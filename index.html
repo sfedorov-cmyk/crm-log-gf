@@ -84,7 +84,11 @@ tr:hover td{background:#faf9f7}
 .btn-cancel:hover{color:var(--text)}
 .btn-del{background:transparent;color:#c0392b;border:1px solid #fcc;border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;font-family:'Golos Text',sans-serif}
 .btn-del:hover{background:#fdeaea}
-.empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+.row-rezerv td{background:#f0eeff!important}.row-rezerv:hover td{background:#e6e0ff!important}
+.row-zhdu td{background:#fff0f5!important}.row-zhdu:hover td{background:#ffe0ec!important}
+.row-sb td{background:#fffde0!important}.row-sb:hover td{background:#fff9c0!important}
+.row-logistic td{background:#e6f5ed!important}.row-logistic:hover td{background:#d0eddc!important}
+
 .sort-arrow{font-size:10px;margin-left:3px}
 .edit-btn{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;color:var(--muted)}
 .edit-btn:hover{color:var(--accent);border-color:var(--accent)}
@@ -142,7 +146,7 @@ tr:hover td{background:#faf9f7}
       <select id="fDa"><option value="">—</option><option value="да">Да</option><option value="нет">Нет</option><option value="думает">Думает</option></select>
     </div>
     <div class="form-group"><label>Статус</label>
-      <select id="fStatus"><option value="">—</option><option>думает</option><option>недозвон</option><option>отказ</option><option>принят</option><option>оформление</option><option>стажировка</option></select>
+      <select id="fStatus"><option value="">—</option><option>думает</option><option>недозвон</option><option>отказ</option><option>принят</option><option>оформление</option><option>стажировка</option><option>резерв</option><option>жду доки</option><option>проверка СБ</option><option>передан в логистику</option></select>
     </div>
     <div class="form-group"><label>Юр. Статус</label>
       <select id="fJur"><option value="">—</option><option>СМЗ</option><option>ИП</option><option>ТД</option><option>ГПХ</option></select>
@@ -291,7 +295,7 @@ function renderFiltersBar() {
     <div class="filter-group"><label>Статус</label>
       <select onchange="filters.status=this.value;render()">
         <option value="">Все</option>
-        ${['думает','недозвон','отказ','принят','оформление','стажировка'].map(o=>`<option ${filters.status===o?'selected':''}>${o}</option>`).join('')}
+        ${['думает','недозвон','отказ','принят','оформление','стажировка','резерв','жду доки','проверка СБ','передан в логистику'].map(o=>`<option ${filters.status===o?'selected':''}>${o}</option>`).join('')}
       </select>
     </div>
     <div class="filter-group"><label>Город</label>
@@ -336,8 +340,9 @@ function renderTable(rows) {
   const arr = d => d===1?'↑':'↓';
   document.getElementById('thead').innerHTML = '<tr>'+COLS.map(c=>`<th onclick="setSort('${c.key}')">${c.label}${sortCol===c.key?`<span class="sort-arrow">${arr(sortDir)}</span>`:''}</th>`).join('')+'<th style="width:50px"></th></tr>';
   if (!rows.length) { document.getElementById('tbody').innerHTML=`<tr><td colspan="${COLS.length+1}"><div class="empty-state">Нет записей. Нажмите «+ Запись» чтобы добавить.</div></td></tr>`; return; }
+  function rowClass(s){if(s==='резерв')return 'row-rezerv';if(s==='жду доки')return 'row-zhdu';if(s==='проверка СБ')return 'row-sb';if(s==='передан в логистику')return 'row-logistic';return '';}
   document.getElementById('tbody').innerHTML = rows.map(r => `
-    <tr ondblclick="openEditModal('${r.id}')">
+    <tr class="${rowClass(r.status)}" ondblclick="openEditModal('${r.id}')">
       <td>${fmtDate(r.date)}</td><td>${r.time||'—'}</td>
       <td style="font-weight:500">${r.fio||'—'}</td>
       <td>${r.tel||'—'}</td><td>${r.okrug||'—'}</td>
