@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR CRM — Подбор курьеров</title>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f4f0;--surface:#fff;--border:#e0ddd5;--text:#1a1a1a;--muted:#888;--accent:#1a7a4a;--yes:#1a7a4a;--yes-bg:#e6f5ed;--no:#b94040;--no-bg:#fdeaea;--pending:#7a5c1a;--pending-bg:#fdf3e0;}
+body,html{font-family:'Golos Text',sans-serif;background:var(--bg);color:var(--text);font-size:13px;height:100%}
+.app{display:flex;flex-direction:column;height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;flex-shrink:0}
+.logo{font-size:14px;font-weight:600;color:var(--accent);padding:12px 16px 12px 0;border-right:1px solid var(--border);margin-right:4px;white-space:nowrap}
+.sync-status{font-size:11px;padding:3px 10px;border-radius:20px;margin-left:12px}
+.sync-ok{background:#e6f5ed;color:#1a7a4a}
+.sync-err{background:#fdeaea;color:#b94040}
+.sync-loading{background:#fdf3e0;color:#7a5c1a}
+.tabs-wrap{display:flex;gap:0;overflow-x:auto;flex:1}
+.tab{padding:12px 14px;font-size:12px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;color:var(--muted);transition:color .15s,border-color .15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-add{padding:10px 14px;font-size:20px;color:var(--muted);cursor:pointer;flex-shrink:0}
+.tab-add:hover{color:var(--accent)}
+.filters{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0}
+.filter-group{display:flex;align-items:center;gap:6px}
+.filter-group label{font-size:11px;color:var(--muted);white-space:nowrap}
+.filters input[type=date],.filters select{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'Golos Text',sans-serif;font-size:12px;background:#fff;color:var(--text);outline:none}
+.filters input[type=date]:focus,.filters select:focus{border-color:var(--accent)}
+.btn-clear{font-size:12px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}
+.btn-clear:hover{color:var(--text);border-color:#aaa}
+.btn-add-row{font-size:12px;padding:5px 14px;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;margin-left:auto;font-family:'Golos Text',sans-serif}
+.btn-add-row:hover{opacity:.88}
+.stats-bar{display:flex;gap:10px;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px 14px;display:flex;align-items:center;gap:8px}
+.stat-val{font-size:17px;font-weight:600}
+.stat-label{font-size:11px;color:var(--muted)}
+.stat.yes .stat-val{color:var(--yes)}
+.stat.no .stat-val{color:var(--no)}
+.table-wrap{flex:1;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{position:sticky;top:0;z-index:2}
+th{background:#eeecea;border-bottom:1px solid var(--border);padding:7px 8px;text-align:left;font-weight:600;font-size:11px;color:#555;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{background:#e5e3e0}
+td{border-bottom:1px solid #f0ede8;padding:6px 8px;vertical-align:top}
+tr:hover td{background:#faf9f7}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.badge-yes{background:var(--yes-bg);color:var(--yes)}
+.badge-no{background:var(--no-bg);color:var(--no)}
+.badge-think{background:var(--pending-bg);color:var(--pending)}
+.badge-empty{background:#f0ede8;color:#999}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:460px;max-width:96vw;max-height:92vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:18px;color:var(--accent)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select,.form-group textarea{border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-family:'Golos Text',sans-serif;font-size:13px;color:var(--text);outline:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:70px}
+.modal-actions{display:flex;gap:8px;margin-top:20px}
+.btn-save{flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Golos Text',sans-serif}
+.btn-save:hover{opacity:.88}
+.btn-cancel{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;font-family:'Golos Text',sans-serif}
+.btn-cancel:hover{color:var(--text)}
+.btn-del{background:transparent;color:#c0392b;border:1px solid #fcc;border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;font-family:'Golos Text',sans-serif}
+.btn-del:hover{background:#fdeaea}
+.name-modal{background:#fff;border-radius:14px;padding:24px;width:320px}
+.name-modal h3{font-size:15px;font-weight:600;margin-bottom:16px;color:var(--accent)}
+.name-modal input{width:100%;border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;font-family:'Golos Text',sans-serif;outline:none}
+.name-modal input:focus{border-color:var(--accent)}
+.name-modal .modal-actions{margin-top:16px}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+.sort-arrow{font-size:10px;margin-left:3px}
+.edit-btn{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;color:var(--muted)}
+.edit-btn:hover{color:var(--accent);border-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="logo">HR GF</div>
+    <span class="sync-status sync-loading" id="syncStatus">подключение...</span>
+    <div class="tabs-wrap" id="tabsWrap"></div>
+    <div class="tab-add" title="Добавить рекрутера" onclick="openAddRecruiter()">+</div>
+  </div>
+  <div class="filters" id="filtersBar"></div>
+  <div class="stats-bar" id="statsBar"></div>
+  <div class="table-wrap"><table id="mainTable"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+<div class="modal">
+  <h3 id="modalTitle">Новая запись</h3>
+  <div class="form-grid">
+    <div class="form-group"><label>Дата</label><input type="date" id="fDate"></div>
+    <div class="form-group"><label>Время</label><input type="time" id="fTime"></div>
+    <div class="form-group full"><label>ФИО</label><input type="text" id="fFio" placeholder="Иванов Иван Иванович"></div>
+    <div class="form-group"><label>Телефон</label><input type="tel" id="fTel" placeholder="7 (900) 000-00-00"></div>
+    <div class="form-group"><label>Округ</label>
+      <select id="fOkrug"><option value="">—</option><option>СПБ : ВОСТОК</option><option>СПБ : ЗАПАД</option><option>СПБ : СЕВЕР</option><option>СПБ : ЮГ</option><option>МСК : ЦАО</option><option>МСК : САО</option><option>МСК : ЮАО</option><option>МСК : ВАО</option><option>МСК : ЗАО</option></select>
+    </div>
+    <div class="form-group"><label>Да/Нет</label>
+      <select id="fDa"><option value="">—</option><option value="да">Да</option><option value="нет">Нет</option><option value="думает">Думает</option></select>
+    </div>
+    <div class="form-group"><label>Статус</label>
+      <select id="fStatus"><option value="">—</option><option>думает</option><option>недозвон</option><option>отказ</option><option>принят</option><option>оформление</option><option>стажировка</option></select>
+    </div>
+    <div class="form-group"><label>Юр. Статус</label>
+      <select id="fJur"><option value="">—</option><option>СМЗ</option><option>ИП</option><option>ТД</option><option>ГПХ</option></select>
+    </div>
+    <div class="form-group"><label>Город</label>
+      <select id="fCity"><option value="">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Нижний Новгород</option><option>Воронеж</option><option>Другой</option></select>
+    </div>
+    <div class="form-group full"><label>Комментарий</label><textarea id="fComment" placeholder="Заметки..."></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+    <button class="btn-del" id="btnDel" style="display:none" onclick="deleteRow()">Удалить</button>
+    <button class="btn-save" onclick="saveRow()">Сохранить</button>
+  </div>
+</div>
+</div>
+
+<div class="modal-bg" id="recModalBg">
+<div class="name-modal">
+  <h3>Новый рекрутер</h3>
+  <input type="text" id="recName" placeholder="Фамилия Имя" onkeydown="if(event.key==='Enter')saveRecruiter()">
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeRecModal()">Отмена</button>
+    <button class="btn-save" onclick="saveRecruiter()">Добавить</button>
+  </div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://orffvetweovwgowtprsv.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_NaTVWE-doecU4Au19gFLdg__qGD-fpH';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const RECRUITERS = ['Осипова А.','Наседко Е.','Дюпина Е.','Смоленцева К.','Кислякова Е.','Рачеева Д.','Степакова М.','Яковлева А.'];
+
+let allRows = [];
+let currentTab = 0;
+let editingRowId = null;
+let sortCol = 'date'; let sortDir = 1;
+let filters = {dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:''};
+
+function syncStatus(state, msg) {
+  const el = document.getElementById('syncStatus');
+  el.className = 'sync-status sync-' + state;
+  el.textContent = msg;
+}
+
+async function loadData() {
+  syncStatus('loading', 'загрузка...');
+  const {data, error} = await sb.from('candidates').select('*').order('date', {ascending: true});
+  if (error) { syncStatus('err', 'ошибка подключения'); return; }
+  allRows = data || [];
+  syncStatus('ok', '● онлайн');
+  render();
+}
+
+// realtime
+sb.channel('candidates').on('postgres_changes', {event:'*', schema:'public', table:'candidates'}, () => {
+  loadData();
+}).subscribe();
+
+function render() {
+  renderTabs();
+  renderFiltersBar();
+  const rows = filteredRows();
+  renderStats(rows);
+  renderTable(rows);
+}
+
+function renderTabs() {
+  document.getElementById('tabsWrap').innerHTML = RECRUITERS.map((r,i) =>
+    `<div class="tab ${i===currentTab?'active':''}" onclick="switchTab(${i})">${r}</div>`
+  ).join('');
+}
+
+function renderFiltersBar() {
+  document.getElementById('filtersBar').innerHTML = `
+    <div class="filter-group"><label>С</label><input type="date" value="${filters.dateFrom}" onchange="filters.dateFrom=this.value;render()"></div>
+    <div class="filter-group"><label>По</label><input type="date" value="${filters.dateTo}" onchange="filters.dateTo=this.value;render()"></div>
+    <div class="filter-group"><label>Округ</label>
+      <select onchange="filters.okrug=this.value;render()">
+        <option value="">Все</option>
+        ${['СПБ : ВОСТОК','СПБ : ЗАПАД','СПБ : СЕВЕР','СПБ : ЮГ','МСК : ЦАО','МСК : САО','МСК : ЮАО','МСК : ВАО','МСК : ЗАО'].map(o=>`<option ${filters.okrug===o?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="filter-group"><label>Да/Нет</label>
+      <select onchange="filters.da=this.value;render()">
+        <option value="">Все</option>
+        <option ${filters.da==='да'?'selected':''} value="да">Да</option>
+        <option ${filters.da==='нет'?'selected':''} value="нет">Нет</option>
+        <option ${filters.da==='думает'?'selected':''} value="думает">Думает</option>
+      </select>
+    </div>
+    <div class="filter-group"><label>Статус</label>
+      <select onchange="filters.status=this.value;render()">
+        <option value="">Все</option>
+        ${['думает','недозвон','отказ','принят','оформление','стажировка'].map(o=>`<option ${filters.status===o?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="filter-group"><label>Город</label>
+      <select onchange="filters.city=this.value;render()">
+        <option value="">Все</option>
+        ${['Санкт-Петербург','Москва','Казань','Нижний Новгород','Воронеж'].map(o=>`<option ${filters.city===o?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <button class="btn-clear" onclick="clearFilters()">Сбросить</button>
+    <button class="btn-add-row" onclick="openModal()">+ Запись</button>
+  `;
+}
+
+function filteredRows() {
+  const rec = RECRUITERS[currentTab];
+  return allRows.filter(r => {
+    if (r.recruiter !== rec) return false;
+    if (filters.dateFrom && r.date < filters.dateFrom) return false;
+    if (filters.dateTo && r.date > filters.dateTo) return false;
+    if (filters.okrug && r.okrug !== filters.okrug) return false;
+    if (filters.da && r.da !== filters.da) return false;
+    if (filters.status && r.status !== filters.status) return false;
+    if (filters.city && r.city !== filters.city) return false;
+    return true;
+  }).sort((a,b) => {
+    let va=a[sortCol]||'', vb=b[sortCol]||'';
+    return va<vb?-sortDir:va>vb?sortDir:0;
+  });
+}
+
+function renderStats(rows) {
+  const total=rows.length, yes=rows.filter(r=>r.da==='да').length, no=rows.filter(r=>r.da==='нет').length, think=rows.filter(r=>r.da==='думает').length, pct=total?Math.round(yes/total*100):0;
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat"><span class="stat-val">${total}</span><span class="stat-label">всего</span></div>
+    <div class="stat yes"><span class="stat-val">${yes}</span><span class="stat-label">да (${pct}%)</span></div>
+    <div class="stat no"><span class="stat-val">${no}</span><span class="stat-label">нет</span></div>
+    <div class="stat"><span class="stat-val">${think}</span><span class="stat-label">думают</span></div>
+  `;
+}
+
+const COLS=[{key:'date',label:'Дата'},{key:'time',label:'Время'},{key:'fio',label:'ФИО'},{key:'tel',label:'Тел'},{key:'okrug',label:'Округ'},{key:'da',label:'Да/Нет'},{key:'status',label:'Статус'},{key:'jur',label:'Юр.Статус'},{key:'city',label:'Город'},{key:'comment',label:'Комментарий'}];
+
+function renderTable(rows) {
+  const arr = d => d===1?'↑':'↓';
+  document.getElementById('thead').innerHTML = '<tr>'+COLS.map(c=>`<th onclick="setSort('${c.key}')">${c.label}${sortCol===c.key?`<span class="sort-arrow">${arr(sortDir)}</span>`:''}</th>`).join('')+'<th style="width:50px"></th></tr>';
+  if (!rows.length) { document.getElementById('tbody').innerHTML=`<tr><td colspan="${COLS.length+1}"><div class="empty-state">Нет записей. Нажмите «+ Запись» чтобы добавить.</div></td></tr>`; return; }
+  document.getElementById('tbody').innerHTML = rows.map(r => `
+    <tr ondblclick="openEditModal('${r.id}')">
+      <td>${fmtDate(r.date)}</td><td>${r.time||'—'}</td>
+      <td style="font-weight:500">${r.fio||'—'}</td>
+      <td>${r.tel||'—'}</td><td>${r.okrug||'—'}</td>
+      <td>${daBadge(r.da)}</td><td>${r.status||'—'}</td>
+      <td>${r.jur||'—'}</td><td>${r.city||'—'}</td>
+      <td style="color:#555;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.comment)}">${r.comment||'—'}</td>
+      <td><button class="edit-btn" onclick="openEditModal('${r.id}')">✏️</button></td>
+    </tr>
+  `).join('');
+}
+
+function fmtDate(d){if(!d)return'—';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
+function esc(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function daBadge(v){if(v==='да')return'<span class="badge badge-yes">Да</span>';if(v==='нет')return'<span class="badge badge-no">Нет</span>';if(v==='думает')return'<span class="badge badge-think">Думает</span>';return'<span class="badge badge-empty">—</span>';}
+function setSort(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}render();}
+function clearFilters(){filters={dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:''};render();}
+function switchTab(i){currentTab=i;render();}
+
+function openModal() {
+  editingRowId=null;
+  document.getElementById('modalTitle').textContent='Новая запись';
+  document.getElementById('btnDel').style.display='none';
+  document.getElementById('fDate').value=new Date().toISOString().slice(0,10);
+  ['fTime','fFio','fTel','fComment'].forEach(id=>document.getElementById(id).value='');
+  ['fOkrug','fDa','fStatus','fJur','fCity'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('modalBg').classList.add('open');
+  setTimeout(()=>document.getElementById('fFio').focus(),100);
+}
+
+function openEditModal(id) {
+  const r=allRows.find(x=>x.id===id); if(!r)return;
+  editingRowId=id;
+  document.getElementById('modalTitle').textContent='Редактировать запись';
+  document.getElementById('btnDel').style.display='';
+  document.getElementById('fDate').value=r.date||'';
+  document.getElementById('fTime').value=r.time||'';
+  document.getElementById('fFio').value=r.fio||'';
+  document.getElementById('fTel').value=r.tel||'';
+  document.getElementById('fOkrug').value=r.okrug||'';
+  document.getElementById('fDa').value=r.da||'';
+  document.getElementById('fStatus').value=r.status||'';
+  document.getElementById('fJur').value=r.jur||'';
+  document.getElementById('fCity').value=r.city||'';
+  document.getElementById('fComment').value=r.comment||'';
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modalBg').classList.remove('open');}
+
+async function saveRow() {
+  const rec=RECRUITERS[currentTab];
+  const data={recruiter:rec,date:document.getElementById('fDate').value,time:document.getElementById('fTime').value,fio:document.getElementById('fFio').value,tel:document.getElementById('fTel').value,okrug:document.getElementById('fOkrug').value,da:document.getElementById('fDa').value,status:document.getElementById('fStatus').value,jur:document.getElementById('fJur').value,city:document.getElementById('fCity').value,comment:document.getElementById('fComment').value};
+  if(editingRowId){
+    await sb.from('candidates').update(data).eq('id',editingRowId);
+  } else {
+    await sb.from('candidates').insert(data);
+  }
+  closeModal();
+  await loadData();
+}
+
+async function deleteRow() {
+  if(!editingRowId)return;
+  if(!confirm('Удалить запись?'))return;
+  await sb.from('candidates').delete().eq('id',editingRowId);
+  closeModal();
+  await loadData();
+}
+
+function openAddRecruiter(){alert('Для добавления рекрутера обратитесь к администратору CRM.');}
+function closeRecModal(){document.getElementById('recModalBg').classList.remove('open');}
+
+document.getElementById('modalBg').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+loadData();
+</script>
+</body>
+</html>
