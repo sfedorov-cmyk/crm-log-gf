@@ -10,8 +10,6 @@
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#f5f4f0;--surface:#fff;--border:#e0ddd5;--text:#1a1a1a;--muted:#888;--accent:#1a7a4a;--yes:#1a7a4a;--yes-bg:#e6f5ed;--no:#b94040;--no-bg:#fdeaea;--pending:#7a5c1a;--pending-bg:#fdf3e0;}
 body,html{font-family:'Golos Text',sans-serif;background:var(--bg);color:var(--text);font-size:13px;height:100%}
-
-/* LOGIN */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;}
 .login-box{background:#fff;border:1px solid var(--border);border-radius:16px;padding:40px;width:360px;max-width:95vw;}
 .login-logo{font-size:22px;font-weight:600;color:var(--accent);margin-bottom:8px;}
@@ -23,22 +21,19 @@ body,html{font-family:'Golos Text',sans-serif;background:var(--bg);color:var(--t
 .login-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Golos Text',sans-serif;margin-top:8px;}
 .login-btn:hover{opacity:.88;}
 .login-err{color:#b94040;font-size:12px;margin-top:8px;text-align:center;}
-
-/* APP */
 .app{display:flex;flex-direction:column;height:100vh}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;flex-shrink:0}
 .logo{font-size:14px;font-weight:600;color:var(--accent);padding:12px 16px 12px 0;border-right:1px solid var(--border);margin-right:4px;white-space:nowrap}
 .sync-status{font-size:11px;padding:3px 10px;border-radius:20px;margin-left:12px}
-.sync-ok{background:#e6f5ed;color:#1a7a4a}
-.sync-err{background:#fdeaea;color:#b94040}
-.sync-loading{background:#fdf3e0;color:#7a5c1a}
+.sync-ok{background:#e6f5ed;color:#1a7a4a}.sync-err{background:#fdeaea;color:#b94040}.sync-loading{background:#fdf3e0;color:#7a5c1a}
 .user-info{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+.avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);cursor:pointer;}
+.avatar-placeholder{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;}
 .btn-logout{font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}
 .btn-logout:hover{color:#b94040;border-color:#b94040}
 .tabs-wrap{display:flex;gap:0;overflow-x:auto;}
 .tab{padding:12px 14px;font-size:12px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;color:var(--muted);transition:color .15s,border-color .15s}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .filters{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0}
 .filter-group{display:flex;align-items:center;gap:6px}
 .filter-group label{font-size:11px;color:var(--muted);white-space:nowrap}
@@ -50,10 +45,8 @@ body,html{font-family:'Golos Text',sans-serif;background:var(--bg);color:var(--t
 .btn-add-row:hover{opacity:.88}
 .stats-bar{display:flex;gap:10px;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px 14px;display:flex;align-items:center;gap:8px}
-.stat-val{font-size:17px;font-weight:600}
-.stat-label{font-size:11px;color:var(--muted)}
-.stat.yes .stat-val{color:var(--yes)}
-.stat.no .stat-val{color:var(--no)}
+.stat-val{font-size:17px;font-weight:600}.stat-label{font-size:11px;color:var(--muted)}
+.stat.yes .stat-val{color:var(--yes)}.stat.no .stat-val{color:var(--no)}
 .table-wrap{flex:1;overflow:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 thead{position:sticky;top:0;z-index:2}
@@ -61,11 +54,15 @@ th{background:#eeecea;border-bottom:1px solid var(--border);padding:7px 8px;text
 th:hover{background:#e5e3e0}
 td{border-bottom:1px solid #f0ede8;padding:6px 8px;vertical-align:top}
 tr:hover td{background:#faf9f7}
+tr.dragging{opacity:0.4}
+tr.drag-over td{border-top:2px solid var(--accent)!important}
 .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
-.badge-yes{background:var(--yes-bg);color:var(--yes)}
-.badge-no{background:var(--no-bg);color:var(--no)}
-.badge-think{background:var(--pending-bg);color:var(--pending)}
-.badge-empty{background:#f0ede8;color:#999}
+.badge-yes{background:var(--yes-bg);color:var(--yes)}.badge-no{background:var(--no-bg);color:var(--no)}
+.badge-think{background:var(--pending-bg);color:var(--pending)}.badge-empty{background:#f0ede8;color:#999}
+.row-rezerv td{background:#f0eeff!important}.row-rezerv:hover td{background:#e6e0ff!important}
+.row-zhdu td{background:#fff0f5!important}.row-zhdu:hover td{background:#ffe0ec!important}
+.row-sb td{background:#fffde0!important}.row-sb:hover td{background:#fff9c0!important}
+.row-logistic td{background:#e6f5ed!important}.row-logistic:hover td{background:#d0eddc!important}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
 .modal{background:#fff;border-radius:14px;padding:24px;width:460px;max-width:96vw;max-height:92vh;overflow-y:auto}
@@ -84,20 +81,21 @@ tr:hover td{background:#faf9f7}
 .btn-cancel:hover{color:var(--text)}
 .btn-del{background:transparent;color:#c0392b;border:1px solid #fcc;border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;font-family:'Golos Text',sans-serif}
 .btn-del:hover{background:#fdeaea}
-.row-rezerv td{background:#f0eeff!important}.row-rezerv:hover td{background:#e6e0ff!important}
-.row-zhdu td{background:#fff0f5!important}.row-zhdu:hover td{background:#ffe0ec!important}
-.row-sb td{background:#fffde0!important}.row-sb:hover td{background:#fff9c0!important}
-.row-logistic td{background:#e6f5ed!important}.row-logistic:hover td{background:#d0eddc!important}
-
 .sort-arrow{font-size:10px;margin-left:3px}
 .edit-btn{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;color:var(--muted)}
 .edit-btn:hover{color:var(--accent);border-color:var(--accent)}
+.drag-handle{cursor:grab;color:#ccc;padding:0 4px;font-size:14px}
+.drag-handle:hover{color:#999}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
 .hidden{display:none!important}
+.avatar-modal{background:#fff;border-radius:14px;padding:24px;width:320px;text-align:center}
+.avatar-modal h3{font-size:15px;font-weight:600;margin-bottom:16px;color:var(--accent)}
+.avatar-preview{width:80px;height:80px;border-radius:50%;margin:0 auto 16px;border:2px solid var(--border);object-fit:cover;display:block;}
+.avatar-preview-placeholder{width:80px;height:80px;border-radius:50%;margin:0 auto 16px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo">HR GF</div>
@@ -115,13 +113,13 @@ tr:hover td{background:#faf9f7}
   </div>
 </div>
 
-<!-- APP -->
 <div class="app hidden" id="appWrap">
   <div class="topbar">
     <div class="logo">HR GF</div>
     <span class="sync-status sync-loading" id="syncStatus">загрузка...</span>
     <div class="tabs-wrap" id="tabsWrap"></div>
     <div class="user-info">
+      <div id="avatarBtn" onclick="openAvatarModal()" title="Сменить фото"></div>
       <span id="userEmail"></span>
       <button class="btn-logout" onclick="doLogout()">Выйти</button>
     </div>
@@ -135,12 +133,22 @@ tr:hover td{background:#faf9f7}
 <div class="modal">
   <h3 id="modalTitle">Новая запись</h3>
   <div class="form-grid">
-    <div class="form-group"><label>Дата</label><input type="date" id="fDate"></div>
-    <div class="form-group"><label>Время</label><input type="time" id="fTime"></div>
+    <div class="form-group"><label>Дата</label><input type="date" id="fDate" readonly style="background:#f5f4f0;color:#888"></div>
+    <div class="form-group"><label>Время</label><input type="time" id="fTime" readonly style="background:#f5f4f0;color:#888"></div>
     <div class="form-group full"><label>ФИО</label><input type="text" id="fFio" placeholder="Иванов Иван Иванович"></div>
     <div class="form-group"><label>Телефон</label><input type="tel" id="fTel" placeholder="7 (900) 000-00-00"></div>
     <div class="form-group"><label>Округ</label>
-      <select id="fOkrug"><option value="">—</option><option>СПБ : ВОСТОК</option><option>СПБ : ЗАПАД</option><option>СПБ : СЕВЕР</option><option>СПБ : ЮГ</option><option>МСК : ЦАО</option><option>МСК : САО</option><option>МСК : ЮАО</option><option>МСК : ВАО</option><option>МСК : ЗАО</option></select>
+      <select id="fOkrug"><option value="">—</option>
+        <optgroup label="Санкт-Петербург">
+          <option>СПБ : СЗ</option><option>СПБ : СВ</option><option>СПБ : ВОСТОК</option>
+          <option>СПБ : ЮВ</option><option>СПБ : ЮЗ</option>
+        </optgroup>
+        <optgroup label="Москва">
+          <option>МСК : САО</option><option>МСК : СВАО</option><option>МСК : СЗАО</option>
+          <option>МСК : ВАО</option><option>МСК : ЮАО</option><option>МСК : ЮВАО</option>
+          <option>МСК : ЮЗАО</option><option>МСК : ЗАО</option>
+        </optgroup>
+      </select>
     </div>
     <div class="form-group"><label>Да/Нет</label>
       <select id="fDa"><option value="">—</option><option value="да">Да</option><option value="нет">Нет</option><option value="думает">Думает</option></select>
@@ -164,12 +172,22 @@ tr:hover td{background:#faf9f7}
 </div>
 </div>
 
+<!-- Avatar modal -->
+<div class="modal-bg" id="avatarModalBg">
+<div class="avatar-modal">
+  <h3>Фото профиля</h3>
+  <div id="avatarPreviewWrap"></div>
+  <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+  <button class="btn-save" style="width:100%;margin-bottom:8px" onclick="document.getElementById('avatarFile').click()">Выбрать фото</button>
+  <button class="btn-cancel" style="width:100%" onclick="closeAvatarModal()">Закрыть</button>
+</div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://orffvetweovwgowtprsv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_NaTVWE-doecU4Au19gFLdg__qGD-fpH';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// email → имя рекрутера
 const EMAIL_MAP = {
   'osipova@growfood.pro': 'Осипова А.',
   'nasedko@growfood.pro': 'Наседко Е.',
@@ -179,12 +197,18 @@ const EMAIL_MAP = {
   'racheeva@growfood.pro': 'Рачеева Д.',
   'stepakova@growfood.pro': 'Степакова М.',
   'yakovleva@growfood.pro': 'Яковлева А.',
+  'a.yakovleva@growfood.pro': 'Яковлева А.',
   'd.elsafadi@growfood.pro': 'Эль-Сафади Д.',
   'ya.fedorova@growfood.pro': 'Федорова Я.',
+  's.fedorov@growfood.pro': 'Федоров С.',
 };
 
-const ALL_RECRUITERS = Object.values(EMAIL_MAP);
-const ADMIN_EMAILS = ['d.elsafadi@growfood.pro', 'ya.fedorova@growfood.pro', 'stepakova@growfood.pro', 'yakovleva@growfood.pro', 's.fedorov@growfood.pro'];
+const ALL_RECRUITERS = ['Осипова А.','Наседко Е.','Дюпина Е.','Смоленцева К.','Кислякова Е.','Рачеева Д.','Степакова М.','Яковлева А.'];
+const ADMIN_EMAILS = ['d.elsafadi@growfood.pro','ya.fedorova@growfood.pro','stepakova@growfood.pro','yakovleva@growfood.pro','a.yakovleva@growfood.pro','s.fedorov@growfood.pro'];
+
+const SPB_OKRUGS = ['СПБ : СЗ','СПБ : СВ','СПБ : ВОСТОК','СПБ : ЮВ','СПБ : ЮЗ'];
+const MSK_OKRUGS = ['МСК : САО','МСК : СВАО','МСК : СЗАО','МСК : ВАО','МСК : ЮАО','МСК : ЮВАО','МСК : ЮЗАО','МСК : ЗАО'];
+const ALL_OKRUGS = [...SPB_OKRUGS, ...MSK_OKRUGS];
 
 let currentUser = null;
 let isAdmin = false;
@@ -192,8 +216,9 @@ let myRecruiter = null;
 let allRows = [];
 let currentTab = 0;
 let editingRowId = null;
-let sortCol = 'date'; let sortDir = 1;
-let filters = {dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:''};
+let sortCol = 'created_at'; let sortDir = 1;
+let filters = {dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:'',fio:''};
+let dragSrcId = null;
 
 // AUTH
 async function doLogin() {
@@ -217,22 +242,64 @@ function initUser(user) {
   isAdmin = ADMIN_EMAILS.includes(user.email);
   myRecruiter = EMAIL_MAP[user.email] || user.email;
   document.getElementById('userEmail').textContent = myRecruiter;
+  renderAvatar();
   document.getElementById('loginWrap').classList.add('hidden');
   document.getElementById('appWrap').classList.remove('hidden');
-  // если не админ — сразу на свою вкладку
   if (!isAdmin) {
     currentTab = ALL_RECRUITERS.indexOf(myRecruiter);
     if (currentTab < 0) currentTab = 0;
   }
   loadData();
-  // realtime
   sb.channel('candidates').on('postgres_changes', {event:'*', schema:'public', table:'candidates'}, () => loadData()).subscribe();
 }
 
-// проверить сессию при загрузке
 sb.auth.getSession().then(({data}) => {
   if (data.session) initUser(data.session.user);
 });
+
+// AVATAR
+function getAvatarKey() { return 'avatar_' + (currentUser?.email||''); }
+
+function renderAvatar() {
+  const key = getAvatarKey();
+  const src = localStorage.getItem(key);
+  const name = myRecruiter || '?';
+  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const btn = document.getElementById('avatarBtn');
+  if (src) {
+    btn.innerHTML = `<img class="avatar" src="${src}" alt="avatar">`;
+  } else {
+    btn.innerHTML = `<div class="avatar-placeholder">${initials}</div>`;
+  }
+}
+
+function openAvatarModal() {
+  const key = getAvatarKey();
+  const src = localStorage.getItem(key);
+  const name = myRecruiter || '?';
+  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const wrap = document.getElementById('avatarPreviewWrap');
+  if (src) {
+    wrap.innerHTML = `<img class="avatar-preview" src="${src}">`;
+  } else {
+    wrap.innerHTML = `<div class="avatar-preview-placeholder">${initials}</div>`;
+  }
+  document.getElementById('avatarModalBg').classList.add('open');
+}
+
+function closeAvatarModal() { document.getElementById('avatarModalBg').classList.remove('open'); }
+
+function previewAvatar(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const src = e.target.result;
+    localStorage.setItem(getAvatarKey(), src);
+    renderAvatar();
+    document.getElementById('avatarPreviewWrap').innerHTML = `<img class="avatar-preview" src="${src}">`;
+  };
+  reader.readAsDataURL(file);
+}
 
 function syncStatus(state, msg) {
   const el = document.getElementById('syncStatus');
@@ -242,7 +309,7 @@ function syncStatus(state, msg) {
 
 async function loadData() {
   syncStatus('loading', 'загрузка...');
-  const {data, error} = await sb.from('candidates').select('*').order('date', {ascending: true});
+  const {data, error} = await sb.from('candidates').select('*').order('sort_order', {ascending: true}).order('created_at', {ascending: true});
   if (error) { syncStatus('err', 'ошибка'); return; }
   allRows = data || [];
   syncStatus('ok', '● онлайн');
@@ -276,12 +343,14 @@ function renderTabs() {
 function renderFiltersBar() {
   const canAdd = isAdmin || myRecruiter === getVisibleRecruiters()[currentTab];
   document.getElementById('filtersBar').innerHTML = `
+    <div class="filter-group"><label>Поиск ФИО</label><input type="text" value="${filters.fio}" placeholder="Иванов..." oninput="filters.fio=this.value;render()" style="border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'Golos Text',sans-serif;font-size:12px;background:#fff;color:var(--text);outline:none;width:140px"></div>
     <div class="filter-group"><label>С</label><input type="date" value="${filters.dateFrom}" onchange="filters.dateFrom=this.value;render()"></div>
     <div class="filter-group"><label>По</label><input type="date" value="${filters.dateTo}" onchange="filters.dateTo=this.value;render()"></div>
     <div class="filter-group"><label>Округ</label>
       <select onchange="filters.okrug=this.value;render()">
         <option value="">Все</option>
-        ${['СПБ : ВОСТОК','СПБ : ЗАПАД','СПБ : СЕВЕР','СПБ : ЮГ','МСК : ЦАО','МСК : САО','МСК : ЮАО','МСК : ВАО','МСК : ЗАО'].map(o=>`<option ${filters.okrug===o?'selected':''}>${o}</option>`).join('')}
+        <optgroup label="Санкт-Петербург">${SPB_OKRUGS.map(o=>`<option ${filters.okrug===o?'selected':''}>${o}</option>`).join('')}</optgroup>
+        <optgroup label="Москва">${MSK_OKRUGS.map(o=>`<option ${filters.okrug===o?'selected':''}>${o}</option>`).join('')}</optgroup>
       </select>
     </div>
     <div class="filter-group"><label>Да/Нет</label>
@@ -314,6 +383,7 @@ function filteredRows() {
   const rec = recs[currentTab] || recs[0];
   return allRows.filter(r => {
     if (r.recruiter !== rec) return false;
+    if (filters.fio && !r.fio?.toLowerCase().includes(filters.fio.toLowerCase())) return false;
     if (filters.dateFrom && r.date < filters.dateFrom) return false;
     if (filters.dateTo && r.date > filters.dateTo) return false;
     if (filters.okrug && r.okrug !== filters.okrug) return false;
@@ -321,7 +391,7 @@ function filteredRows() {
     if (filters.status && r.status !== filters.status) return false;
     if (filters.city && r.city !== filters.city) return false;
     return true;
-  }).sort((a,b) => { let va=a[sortCol]||'',vb=b[sortCol]||''; return va<vb?-sortDir:va>vb?sortDir:0; });
+  });
 }
 
 function renderStats(rows) {
@@ -336,13 +406,14 @@ function renderStats(rows) {
 
 const COLS=[{key:'date',label:'Дата'},{key:'time',label:'Время'},{key:'fio',label:'ФИО'},{key:'tel',label:'Тел'},{key:'okrug',label:'Округ'},{key:'da',label:'Да/Нет'},{key:'status',label:'Статус'},{key:'jur',label:'Юр.Статус'},{key:'city',label:'Город'},{key:'comment',label:'Комментарий'}];
 
+function rowClass(s){if(s==='резерв')return 'row-rezerv';if(s==='жду доки')return 'row-zhdu';if(s==='проверка СБ')return 'row-sb';if(s==='передан в логистику')return 'row-logistic';return '';}
+
 function renderTable(rows) {
-  const arr = d => d===1?'↑':'↓';
-  document.getElementById('thead').innerHTML = '<tr>'+COLS.map(c=>`<th onclick="setSort('${c.key}')">${c.label}${sortCol===c.key?`<span class="sort-arrow">${arr(sortDir)}</span>`:''}</th>`).join('')+'<th style="width:50px"></th></tr>';
-  if (!rows.length) { document.getElementById('tbody').innerHTML=`<tr><td colspan="${COLS.length+1}"><div class="empty-state">Нет записей. Нажмите «+ Запись» чтобы добавить.</div></td></tr>`; return; }
-  function rowClass(s){if(s==='резерв')return 'row-rezerv';if(s==='жду доки')return 'row-zhdu';if(s==='проверка СБ')return 'row-sb';if(s==='передан в логистику')return 'row-logistic';return '';}
+  document.getElementById('thead').innerHTML = '<tr><th style="width:24px"></th>'+COLS.map(c=>`<th>${c.label}</th>`).join('')+'<th style="width:50px"></th></tr>';
+  if (!rows.length) { document.getElementById('tbody').innerHTML=`<tr><td colspan="${COLS.length+2}"><div class="empty-state">Нет записей. Нажмите «+ Запись» чтобы добавить.</div></td></tr>`; return; }
   document.getElementById('tbody').innerHTML = rows.map(r => `
-    <tr class="${rowClass(r.status)}" ondblclick="openEditModal('${r.id}')">
+    <tr class="${rowClass(r.status)}" draggable="true" data-id="${r.id}" ondblclick="openEditModal('${r.id}')">
+      <td><span class="drag-handle" title="Перетащить">⠿</span></td>
       <td>${fmtDate(r.date)}</td><td>${r.time||'—'}</td>
       <td style="font-weight:500">${r.fio||'—'}</td>
       <td>${r.tel||'—'}</td><td>${r.okrug||'—'}</td>
@@ -352,21 +423,53 @@ function renderTable(rows) {
       <td><button class="edit-btn" onclick="openEditModal('${r.id}')">✏️</button></td>
     </tr>
   `).join('');
+  initDrag();
+}
+
+// DRAG & DROP
+function initDrag() {
+  const rows = document.querySelectorAll('#tbody tr[draggable]');
+  rows.forEach(row => {
+    row.addEventListener('dragstart', e => { dragSrcId = row.dataset.id; row.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    row.addEventListener('dragend', () => { row.classList.remove('dragging'); document.querySelectorAll('#tbody tr').forEach(r=>r.classList.remove('drag-over')); });
+    row.addEventListener('dragover', e => { e.preventDefault(); document.querySelectorAll('#tbody tr').forEach(r=>r.classList.remove('drag-over')); row.classList.add('drag-over'); });
+    row.addEventListener('drop', async e => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      if (dragSrcId === row.dataset.id) return;
+      const tbody = document.getElementById('tbody');
+      const allTr = [...tbody.querySelectorAll('tr[data-id]')];
+      const srcIdx = allTr.findIndex(r=>r.dataset.id===dragSrcId);
+      const dstIdx = allTr.findIndex(r=>r.dataset.id===row.dataset.id);
+      if (srcIdx < 0 || dstIdx < 0) return;
+      // reorder in allRows
+      const srcRow = allRows.find(r=>r.id===dragSrcId);
+      const dstRow = allRows.find(r=>r.id===row.dataset.id);
+      if (!srcRow || !dstRow) return;
+      const srcOrder = dstRow.sort_order ?? dstIdx;
+      const dstOrder = srcRow.sort_order ?? srcIdx;
+      await sb.from('candidates').update({sort_order: srcOrder}).eq('id', dragSrcId);
+      await sb.from('candidates').update({sort_order: dstOrder}).eq('id', row.dataset.id);
+      await loadData();
+    });
+  });
 }
 
 function fmtDate(d){if(!d)return'—';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
+function fmtDateTime(){const n=new Date();return{date:n.toISOString().slice(0,10),time:n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')};}
 function esc(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 function daBadge(v){if(v==='да')return'<span class="badge badge-yes">Да</span>';if(v==='нет')return'<span class="badge badge-no">Нет</span>';if(v==='думает')return'<span class="badge badge-think">Думает</span>';return'<span class="badge badge-empty">—</span>';}
-function setSort(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}render();}
-function clearFilters(){filters={dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:''};render();}
-function switchTab(i){currentTab=i;filters={dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:''};render();}
+function clearFilters(){filters={dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:'',fio:''};render();}
+function switchTab(i){currentTab=i;filters={dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:'',fio:''};render();}
 
 function openModal() {
   editingRowId=null;
   document.getElementById('modalTitle').textContent='Новая запись';
   document.getElementById('btnDel').style.display='none';
-  document.getElementById('fDate').value=new Date().toISOString().slice(0,10);
-  ['fTime','fFio','fTel','fComment'].forEach(id=>document.getElementById(id).value='');
+  const dt = fmtDateTime();
+  document.getElementById('fDate').value=dt.date;
+  document.getElementById('fTime').value=dt.time;
+  ['fFio','fTel','fComment'].forEach(id=>document.getElementById(id).value='');
   ['fOkrug','fDa','fStatus','fJur','fCity'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('modalBg').classList.add('open');
   setTimeout(()=>document.getElementById('fFio').focus(),100);
@@ -409,6 +512,7 @@ async function deleteRow() {
 }
 
 document.getElementById('modalBg').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('avatarModalBg').addEventListener('click',function(e){if(e.target===this)closeAvatarModal();});
 </script>
 </body>
 </html>
