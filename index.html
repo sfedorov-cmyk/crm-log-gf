@@ -21,6 +21,7 @@ body,html{font-family:'Golos Text',sans-serif;background:var(--bg);color:var(--t
 .login-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Golos Text',sans-serif;margin-top:8px;}
 .login-btn:hover{opacity:.88;}
 .login-err{color:#b94040;font-size:12px;margin-top:8px;text-align:center;}
+.login-welcome{color:#1a7a4a;font-size:13px;font-weight:500;margin-top:12px;text-align:center;padding:10px;background:#e6f5ed;border-radius:8px;}
 .app{display:flex;flex-direction:column;height:100vh}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;flex-shrink:0}
 .logo{font-size:14px;font-weight:600;color:var(--accent);padding:12px 16px 12px 0;border-right:1px solid var(--border);margin-right:4px;white-space:nowrap}
@@ -110,6 +111,7 @@ tr.drag-over td{border-top:2px solid var(--accent)!important}
     </div>
     <button class="login-btn" onclick="doLogin()">Войти</button>
     <div class="login-err hidden" id="loginErr">Неверный email или пароль</div>
+    <div class="login-welcome hidden" id="loginWelcome">Добро пожаловать! Продуктивного дня тебе 🌿</div>
   </div>
 </div>
 
@@ -227,7 +229,8 @@ async function doLogin() {
   document.getElementById('loginErr').classList.add('hidden');
   const {data, error} = await sb.auth.signInWithPassword({email, password: pass});
   if (error) { document.getElementById('loginErr').classList.remove('hidden'); return; }
-  initUser(data.user);
+  document.getElementById('loginWelcome').classList.remove('hidden');
+  setTimeout(() => initUser(data.user), 1500);
 }
 
 async function doLogout() {
@@ -516,3 +519,4 @@ document.getElementById('avatarModalBg').addEventListener('click',function(e){if
 </script>
 </body>
 </html>
+
