@@ -254,6 +254,10 @@ function initUser(user) {
   }
   loadData();
   sb.channel('candidates').on('postgres_changes', {event:'*', schema:'public', table:'candidates'}, () => loadData()).subscribe();
+  // presence tracking
+  updatePresence();
+  setInterval(updatePresence, 30000);
+  sb.channel('presence').on('postgres_changes', {event:'*', schema:'public', table:'user_presence'}, () => renderPresence()).subscribe();
 }
 
 sb.auth.getSession().then(({data}) => {
@@ -304,6 +308,39 @@ function previewAvatar(input) {
   reader.readAsDataURL(file);
 }
 
+// PRESENCE
+async function updatePresence() {
+  if (!currentUser) return;
+  await sb.from('user_presence').upsert({email: currentUser.email, name: myRecruiter, last_seen: new Date().toISOString()});
+}
+
+async function renderPresence() {
+  const {data} = await sb.from('user_presence').select('*');
+  if (!data) return;
+  const now = new Date();
+  const tabs = document.querySelectorAll('.tab');
+  const recs = getVisibleRecruiters();
+  tabs.forEach((tab, i) => {
+    const rec = recs[i];
+    const user = data.find(u => u.name === rec);
+    if (!user) return;
+    const diff = Math.floor((now - new Date(user.last_seen)) / 1000);
+    const isOnline = diff < 120;
+    const dot = tab.querySelector('.presence-dot');
+    if (dot) {
+      dot.style.background = isOnline ? '#1a7a4a' : '#ccc';
+      dot.title = isOnline ? 'Онлайн' : 'Был(а) ' + fmtAgo(diff);
+    }
+  });
+}
+
+function fmtAgo(sec) {
+  if (sec < 60) return 'только что';
+  if (sec < 3600) return Math.floor(sec/60) + ' мин назад';
+  if (sec < 86400) return Math.floor(sec/3600) + ' ч назад';
+  return Math.floor(sec/86400) + ' дн назад';
+}
+
 function syncStatus(state, msg) {
   const el = document.getElementById('syncStatus');
   el.className = 'sync-status sync-' + state;
@@ -339,8 +376,9 @@ function renderTabs() {
     return;
   }
   document.getElementById('tabsWrap').innerHTML = recs.map((r,i) =>
-    `<div class="tab ${i===currentTab?'active':''}" onclick="switchTab(${i})">${r}</div>`
+    `<div class="tab ${i===currentTab?'active':''}" onclick="switchTab(${i})">${r} <span class="presence-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ccc;margin-left:4px;vertical-align:middle"></span></div>`
   ).join('');
+  renderPresence();
 }
 
 function renderFiltersBar() {
@@ -519,4 +557,3 @@ document.getElementById('avatarModalBg').addEventListener('click',function(e){if
 </script>
 </body>
 </html>
-
