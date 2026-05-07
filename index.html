@@ -3,13 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HR CRM — Подбор курьеров</title>
+<title>HR GF — Подбор курьеров</title>
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#f5f4f0;--surface:#fff;--border:#e0ddd5;--text:#1a1a1a;--muted:#888;--accent:#1a7a4a;--yes:#1a7a4a;--yes-bg:#e6f5ed;--no:#b94040;--no-bg:#fdeaea;--pending:#7a5c1a;--pending-bg:#fdf3e0;}
 body,html{font-family:'Golos Text',sans-serif;background:var(--bg);color:var(--text);font-size:13px;height:100%}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.login-box{background:#fff;border:1px solid var(--border);border-radius:16px;padding:40px;width:360px;max-width:95vw;}
+.login-logo{font-size:22px;font-weight:600;color:var(--accent);margin-bottom:8px;}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.login-group{margin-bottom:16px;}
+.login-group label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:6px;}
+.login-group input{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Golos Text',sans-serif;font-size:14px;color:var(--text);outline:none;}
+.login-group input:focus{border-color:var(--accent);}
+.login-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Golos Text',sans-serif;margin-top:8px;}
+.login-btn:hover{opacity:.88;}
+.login-err{color:#b94040;font-size:12px;margin-top:8px;text-align:center;}
+
+/* APP */
 .app{display:flex;flex-direction:column;height:100vh}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;flex-shrink:0}
 .logo{font-size:14px;font-weight:600;color:var(--accent);padding:12px 16px 12px 0;border-right:1px solid var(--border);margin-right:4px;white-space:nowrap}
@@ -17,12 +32,13 @@ body,html{font-family:'Golos Text',sans-serif;background:var(--bg);color:var(--t
 .sync-ok{background:#e6f5ed;color:#1a7a4a}
 .sync-err{background:#fdeaea;color:#b94040}
 .sync-loading{background:#fdf3e0;color:#7a5c1a}
-.tabs-wrap{display:flex;gap:0;overflow-x:auto;flex:1}
+.user-info{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+.btn-logout{font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}
+.btn-logout:hover{color:#b94040;border-color:#b94040}
+.tabs-wrap{display:flex;gap:0;overflow-x:auto;}
 .tab{padding:12px 14px;font-size:12px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;color:var(--muted);transition:color .15s,border-color .15s}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.tab-add{padding:10px 14px;font-size:20px;color:var(--muted);cursor:pointer;flex-shrink:0}
-.tab-add:hover{color:var(--accent)}
 .filters{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0}
 .filter-group{display:flex;align-items:center;gap:6px}
 .filter-group label{font-size:11px;color:var(--muted);white-space:nowrap}
@@ -68,28 +84,47 @@ tr:hover td{background:#faf9f7}
 .btn-cancel:hover{color:var(--text)}
 .btn-del{background:transparent;color:#c0392b;border:1px solid #fcc;border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;font-family:'Golos Text',sans-serif}
 .btn-del:hover{background:#fdeaea}
-.name-modal{background:#fff;border-radius:14px;padding:24px;width:320px}
-.name-modal h3{font-size:15px;font-weight:600;margin-bottom:16px;color:var(--accent)}
-.name-modal input{width:100%;border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;font-family:'Golos Text',sans-serif;outline:none}
-.name-modal input:focus{border-color:var(--accent)}
-.name-modal .modal-actions{margin-top:16px}
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
 .sort-arrow{font-size:10px;margin-left:3px}
 .edit-btn{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;color:var(--muted)}
 .edit-btn:hover{color:var(--accent);border-color:var(--accent)}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
-<div class="app" id="app">
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">HR GF</div>
+    <div class="login-sub">Система подбора курьеров</div>
+    <div class="login-group">
+      <label>Email</label>
+      <input type="email" id="lEmail" placeholder="your@growfood.pro" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-group">
+      <label>Пароль</label>
+      <input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Войти</button>
+    <div class="login-err hidden" id="loginErr">Неверный email или пароль</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app hidden" id="appWrap">
   <div class="topbar">
     <div class="logo">HR GF</div>
-    <span class="sync-status sync-loading" id="syncStatus">подключение...</span>
+    <span class="sync-status sync-loading" id="syncStatus">загрузка...</span>
     <div class="tabs-wrap" id="tabsWrap"></div>
-    <div class="tab-add" title="Добавить рекрутера" onclick="openAddRecruiter()">+</div>
+    <div class="user-info">
+      <span id="userEmail"></span>
+      <button class="btn-logout" onclick="doLogout()">Выйти</button>
+    </div>
   </div>
   <div class="filters" id="filtersBar"></div>
   <div class="stats-bar" id="statsBar"></div>
-  <div class="table-wrap"><table id="mainTable"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+  <div class="table-wrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
 </div>
 
 <div class="modal-bg" id="modalBg">
@@ -125,29 +160,75 @@ tr:hover td{background:#faf9f7}
 </div>
 </div>
 
-<div class="modal-bg" id="recModalBg">
-<div class="name-modal">
-  <h3>Новый рекрутер</h3>
-  <input type="text" id="recName" placeholder="Фамилия Имя" onkeydown="if(event.key==='Enter')saveRecruiter()">
-  <div class="modal-actions">
-    <button class="btn-cancel" onclick="closeRecModal()">Отмена</button>
-    <button class="btn-save" onclick="saveRecruiter()">Добавить</button>
-  </div>
-</div>
-</div>
-
 <script>
 const SUPABASE_URL = 'https://orffvetweovwgowtprsv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_NaTVWE-doecU4Au19gFLdg__qGD-fpH';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const RECRUITERS = ['Осипова А.','Наседко Е.','Дюпина Е.','Смоленцева К.','Кислякова Е.','Рачеева Д.','Степакова М.','Яковлева А.'];
+// email → имя рекрутера
+const EMAIL_MAP = {
+  'osipova@growfood.pro': 'Осипова А.',
+  'nasedko@growfood.pro': 'Наседко Е.',
+  'dupina@growfood.pro': 'Дюпина Е.',
+  'smolentseva@growfood.pro': 'Смоленцева К.',
+  'kislyakova@growfood.pro': 'Кислякова Е.',
+  'racheeva@growfood.pro': 'Рачеева Д.',
+  'stepakova@growfood.pro': 'Степакова М.',
+  'yakovleva@growfood.pro': 'Яковлева А.',
+  'd.elsafadi@growfood.pro': 'Эль-Сафади Д.',
+  'ya.fedorova@growfood.pro': 'Федорова Я.',
+};
 
+const ALL_RECRUITERS = Object.values(EMAIL_MAP);
+const ADMIN_EMAILS = ['d.elsafadi@growfood.pro', 'ya.fedorova@growfood.pro', 'stepakova@growfood.pro', 'yakovleva@growfood.pro', 's.fedorov@growfood.pro'];
+
+let currentUser = null;
+let isAdmin = false;
+let myRecruiter = null;
 let allRows = [];
 let currentTab = 0;
 let editingRowId = null;
 let sortCol = 'date'; let sortDir = 1;
 let filters = {dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:''};
+
+// AUTH
+async function doLogin() {
+  const email = document.getElementById('lEmail').value.trim();
+  const pass = document.getElementById('lPass').value;
+  document.getElementById('loginErr').classList.add('hidden');
+  const {data, error} = await sb.auth.signInWithPassword({email, password: pass});
+  if (error) { document.getElementById('loginErr').classList.remove('hidden'); return; }
+  initUser(data.user);
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  currentUser = null;
+  document.getElementById('appWrap').classList.add('hidden');
+  document.getElementById('loginWrap').classList.remove('hidden');
+}
+
+function initUser(user) {
+  currentUser = user;
+  isAdmin = ADMIN_EMAILS.includes(user.email);
+  myRecruiter = EMAIL_MAP[user.email] || user.email;
+  document.getElementById('userEmail').textContent = myRecruiter;
+  document.getElementById('loginWrap').classList.add('hidden');
+  document.getElementById('appWrap').classList.remove('hidden');
+  // если не админ — сразу на свою вкладку
+  if (!isAdmin) {
+    currentTab = ALL_RECRUITERS.indexOf(myRecruiter);
+    if (currentTab < 0) currentTab = 0;
+  }
+  loadData();
+  // realtime
+  sb.channel('candidates').on('postgres_changes', {event:'*', schema:'public', table:'candidates'}, () => loadData()).subscribe();
+}
+
+// проверить сессию при загрузке
+sb.auth.getSession().then(({data}) => {
+  if (data.session) initUser(data.session.user);
+});
 
 function syncStatus(state, msg) {
   const el = document.getElementById('syncStatus');
@@ -158,16 +239,11 @@ function syncStatus(state, msg) {
 async function loadData() {
   syncStatus('loading', 'загрузка...');
   const {data, error} = await sb.from('candidates').select('*').order('date', {ascending: true});
-  if (error) { syncStatus('err', 'ошибка подключения'); return; }
+  if (error) { syncStatus('err', 'ошибка'); return; }
   allRows = data || [];
   syncStatus('ok', '● онлайн');
   render();
 }
-
-// realtime
-sb.channel('candidates').on('postgres_changes', {event:'*', schema:'public', table:'candidates'}, () => {
-  loadData();
-}).subscribe();
 
 function render() {
   renderTabs();
@@ -177,13 +253,24 @@ function render() {
   renderTable(rows);
 }
 
+function getVisibleRecruiters() {
+  if (isAdmin) return ALL_RECRUITERS;
+  return [myRecruiter];
+}
+
 function renderTabs() {
-  document.getElementById('tabsWrap').innerHTML = RECRUITERS.map((r,i) =>
+  const recs = getVisibleRecruiters();
+  if (recs.length === 1) {
+    document.getElementById('tabsWrap').innerHTML = `<div class="tab active">${recs[0]}</div>`;
+    return;
+  }
+  document.getElementById('tabsWrap').innerHTML = recs.map((r,i) =>
     `<div class="tab ${i===currentTab?'active':''}" onclick="switchTab(${i})">${r}</div>`
   ).join('');
 }
 
 function renderFiltersBar() {
+  const canAdd = isAdmin || myRecruiter === getVisibleRecruiters()[currentTab];
   document.getElementById('filtersBar').innerHTML = `
     <div class="filter-group"><label>С</label><input type="date" value="${filters.dateFrom}" onchange="filters.dateFrom=this.value;render()"></div>
     <div class="filter-group"><label>По</label><input type="date" value="${filters.dateTo}" onchange="filters.dateTo=this.value;render()"></div>
@@ -214,12 +301,13 @@ function renderFiltersBar() {
       </select>
     </div>
     <button class="btn-clear" onclick="clearFilters()">Сбросить</button>
-    <button class="btn-add-row" onclick="openModal()">+ Запись</button>
+    ${canAdd ? `<button class="btn-add-row" onclick="openModal()">+ Запись</button>` : ''}
   `;
 }
 
 function filteredRows() {
-  const rec = RECRUITERS[currentTab];
+  const recs = getVisibleRecruiters();
+  const rec = recs[currentTab] || recs[0];
   return allRows.filter(r => {
     if (r.recruiter !== rec) return false;
     if (filters.dateFrom && r.date < filters.dateFrom) return false;
@@ -229,10 +317,7 @@ function filteredRows() {
     if (filters.status && r.status !== filters.status) return false;
     if (filters.city && r.city !== filters.city) return false;
     return true;
-  }).sort((a,b) => {
-    let va=a[sortCol]||'', vb=b[sortCol]||'';
-    return va<vb?-sortDir:va>vb?sortDir:0;
-  });
+  }).sort((a,b) => { let va=a[sortCol]||'',vb=b[sortCol]||''; return va<vb?-sortDir:va>vb?sortDir:0; });
 }
 
 function renderStats(rows) {
@@ -269,7 +354,7 @@ function esc(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 function daBadge(v){if(v==='да')return'<span class="badge badge-yes">Да</span>';if(v==='нет')return'<span class="badge badge-no">Нет</span>';if(v==='думает')return'<span class="badge badge-think">Думает</span>';return'<span class="badge badge-empty">—</span>';}
 function setSort(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}render();}
 function clearFilters(){filters={dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:''};render();}
-function switchTab(i){currentTab=i;render();}
+function switchTab(i){currentTab=i;filters={dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:''};render();}
 
 function openModal() {
   editingRowId=null;
@@ -303,31 +388,22 @@ function openEditModal(id) {
 function closeModal(){document.getElementById('modalBg').classList.remove('open');}
 
 async function saveRow() {
-  const rec=RECRUITERS[currentTab];
+  const recs = getVisibleRecruiters();
+  const rec = recs[currentTab] || recs[0];
   const data={recruiter:rec,date:document.getElementById('fDate').value,time:document.getElementById('fTime').value,fio:document.getElementById('fFio').value,tel:document.getElementById('fTel').value,okrug:document.getElementById('fOkrug').value,da:document.getElementById('fDa').value,status:document.getElementById('fStatus').value,jur:document.getElementById('fJur').value,city:document.getElementById('fCity').value,comment:document.getElementById('fComment').value};
-  if(editingRowId){
-    await sb.from('candidates').update(data).eq('id',editingRowId);
-  } else {
-    await sb.from('candidates').insert(data);
-  }
-  closeModal();
-  await loadData();
+  if(editingRowId){ await sb.from('candidates').update(data).eq('id',editingRowId); }
+  else { await sb.from('candidates').insert(data); }
+  closeModal(); await loadData();
 }
 
 async function deleteRow() {
   if(!editingRowId)return;
   if(!confirm('Удалить запись?'))return;
   await sb.from('candidates').delete().eq('id',editingRowId);
-  closeModal();
-  await loadData();
+  closeModal(); await loadData();
 }
 
-function openAddRecruiter(){alert('Для добавления рекрутера обратитесь к администратору CRM.');}
-function closeRecModal(){document.getElementById('recModalBg').classList.remove('open');}
-
 document.getElementById('modalBg').addEventListener('click',function(e){if(e.target===this)closeModal();});
-
-loadData();
 </script>
 </body>
 </html>
