@@ -195,6 +195,7 @@ tr:hover td{background:#f9f9f9}
     <div class="logo">HR GF</div>
     <span class="sync-pill sync-loading" id="syncStatus">загрузка...</span>
     <div class="topbar-right">
+      <span id="queueBadge" style="display:none;font-size:11px;background:#fff3cd;color:#856404;padding:3px 8px;border-radius:20px;font-weight:500"></span>
       <button class="avatar-btn" id="avatarBtn"></button>
       <span class="user-name" id="userName"></span>
       <button class="btn-out" id="logoutBtn">Выйти</button>
@@ -274,6 +275,26 @@ const SURL='https://orffvetweovwgowtprsv.supabase.co';
 const SKEY='sb_publishable_NaTVWE-doecU4Au19gFLdg__qGD-fpH';
 const sb=supabase.createClient(SURL,SKEY);
 
+// ---- OFFLINE QUEUE ----
+const QKEY='hrcrm_queue';
+function getQueue(){try{return JSON.parse(localStorage.getItem(QKEY)||'[]')}catch{return[]}}
+function saveQueue(q){localStorage.setItem(QKEY,JSON.stringify(q))}
+function addToQueue(op){const q=getQueue();q.push({...op,id:Date.now().toString(36)+Math.random().toString(36).slice(2)});saveQueue(q);showQueueBadge()}
+function showQueueBadge(){const q=getQueue();const el=document.getElementById('queueBadge');if(el){el.textContent=q.length?`📤 ${q.length} не синхр.`:'';el.style.display=q.length?'block':'none'}}
+
+async function syncQueue(){
+  const q=getQueue();if(!q.length)return;
+  const done=[];
+  for(const op of q){
+    try{
+      if(op.type==='insert'){const{error}=await sb.from('candidates').insert(op.data);if(!error)done.push(op.id)}
+      if(op.type==='update'){const{error}=await sb.from('candidates').update(op.data).eq('id',op.rowId);if(!error)done.push(op.id)}
+      if(op.type==='delete'){const{error}=await sb.from('candidates').delete().eq('id',op.rowId);if(!error)done.push(op.id)}
+    }catch(e){}
+  }
+  if(done.length){saveQueue(getQueue().filter(op=>!done.includes(op.id)));showQueueBadge();if(done.length>0)await loadData();}
+}
+
 const EMAP={
   'osipova@growfood.pro':'Осипова А.',
   'nasedko@growfood.pro':'Наседко Е.',
@@ -338,6 +359,8 @@ function initUser(user){
   updatePresence();setInterval(updatePresence,30000);
   sb.channel('c1').on('postgres_changes',{event:'*',schema:'public',table:'candidates'},()=>loadData()).subscribe();
   sb.channel('c2').on('postgres_changes',{event:'*',schema:'public',table:'user_presence'},()=>renderPresence()).subscribe();
+  // периодически пробуем синхронизировать очередь
+  setInterval(syncQueue,30000);
 }
 
 sb.auth.getSession().then(({data})=>{if(data?.session)initUser(data.session.user)});
@@ -381,9 +404,20 @@ function fmtAgo(s){if(s<60)return'только что';if(s<3600)return Math.flo
 // ---- DATA ----
 async function loadData(){
   setSyncing('loading','загрузка...');
-  const{data,error}=await sb.from('candidates').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:true});
-  if(error){setSyncing('err','ошибка');return}
-  rows=data||[];setSyncing('ok','● онлайн');render();
+  try{
+    const{data,error}=await sb.from('candidates').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:true});
+    if(error)throw error;
+    rows=data||[];
+    localStorage.setItem('hrcrm_cache',JSON.stringify(rows));
+    setSyncing('ok','● онлайн');
+    await syncQueue();
+  }catch(e){
+    // офлайн — грузим кеш
+    const cached=localStorage.getItem('hrcrm_cache');
+    if(cached){rows=JSON.parse(cached);setSyncing('err','● офлайн (кеш)');}
+    else{rows=[];setSyncing('err','● офлайн');}
+  }
+  showQueueBadge();render();
 }
 
 function render(){renderTabs();renderFilters();const fr=filtered();renderStats(fr);renderTable(fr);renderCards(fr)}
@@ -575,13 +609,23 @@ document.getElementById('saveBtn').onclick=async function(){
   };
   if(!d.fio){alert('Введите ФИО');return}
   this.textContent='Сохраняю...';this.disabled=true;
-  let err;
-  if(editId){const res=await sb.from('candidates').update(d).eq('id',editId);err=res.error}
-  else{const res=await sb.from('candidates').insert(d);err=res.error}
+  let saved=false;
+  if(editId){
+    const{error}=await sb.from('candidates').update(d).eq('id',editId);
+    if(!error){saved=true}else{addToQueue({type:'update',data:d,rowId:editId});saved=true;}
+  }else{
+    const{error}=await sb.from('candidates').insert(d);
+    if(!error){saved=true}else{
+      // сохраняем локально с временным id
+      const tempRow={...d,id:'temp_'+Date.now(),sort_order:0,created_at:new Date().toISOString()};
+      const cached=JSON.parse(localStorage.getItem('hrcrm_cache')||'[]');
+      cached.push(tempRow);localStorage.setItem('hrcrm_cache',JSON.stringify(cached));
+      addToQueue({type:'insert',data:d});
+      rows=cached;saved=true;
+    }
+  }
   this.textContent='Сохранить';this.disabled=false;
-  if(err){alert('Ошибка: '+err.message);return}
-  document.getElementById('modalBg').classList.remove('open');
-  await loadData();
+  if(saved){document.getElementById('modalBg').classList.remove('open');await loadData();}
 };
 
 document.getElementById('delBtn').onclick=async function(){
