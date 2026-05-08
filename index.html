@@ -406,15 +406,19 @@ async function loadData(){
   setSyncing('loading','загрузка...');
   try{
     const from=F.from||td();const to=F.to||td();
-    const{data,error}=await sb.from('candidates').select('*').gte('date',from).lte('date',to).order('sort_order',{ascending:true}).order('created_at',{ascending:true}).limit(5000);
+    const{data,error}=await sb.from('candidates').select('*')
+      .gte('date',from).lte('date',to)
+      .order('date',{ascending:false})
+      .order('created_at',{ascending:false})
+      .limit(5000);
     if(error)throw error;
     rows=data||[];
-    localStorage.setItem('hrcrm_cache',JSON.stringify(rows));
+    localStorage.setItem('hrcrm_cache_'+from+'_'+to,JSON.stringify(rows));
     setSyncing('ok','● онлайн');
     await syncQueue();
   }catch(e){
-    // офлайн — грузим кеш
-    const cached=localStorage.getItem('hrcrm_cache');
+    const from=F.from||td();const to=F.to||td();
+    const cached=localStorage.getItem('hrcrm_cache_'+from+'_'+to);
     if(cached){rows=JSON.parse(cached);setSyncing('err','● офлайн (кеш)');}
     else{rows=[];setSyncing('err','● офлайн');}
   }
@@ -428,7 +432,7 @@ function renderTabs(){
   document.getElementById('tabsWrap').innerHTML=recs.map((r,i)=>
     `<div class="tab${i===tab?' active':''}" data-i="${i}">${r}<span class="pdot" data-rec="${r}"></span></div>`
   ).join('');
-  document.querySelectorAll('.tab').forEach(t=>{t.onclick=()=>{tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};render()}});
+  document.querySelectorAll('.tab').forEach(t=>{t.onclick=()=>{tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};loadData()}});
   renderPresence();
 }
 
@@ -469,13 +473,13 @@ function renderFilters(){
     </div>
   `;
   document.getElementById('fFio2').oninput=e=>{F.fio=e.target.value;render()};
-  document.getElementById('fFrom').onchange=e=>{F.from=e.target.value;render()};
-  document.getElementById('fTo').onchange=e=>{F.to=e.target.value;render()};
+  document.getElementById('fFrom').onchange=e=>{F.from=e.target.value;loadData()};
+  document.getElementById('fTo').onchange=e=>{F.to=e.target.value;loadData()};
   document.getElementById('fOkr').onchange=e=>{F.okrug=e.target.value;render()};
   document.getElementById('fDa2').onchange=e=>{F.da=e.target.value;render()};
   document.getElementById('fSt2').onchange=e=>{F.status=e.target.value;render()};
   document.getElementById('fCi2').onchange=e=>{F.city=e.target.value;render()};
-  document.getElementById('resetBtn').onclick=()=>{F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};render()};
+  document.getElementById('resetBtn').onclick=()=>{F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};loadData()};
   if(canAdd)document.getElementById('newBtn').onclick=openModal;
 }
 
