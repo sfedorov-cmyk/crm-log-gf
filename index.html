@@ -599,8 +599,16 @@ function closeModal(){document.getElementById('modalBg').classList.remove('open'
 async function saveRow(){
   const rec=getRecruiters()[currentTab]||getRecruiters()[0];
   const data={recruiter:rec,date:document.getElementById('fDate').value,time:document.getElementById('fTime').value,fio:document.getElementById('fFio').value,tel:document.getElementById('fTel').value,okrug:document.getElementById('fOkrug').value,da:document.getElementById('fDa').value,status:document.getElementById('fStatus').value,jur:document.getElementById('fJur').value,city:document.getElementById('fCity').value,comment:document.getElementById('fComment').value};
-  if(editingRowId){await sb.from('candidates').update(data).eq('id',editingRowId);}
-  else{await sb.from('candidates').insert(data);}
+  if(!data.fio){alert('Введите ФИО!');return;}
+  let error;
+  if(editingRowId){
+    const res=await sb.from('candidates').update(data).eq('id',editingRowId);
+    error=res.error;
+  } else {
+    const res=await sb.from('candidates').insert(data);
+    error=res.error;
+  }
+  if(error){alert('Ошибка сохранения: '+error.message);return;}
   closeModal();await loadData();
 }
 
