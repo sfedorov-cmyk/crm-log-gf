@@ -202,6 +202,7 @@ tr:hover td{background:#f9f9f9}
     </div>
   </div>
   <div class="tabs-wrap" id="tabsWrap"></div>
+  <div id="offlineBanner" style="display:none;padding:8px 16px;font-size:12px;font-weight:500;text-align:center;flex-shrink:0"></div>
   <div class="filters" id="filtersBar"></div>
   <div class="stats-bar" id="statsBar"></div>
   <div class="table-wrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
@@ -277,23 +278,78 @@ const sb=supabase.createClient(SURL,SKEY);
 
 // ---- OFFLINE QUEUE ----
 const QKEY='hrcrm_queue';
+let isOnline=navigator.onLine;
+let syncTimer=null;
+
 function getQueue(){try{return JSON.parse(localStorage.getItem(QKEY)||'[]')}catch{return[]}}
 function saveQueue(q){localStorage.setItem(QKEY,JSON.stringify(q))}
-function addToQueue(op){const q=getQueue();q.push({...op,id:Date.now().toString(36)+Math.random().toString(36).slice(2)});saveQueue(q);showQueueBadge()}
-function showQueueBadge(){const q=getQueue();const el=document.getElementById('queueBadge');if(el){el.textContent=q.length?`📤 ${q.length} не синхр.`:'';el.style.display=q.length?'block':'none'}}
+
+function addToQueue(op){
+  const q=getQueue();
+  q.push({...op,qid:Date.now().toString(36)+Math.random().toString(36).slice(2),ts:new Date().toISOString()});
+  saveQueue(q);
+  showOfflineBanner();
+}
+
+function showOfflineBanner(){
+  const q=getQueue();
+  let banner=document.getElementById('offlineBanner');
+  if(!banner)return;
+  if(!isOnline){
+    banner.innerHTML='🔴 Офлайн режим — изменения сохранены локально и синхронизируются при подключении';
+    banner.style.display='block';
+    banner.style.background='#fff3cd';
+    banner.style.color='#856404';
+  } else if(q.length>0){
+    banner.innerHTML=`🔄 Синхронизация... (${q.length} записей)`;
+    banner.style.display='block';
+    banner.style.background='#cfe2ff';
+    banner.style.color='#084298';
+  } else {
+    banner.style.display='none';
+  }
+  const el=document.getElementById('queueBadge');
+  if(el){el.textContent=q.length?`📤 ${q.length}`:'';el.style.display=q.length?'block':'none';}
+}
 
 async function syncQueue(){
-  const q=getQueue();if(!q.length)return;
+  const q=getQueue();if(!q.length){showOfflineBanner();return;}
+  showOfflineBanner();
   const done=[];
   for(const op of q){
     try{
-      if(op.type==='insert'){const{error}=await sb.from('candidates').insert(op.data);if(!error)done.push(op.id)}
-      if(op.type==='update'){const{error}=await sb.from('candidates').update(op.data).eq('id',op.rowId);if(!error)done.push(op.id)}
-      if(op.type==='delete'){const{error}=await sb.from('candidates').delete().eq('id',op.rowId);if(!error)done.push(op.id)}
+      if(op.type==='insert'){const{error}=await sb.from('candidates').insert(op.data);if(!error)done.push(op.qid)}
+      if(op.type==='update'){const{error}=await sb.from('candidates').update(op.data).eq('id',op.rowId);if(!error)done.push(op.qid)}
+      if(op.type==='delete'){const{error}=await sb.from('candidates').delete().eq('id',op.rowId);if(!error)done.push(op.qid)}
     }catch(e){}
   }
-  if(done.length){saveQueue(getQueue().filter(op=>!done.includes(op.id)));showQueueBadge();if(done.length>0)await loadData();}
+  if(done.length){
+    saveQueue(getQueue().filter(op=>!done.includes(op.qid)));
+    showOfflineBanner();
+    // показываем успех
+    if(!getQueue().length){
+      const banner=document.getElementById('offlineBanner');
+      if(banner){banner.innerHTML='✅ Синхронизация завершена!';banner.style.background='#d1e7dd';banner.style.color='#0a3622';setTimeout(()=>showOfflineBanner(),2000);}
+    }
+    await loadData();
+  }
 }
+
+// слушаем восстановление интернета
+window.addEventListener('online',()=>{
+  isOnline=true;
+  showOfflineBanner();
+  syncQueue();
+  loadData();
+});
+window.addEventListener('offline',()=>{
+  isOnline=false;
+  showOfflineBanner();
+});
+
+// периодическая синхронизация каждые 15 сек
+setInterval(()=>{if(isOnline&&getQueue().length)syncQueue();},15000);
+
 
 const EMAP={
   'osipova@growfood.pro':'Осипова А.',
@@ -404,8 +460,9 @@ function fmtAgo(s){if(s<60)return'только что';if(s<3600)return Math.flo
 // ---- DATA ----
 async function loadData(){
   setSyncing('loading','загрузка...');
+  const from=F.from||td();const to=F.to||td();
+  const cacheKey='hrcrm_cache_'+from+'_'+to;
   try{
-    const from=F.from||td();const to=F.to||td();
     const{data,error}=await sb.from('candidates').select('*')
       .gte('date',from).lte('date',to)
       .order('date',{ascending:false})
@@ -413,16 +470,21 @@ async function loadData(){
       .limit(5000);
     if(error)throw error;
     rows=data||[];
-    localStorage.setItem('hrcrm_cache_'+from+'_'+to,JSON.stringify(rows));
+    localStorage.setItem(cacheKey,JSON.stringify(rows));
+    isOnline=true;
     setSyncing('ok','● онлайн');
     await syncQueue();
   }catch(e){
-    const from=F.from||td();const to=F.to||td();
-    const cached=localStorage.getItem('hrcrm_cache_'+from+'_'+to);
-    if(cached){rows=JSON.parse(cached);setSyncing('err','● офлайн (кеш)');}
-    else{rows=[];setSyncing('err','● офлайн');}
+    isOnline=false;
+    const cached=localStorage.getItem(cacheKey);
+    if(cached){rows=JSON.parse(cached);setSyncing('err','● офлайн');}
+    else{
+      // пробуем найти любой кеш
+      rows=[];setSyncing('err','● офлайн');
+    }
+    showOfflineBanner();
   }
-  showQueueBadge();render();
+  render();
 }
 
 function render(){renderTabs();renderFilters();const fr=filtered();renderStats(fr);renderTable(fr);renderCards(fr)}
