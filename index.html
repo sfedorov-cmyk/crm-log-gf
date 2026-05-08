@@ -405,7 +405,8 @@ function fmtAgo(s){if(s<60)return'только что';if(s<3600)return Math.flo
 async function loadData(){
   setSyncing('loading','загрузка...');
   try{
-    const{data,error}=await sb.from('candidates').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:true});
+    const from=F.from||td();const to=F.to||td();
+    const{data,error}=await sb.from('candidates').select('*').gte('date',from).lte('date',to).order('sort_order',{ascending:true}).order('created_at',{ascending:true}).limit(5000);
     if(error)throw error;
     rows=data||[];
     localStorage.setItem('hrcrm_cache',JSON.stringify(rows));
