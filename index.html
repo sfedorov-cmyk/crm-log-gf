@@ -67,7 +67,7 @@ tr.selected td{background:#e8f5e9!important}
 .card.selected{border:2px solid var(--accent)}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
 .card-name{font-size:15px;font-weight:600}.card-time{font-size:12px;color:var(--muted)}
-.card-tel{font-size:13px;color:var(--blue);margin-bottom:8px}
+.card-tel{font-size:13px;color:var(--blue);margin-bottom:8px;cursor:pointer}
 .card-chips{display:flex;gap:5px;flex-wrap:wrap}.card-comment{font-size:12px;color:var(--muted);margin-top:6px}
 .card-check{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
 .card.selected .card-check{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -109,6 +109,11 @@ tr.selected td{background:#e8f5e9!important}
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
 .hidden{display:none!important}
 input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+/* поле телефона с префиксом */
+.tel-wrap{display:flex;align-items:stretch;border:1.5px solid var(--border);border-radius:var(--rs);overflow:hidden;background:var(--bg);transition:border-color .2s}
+.tel-wrap:focus-within{border-color:var(--accent)}
+.tel-prefix{font-size:14px;font-weight:500;color:var(--text);padding:10px 10px;background:#e8e8ed;border-right:1px solid var(--border);white-space:nowrap;display:flex;align-items:center;user-select:none}
+.tel-input{border:none!important;border-radius:0!important;background:var(--bg)!important;flex:1;padding:10px 12px;font-family:inherit;font-size:14px;color:var(--text);outline:none}
 @media(max-width:599px){.table-wrap{display:none}.cards-wrap{display:flex}}
 </style>
 </head>
@@ -156,15 +161,20 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
     <div class="form-grid">
       <div class="fg"><label>Дата</label><input type="date" id="fDate" readonly></div>
       <div class="fg"><label>Время</label><input type="time" id="fTime" readonly></div>
-      <div class="fg full"><label>ФИО</label><input type="text" id="fFio" placeholder="Иванов Иван Иванович"></div>
-      <div class="fg"><label>Телефон</label><input type="tel" id="fTel" placeholder="7 (900) 000-00-00"></div>
-      <div class="fg"><label>Округ</label>
+      <div class="fg full"><label>ФИО *</label><input type="text" id="fFio" placeholder="Иванов Иван Иванович"></div>
+      <div class="fg"><label>Телефон *</label>
+        <div class="tel-wrap">
+          <span class="tel-prefix">+7</span>
+          <input type="tel" id="fTel" class="tel-input" placeholder="900 000-00-00" maxlength="15" oninput="this.value=this.value.replace(/[^0-9\s\-\(\)]/g,'')">
+        </div>
+      </div>
+      <div class="fg"><label>Округ *</label>
         <select id="fOkrug"><option value="">—</option>
           <optgroup label="Санкт-Петербург"><option>СПБ : СЗ</option><option>СПБ : СВ</option><option>СПБ : ВОСТОК</option><option>СПБ : ЮВ</option><option>СПБ : ЮЗ</option></optgroup>
           <optgroup label="Москва"><option>МСК : САО</option><option>МСК : СВАО</option><option>МСК : СЗАО</option><option>МСК : ВАО</option><option>МСК : ЮАО</option><option>МСК : ЮВАО</option><option>МСК : ЮЗАО</option><option>МСК : ЗАО</option></optgroup>
         </select>
       </div>
-      <div class="fg"><label>Да/Нет</label><select id="fDa"><option value="">—</option><option value="да">Да</option><option value="нет">Нет</option><option value="думает">Думает</option></select></div>
+      <div class="fg"><label>Да/Нет *</label><select id="fDa"><option value="">—</option><option value="да">Да</option><option value="нет">Нет</option><option value="думает">Думает</option></select></div>
       <div class="fg"><label>Статус</label><select id="fStatus"><option value="">—</option><option>думает</option><option>недозвон</option><option>отказ</option><option>принят</option><option>оформление</option><option>стажировка</option><option>резерв</option><option>жду доки</option><option>проверка СБ</option><option>передан в логистику</option></select></div>
       <div class="fg"><label>Юр. Статус</label><select id="fJur"><option value="">—</option><option>СМЗ</option><option>ИП</option><option>ТД</option><option>ГПХ</option></select></div>
       <div class="fg"><label>Город</label><select id="fCity"><option value="">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Нижний Новгород</option><option>Воронеж</option><option>Другой</option></select></div>
@@ -243,6 +253,16 @@ function daBadge(v){if(v==='да')return'<span class="chip c-da-yes">Да</span>
 function stBadge(s){const c=sClass(s);return s?`<span class="chip c-${c}">${s}</span>`:'—'}
 function setSyncing(st,msg){const el=document.getElementById('syncStatus');el.className='sync-pill sync-'+st;el.textContent=msg}
 function nowDT(){const n=new Date();return{date:n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'),time:String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')}}
+// копирование телефона
+function copyPhone(tel){
+  if(!tel||tel==='—')return;
+  navigator.clipboard.writeText(tel).then(()=>{
+    const t=document.createElement('div');
+    t.textContent='📋 Номер скопирован';
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999';
+    document.body.appendChild(t);setTimeout(()=>t.remove(),2000);
+  }).catch(()=>{});
+}
 function toggleSelect(id){if(selected.has(id))selected.delete(id);else selected.add(id);updateBulkBar();renderTable(filtered());renderCards(filtered())}
 function selectAll(fr){fr.forEach(r=>selected.add(r.id));updateBulkBar();renderTable(fr);renderCards(fr)}
 function clearSelection(){selected.clear();updateBulkBar();renderTable(filtered());renderCards(filtered())}
@@ -310,7 +330,7 @@ function renderTabs(){
   let tabs=recs.map((r,i)=>`<div class="tab${!dashMode&&i===tab?' active':''}" data-i="${i}">${r}<span class="pdot" data-rec="${r}"></span></div>`).join('');
   if(isAdmin)tabs+=`<div class="tab${dashMode?' active':''}" data-dash="1">📊 Дашборд</div>`;
   document.getElementById('tabsWrap').innerHTML=tabs;
-  document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};clearSelection();loadData()}});
+  document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()}});
   const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=()=>{dashMode=true;clearSelection();render();};
   renderPresence();
 }
@@ -354,7 +374,7 @@ function renderFilters(){
   document.getElementById('filtersBar').innerHTML=`
     <div class="frow">
       <span class="flabel">ФИО</span><input class="finput finput-wide" type="text" value="${esc(F.fio)}" placeholder="Поиск..." id="fFio2">
-      <span class="flabel">Тел</span><input class="finput" type="text" value="${esc(F.tel||'')}" placeholder="+7..." id="fTel2" style="width:110px">
+      <span class="flabel">Тел</span><input class="finput" type="text" value="${esc(F.tel||'')}" placeholder="Номер..." id="fTel2" style="width:110px">
       <span class="flabel">С</span><input class="finput finput-date" type="date" value="${F.from}" id="fFrom">
       <span class="flabel">По</span><input class="finput finput-date" type="date" value="${F.to}" id="fTo">
     </div>
@@ -378,7 +398,7 @@ function renderFilters(){
   document.getElementById('fDa2').onchange=e=>{F.da=e.target.value;render()};
   document.getElementById('fSt2').onchange=e=>{F.status=e.target.value;render()};
   document.getElementById('fCi2').onchange=e=>{F.city=e.target.value;render()};
-  document.getElementById('resetBtn').onclick=()=>{F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};clearSelection();loadData()};
+  document.getElementById('resetBtn').onclick=()=>{F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()};
   if(canAdd)document.getElementById('newBtn').onclick=openModal;
 }
 function filtered(){
@@ -386,20 +406,11 @@ function filtered(){
   return rows.filter(r=>{
     if(r.recruiter!==rec)return false;
     if(F.fio&&!r.fio?.toLowerCase().includes(F.fio.toLowerCase()))return false;
-    if(F.tel&&!r.tel?.replace(/\s/g,'').includes(F.tel.replace(/\s/g,'')))return false;
+    if(F.tel&&!r.tel?.replace(/\D/g,'').includes(F.tel.replace(/\D/g,'')))return false;
     if(F.from&&r.date<F.from)return false;if(F.to&&r.date>F.to)return false;
     if(F.okrug&&r.okrug!==F.okrug)return false;if(F.da&&r.da!==F.da)return false;
     if(F.status&&r.status!==F.status)return false;if(F.city&&r.city!==F.city)return false;
     return true;
-  });
-}
-function copyPhone(tel){
-  const clean=tel.replace(/\s/g,'');
-  navigator.clipboard.writeText(clean).then(()=>{
-    const toast=document.createElement('div');
-    toast.textContent='📋 Номер скопирован';
-    toast.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;animation:fadeIn .2s';
-    document.body.appendChild(toast);setTimeout(()=>toast.remove(),2000);
   });
 }
 function renderStats(fr){
@@ -417,7 +428,7 @@ function renderTable(fr){
       <td><span class="drag-handle">⠿</span></td>
       <td>${fd(r.date)}</td><td>${r.time||'—'}</td>
       <td style="font-weight:600;min-width:140px">${r.fio||'—'}</td>
-      <td style="white-space:nowrap;cursor:pointer;color:var(--blue)" onclick="copyPhone('${r.tel||''}')" title="Нажмите чтобы скопировать">${r.tel||'—'}</td>
+      <td style="white-space:nowrap;cursor:pointer;color:var(--blue)" onclick="copyPhone('${esc(r.tel||'')}')" title="Нажмите чтобы скопировать">${r.tel||'—'}</td>
       <td style="white-space:nowrap">${r.okrug||'—'}</td>
       <td>${daBadge(r.da)}</td><td>${stBadge(r.status)}</td>
       <td>${r.jur||'—'}</td><td>${r.city||'—'}</td>
@@ -434,7 +445,7 @@ function renderCards(fr){
       <div class="card-check" onclick="event.stopPropagation();toggleSelect('${r.id}')">${chk?'✓':''}</div>
       <div onclick="openEdit('${r.id}')">
         <div class="card-top"><div class="card-name">${r.fio||'—'}</div><div class="card-time">${fd(r.date)} ${r.time||''}</div></div>
-        <div class="card-tel">${r.tel||'—'}</div>
+        <div class="card-tel" onclick="event.stopPropagation();copyPhone('${esc(r.tel||'')}')" title="Нажмите чтобы скопировать">${r.tel||'—'}</div>
         <div class="card-chips">${r.okrug?`<span class="chip c-empty">${r.okrug}</span>`:''}${daBadge(r.da)}${stBadge(r.status)}${r.jur?`<span class="chip c-empty">${r.jur}</span>`:''}${r.city?`<span class="chip c-empty">${r.city}</span>`:''}</div>
         ${r.comment?`<div class="card-comment">${r.comment}</div>`:''}
       </div>
@@ -451,7 +462,7 @@ function initDrag(){
 function openModal(){
   editId=null;document.getElementById('modalTitle').textContent='Новая запись';document.getElementById('delBtn').classList.add('hidden');
   const dt=nowDT();document.getElementById('fDate').value=dt.date;document.getElementById('fTime').value=dt.time;
-  ['fFio','fTel','fComment'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fFio').value='';document.getElementById('fTel').value='';document.getElementById('fComment').value='';
   ['fOkrug','fDa','fStatus','fJur','fCity'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('modalBg').classList.add('open');setTimeout(()=>document.getElementById('fFio').focus(),300);
 }
@@ -459,7 +470,9 @@ function openEdit(id){
   const r=rows.find(x=>x.id===id);if(!r)return;editId=id;
   document.getElementById('modalTitle').textContent='Редактировать';document.getElementById('delBtn').classList.remove('hidden');
   document.getElementById('fDate').value=r.date||'';document.getElementById('fTime').value=r.time||'';
-  document.getElementById('fFio').value=r.fio||'';document.getElementById('fTel').value=r.tel||'';
+  document.getElementById('fFio').value=r.fio||'';
+  // при редактировании показываем номер без +7 если он начинается с +7
+  const tel=r.tel||'';document.getElementById('fTel').value=tel.startsWith('+7')?tel.slice(2):tel;
   document.getElementById('fOkrug').value=r.okrug||'';document.getElementById('fDa').value=r.da||'';
   document.getElementById('fStatus').value=r.status||'';document.getElementById('fJur').value=r.jur||'';
   document.getElementById('fCity').value=r.city||'';document.getElementById('fComment').value=r.comment||'';
@@ -469,8 +482,24 @@ document.getElementById('cancelBtn').onclick=()=>document.getElementById('modalB
 document.getElementById('modalBg').onclick=function(e){if(e.target===this)this.classList.remove('open')};
 document.getElementById('saveBtn').onclick=async function(){
   const rec=getRecs()[tab]||getRecs()[0];
-  const d={recruiter:rec,date:document.getElementById('fDate').value,time:document.getElementById('fTime').value,fio:document.getElementById('fFio').value.trim(),tel:document.getElementById('fTel').value.trim(),okrug:document.getElementById('fOkrug').value,da:document.getElementById('fDa').value,status:document.getElementById('fStatus').value,jur:document.getElementById('fJur').value,city:document.getElementById('fCity').value,comment:document.getElementById('fComment').value.trim()};
-  if(!d.fio){alert('Введите ФИО');return}
+  const telRaw=document.getElementById('fTel').value.trim();
+  const d={
+    recruiter:rec,
+    date:document.getElementById('fDate').value,
+    time:document.getElementById('fTime').value,
+    fio:document.getElementById('fFio').value.trim(),
+    tel:telRaw?'+7'+telRaw.replace(/^\+?7?/,''):'' ,
+    okrug:document.getElementById('fOkrug').value,
+    da:document.getElementById('fDa').value,
+    status:document.getElementById('fStatus').value,
+    jur:document.getElementById('fJur').value,
+    city:document.getElementById('fCity').value,
+    comment:document.getElementById('fComment').value.trim()
+  };
+  if(!d.fio){alert('⚠️ Введите ФИО');document.getElementById('fFio').focus();return}
+  if(!telRaw){alert('⚠️ Введите телефон');document.getElementById('fTel').focus();return}
+  if(!d.okrug){alert('⚠️ Выберите округ');document.getElementById('fOkrug').focus();return}
+  if(!d.da){alert('⚠️ Укажите Да/Нет');document.getElementById('fDa').focus();return}
   this.textContent='Сохраняю...';this.disabled=true;
   let saved=false;
   if(editId){const{error}=await sb.from('candidates').update(d).eq('id',editId);if(!error){saved=true}else{addToQueue({type:'update',data:d,rowId:editId});saved=true;}}
