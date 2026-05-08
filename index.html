@@ -207,6 +207,7 @@ tr:hover td{background:#f9f9f9}
   <div class="stats-bar" id="statsBar"></div>
   <div class="table-wrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
   <div class="cards-wrap" id="cardsWrap"></div>
+  <div id="dashWrap" style="display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column"></div>
 </div>
 
 <!-- Row Modal -->
@@ -487,7 +488,126 @@ async function loadData(){
   render();
 }
 
-function render(){renderTabs();renderFilters();const fr=filtered();renderStats(fr);renderTable(fr);renderCards(fr)}
+let dashMode=false;
+
+function renderTabs(){
+  const recs=getRecs();
+  let tabs=recs.map((r,i)=>
+    `<div class="tab${!dashMode&&i===tab?' active':''}" data-i="${i}">${r}<span class="pdot" data-rec="${r}"></span></div>`
+  ).join('');
+  if(isAdmin) tabs+=`<div class="tab${dashMode?' active':''}" data-dash="1" style="color:${dashMode?'#248a3d':''}">📊 Дашборд</div>`;
+  document.getElementById('tabsWrap').innerHTML=tabs;
+  document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};loadData()}});
+  const dashTab=document.querySelector('.tab[data-dash]');
+  if(dashTab)dashTab.onclick=()=>{dashMode=true;renderDashboard();render();};
+  renderPresence();
+}
+
+function render(){
+  renderTabs();
+  const dashWrap=document.getElementById('dashWrap');
+  const tableWrap=document.querySelector('.table-wrap');
+  const cardsWrap=document.getElementById('cardsWrap');
+  const filtersBar=document.getElementById('filtersBar');
+  const statsBar=document.getElementById('statsBar');
+  if(dashMode){
+    filtersBar.style.display='none';
+    statsBar.style.display='none';
+    if(tableWrap)tableWrap.style.display='none';
+    if(cardsWrap)cardsWrap.style.display='none';
+    if(dashWrap)dashWrap.style.display='flex';
+    renderDashboard();
+  } else {
+    filtersBar.style.display='';
+    statsBar.style.display='';
+    if(tableWrap)tableWrap.style.display='';
+    if(cardsWrap)cardsWrap.style.display='';
+    if(dashWrap)dashWrap.style.display='none';
+    renderFilters();const fr=filtered();renderStats(fr);renderTable(fr);renderCards(fr);
+  }
+}
+
+async function renderDashboard(){
+  const dashWrap=document.getElementById('dashWrap');
+  if(!dashWrap)return;
+  
+  // период для дашборда — последние 7 дней по умолчанию
+  const to=td();
+  const fromD=new Date();fromD.setDate(fromD.getDate()-6);
+  const from=fromD.getFullYear()+'-'+String(fromD.getMonth()+1).padStart(2,'0')+'-'+String(fromD.getDate()).padStart(2,'0');
+
+  dashWrap.innerHTML=`<div style="padding:16px;color:var(--muted);text-align:center">Загрузка дашборда...</div>`;
+  
+  const{data,error}=await sb.from('candidates').select('recruiter,status,da').gte('date',from).lte('date',to);
+  if(error||!data){dashWrap.innerHTML=`<div style="padding:16px;color:var(--muted)">Ошибка загрузки</div>`;return;}
+
+  const STATUSES=['думает','недозвон','отказ','принят','оформление','стажировка','резерв','жду доки','проверка СБ','передан в логистику'];
+  const STATUS_COLORS={'думает':'#eef2ff','недозвон':'#fff7ed','отказ':'#fef2f2','принят':'#f0fdf4','оформление':'#ecfeff','стажировка':'#faf5ff','резерв':'#ede9fe','жду доки':'#fdf2f8','проверка СБ':'#fefce8','передан в логистику':'#f0fdf4'};
+  const STATUS_TEXT={'думает':'#3730a3','недозвон':'#c2410c','отказ':'#b91c1c','принят':'#15803d','оформление':'#0e7490','стажировка':'#7e22ce','резерв':'#5b21b6','жду доки':'#9d174d','проверка СБ':'#854d0e','передан в логистику':'#166534'};
+
+  // группируем по рекрутеру
+  const stats={};
+  ALL_R.forEach(r=>{stats[r]={total:0,logistic:0,statuses:{}}});
+  data.forEach(row=>{
+    if(!stats[row.recruiter])return;
+    stats[row.recruiter].total++;
+    if(row.status==='передан в логистику')stats[row.recruiter].logistic++;
+    if(row.status)stats[row.recruiter].statuses[row.status]=(stats[row.recruiter].statuses[row.status]||0)+1;
+  });
+
+  // рейтинг по логистике
+  const rating=[...ALL_R].sort((a,b)=>stats[b].logistic-stats[a].logistic);
+  const maxLogistic=Math.max(...ALL_R.map(r=>stats[r].logistic),1);
+  const totalAll=data.length;
+
+  dashWrap.innerHTML=`
+    <div style="padding:12px 16px;width:100%;max-width:900px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="font-size:17px;font-weight:700">📊 Дашборд</div>
+        <div style="font-size:13px;color:var(--muted)">${fmtDashDate(from)} — ${fmtDashDate(to)}</div>
+        <div style="font-size:13px;background:#f0fdf4;color:#15803d;padding:4px 12px;border-radius:20px;font-weight:500">Всего анкет: ${totalAll}</div>
+      </div>
+
+      <!-- РЕЙТИНГ -->
+      <div style="background:var(--surface);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--sh)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px">🏆 Рейтинг по передаче в логистику</div>
+        ${rating.map((r,i)=>{
+          const pct=Math.round(stats[r].logistic/maxLogistic*100);
+          const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+          return`<div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:13px;font-weight:500">${medal} ${r}</span>
+              <span style="font-size:13px;font-weight:600;color:#15803d">${stats[r].logistic} <span style="font-weight:400;color:var(--muted);font-size:11px">(${stats[r].total?Math.round(stats[r].logistic/stats[r].total*100):0}%)</span></span>
+            </div>
+            <div style="background:#f2f2f7;border-radius:4px;height:6px;overflow:hidden">
+              <div style="background:#34c759;height:100%;width:${pct}%;border-radius:4px;transition:width .3s"></div>
+            </div>
+          </div>`}).join('')}
+      </div>
+
+      <!-- ПО РЕКРУТЕРАМ -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+        ${ALL_R.map(r=>{
+          const s=stats[r];
+          const pctYes=s.total?Math.round((s.statuses['принят']||0)/s.total*100):0;
+          return`<div style="background:var(--surface);border-radius:16px;padding:14px 16px;box-shadow:var(--sh)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div style="font-size:14px;font-weight:600">${r}</div>
+              <div style="font-size:20px;font-weight:700">${s.total}</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+              ${STATUSES.filter(st=>s.statuses[st]).map(st=>`
+                <span style="background:${STATUS_COLORS[st]};color:${STATUS_TEXT[st]};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">${st}: ${s.statuses[st]}</span>
+              `).join('')}
+            </div>
+            <div style="font-size:11px;color:var(--muted)">В логистику: <strong style="color:#15803d">${s.logistic}</strong> · Конверсия: <strong>${pctYes}%</strong></div>
+          </div>`}).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function fmtDashDate(d){if(!d)return'';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
 
 function renderTabs(){
   const recs=getRecs();
