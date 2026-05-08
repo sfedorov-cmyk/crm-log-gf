@@ -318,7 +318,7 @@ let CU=null,isAdmin=false,myRec=null;
 let rows=[],tab=0,editId=null,dragId=null;
 let F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};
 
-function td(){return new Date().toISOString().slice(0,10)}
+function td(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
 function fd(d){if(!d)return'—';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 function getRecs(){return isAdmin?ALL_R:[myRec]}
@@ -326,7 +326,7 @@ function sClass(s){return{думает:'dumaet',недозвон:'nedozvon',от
 function daBadge(v){if(v==='да')return'<span class="chip c-da-yes">Да</span>';if(v==='нет')return'<span class="chip c-da-no">Нет</span>';if(v==='думает')return'<span class="chip c-da-think">Думает</span>';return'<span class="chip c-empty">—</span>'}
 function stBadge(s){const c=sClass(s);return s?`<span class="chip c-${c}">${s}</span>`:'—'}
 function setSyncing(st,msg){const el=document.getElementById('syncStatus');el.className='sync-pill sync-'+st;el.textContent=msg}
-function nowDT(){const n=new Date();return{date:n.toISOString().slice(0,10),time:String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')}}
+function nowDT(){const n=new Date();return{date:n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'),time:String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')}}
 
 // ---- AUTH ----
 document.getElementById('loginBtn').onclick=async()=>{
