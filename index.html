@@ -499,7 +499,7 @@ function renderTabs(){
   document.getElementById('tabsWrap').innerHTML=tabs;
   document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};loadData()}});
   const dashTab=document.querySelector('.tab[data-dash]');
-  if(dashTab)dashTab.onclick=()=>{dashMode=true;renderDashboard();render();};
+  if(dashTab)dashTab.onclick=()=>{dashMode=true;render();};
   renderPresence();
 }
 
@@ -608,15 +608,6 @@ async function renderDashboard(){
 }
 
 function fmtDashDate(d){if(!d)return'';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
-
-function renderTabs(){
-  const recs=getRecs();
-  document.getElementById('tabsWrap').innerHTML=recs.map((r,i)=>
-    `<div class="tab${i===tab?' active':''}" data-i="${i}">${r}<span class="pdot" data-rec="${r}"></span></div>`
-  ).join('');
-  document.querySelectorAll('.tab').forEach(t=>{t.onclick=()=>{tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};loadData()}});
-  renderPresence();
-}
 
 function renderFilters(){
   const recs=getRecs();const canAdd=isAdmin||(myRec===recs[tab]);
