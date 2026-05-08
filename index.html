@@ -1,154 +1,14 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HR GF — Подбор курьеров</title>
-<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#f5f4f0;--surface:#fff;--border:#e0ddd5;--text:#1a1a1a;--muted:#888;--accent:#1a7a4a;--yes:#1a7a4a;--yes-bg:#e6f5ed;--no:#b94040;--no-bg:#fdeaea;--pending:#7a5c1a;--pending-bg:#fdf3e0;}
-body,html{font-family:'Golos Text',sans-serif;background:var(--bg);color:var(--text);font-size:13px;height:100%}
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;}
-.login-box{background:#fff;border:1px solid var(--border);border-radius:16px;padding:40px;width:360px;max-width:95vw;}
-.login-logo{font-size:22px;font-weight:600;color:var(--accent);margin-bottom:8px;}
-.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
-.login-group{margin-bottom:16px;}
-.login-group label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:6px;}
-.login-group input{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Golos Text',sans-serif;font-size:14px;color:var(--text);outline:none;}
-.login-group input:focus{border-color:var(--accent);}
-.login-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Golos Text',sans-serif;margin-top:8px;}
-.login-btn:hover{opacity:.88;}
-.login-err{color:#b94040;font-size:12px;margin-top:8px;text-align:center;}
-.login-welcome{color:#1a7a4a;font-size:13px;font-weight:500;margin-top:12px;text-align:center;padding:10px;background:#e6f5ed;border-radius:8px;}
-.app{display:flex;flex-direction:column;height:100vh}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;flex-shrink:0}
-.logo{font-size:14px;font-weight:600;color:var(--accent);padding:12px 16px 12px 0;border-right:1px solid var(--border);margin-right:4px;white-space:nowrap}
-.sync-status{font-size:11px;padding:3px 10px;border-radius:20px;margin-left:12px}
-.sync-ok{background:#e6f5ed;color:#1a7a4a}.sync-err{background:#fdeaea;color:#b94040}.sync-loading{background:#fdf3e0;color:#7a5c1a}
-.user-info{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
-.avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);cursor:pointer;}
-.avatar-placeholder{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;}
-.btn-logout{font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}
-.btn-logout:hover{color:#b94040;border-color:#b94040}
-.tabs-wrap{display:flex;gap:0;overflow-x:auto;}
-.tab{padding:12px 14px;font-size:12px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;color:var(--muted);transition:color .15s,border-color .15s}
-.tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.filters{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0}
-.filter-group{display:flex;align-items:center;gap:6px}
-.filter-group label{font-size:11px;color:var(--muted);white-space:nowrap}
-.filters input[type=date],.filters select{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'Golos Text',sans-serif;font-size:12px;background:#fff;color:var(--text);outline:none}
-.filters input[type=date]:focus,.filters select:focus{border-color:var(--accent)}
-.btn-clear{font-size:12px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}
-.btn-clear:hover{color:var(--text);border-color:#aaa}
-.btn-add-row{font-size:12px;padding:5px 14px;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;margin-left:auto;font-family:'Golos Text',sans-serif}
-.btn-add-row:hover{opacity:.88}
-.stats-bar{display:flex;gap:10px;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px 14px;display:flex;align-items:center;gap:8px}
-.stat-val{font-size:17px;font-weight:600}.stat-label{font-size:11px;color:var(--muted)}
-.stat.yes .stat-val{color:var(--yes)}.stat.no .stat-val{color:var(--no)}
-.table-wrap{flex:1;overflow:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
-thead{position:sticky;top:0;z-index:2}
-th{background:#eeecea;border-bottom:1px solid var(--border);padding:7px 8px;text-align:left;font-weight:600;font-size:11px;color:#555;white-space:nowrap;cursor:pointer;user-select:none}
-th:hover{background:#e5e3e0}
-td{border-bottom:1px solid #f0ede8;padding:6px 8px;vertical-align:top}
-tr:hover td{background:#faf9f7}
-tr.dragging{opacity:0.4}
-tr.drag-over td{border-top:2px solid var(--accent)!important}
-.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
-.badge-yes{background:var(--yes-bg);color:var(--yes)}.badge-no{background:var(--no-bg);color:var(--no)}
-.badge-think{background:var(--pending-bg);color:var(--pending)}.badge-empty{background:#f0ede8;color:#999}
-.row-rezerv td{background:#f0eeff!important}.row-rezerv:hover td{background:#e6e0ff!important}
-.row-zhdu td{background:#fff0f5!important}.row-zhdu:hover td{background:#ffe0ec!important}
-.row-sb td{background:#fffde0!important}.row-sb:hover td{background:#fff9c0!important}
-.row-logistic td{background:#e6f5ed!important}.row-logistic:hover td{background:#d0eddc!important}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;align-items:center;justify-content:center}
-.modal-bg.open{display:flex}
-.modal{background:#fff;border-radius:14px;padding:24px;width:460px;max-width:96vw;max-height:92vh;overflow-y:auto}
-.modal h3{font-size:15px;font-weight:600;margin-bottom:18px;color:var(--accent)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.form-group{display:flex;flex-direction:column;gap:5px}
-.form-group.full{grid-column:1/-1}
-.form-group label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
-.form-group input,.form-group select,.form-group textarea{border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-family:'Golos Text',sans-serif;font-size:13px;color:var(--text);outline:none}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
-.form-group textarea{resize:vertical;min-height:70px}
-.modal-actions{display:flex;gap:8px;margin-top:20px}
-.btn-save{flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Golos Text',sans-serif}
-.btn-save:hover{opacity:.88}
-.btn-cancel{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;font-family:'Golos Text',sans-serif}
-.btn-cancel:hover{color:var(--text)}
-.btn-del{background:transparent;color:#c0392b;border:1px solid #fcc;border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;font-family:'Golos Text',sans-serif}
-.btn-del:hover{background:#fdeaea}
-.sort-arrow{font-size:10px;margin-left:3px}
-.edit-btn{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;color:var(--muted)}
-.edit-btn:hover{color:var(--accent);border-color:var(--accent)}
-.drag-handle{cursor:grab;color:#ccc;padding:0 4px;font-size:14px}
-.drag-handle:hover{color:#999}
-.empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
-.hidden{display:none!important}
-.avatar-modal{background:#fff;border-radius:14px;padding:24px;width:320px;text-align:center}
-.avatar-modal h3{font-size:15px;font-weight:600;margin-bottom:16px;color:var(--accent)}
-.avatar-preview{width:80px;height:80px;border-radius:50%;margin:0 auto 16px;border:2px solid var(--border);object-fit:cover;display:block;}
-.avatar-preview-placeholder{width:80px;height:80px;border-radius:50%;margin:0 auto 16px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;}
-</style>
-</head>
-<body>
-
-<div class="login-wrap" id="loginWrap">
-  <div class="login-box">
-    <div class="login-logo">HR GF</div>
-    <div class="login-sub">Система подбора курьеров</div>
-    <div class="login-group">
-      <label>Email</label>
-      <input type="email" id="lEmail" placeholder="your@growfood.pro" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <div class="login-group">
-      <label>Пароль</label>
-      <input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <button class="login-btn" onclick="doLogin()">Войти</button>
-    <div class="login-err hidden" id="loginErr">Неверный email или пароль</div>
-    <div class="login-welcome hidden" id="loginWelcome">Добро пожаловать! Продуктивного дня тебе 🌿</div>
-  </div>
-</div>
-
-<div class="app hidden" id="appWrap">
-  <div class="topbar">
-    <div class="logo">HR GF</div>
-    <span class="sync-status sync-loading" id="syncStatus">загрузка...</span>
-    <div class="tabs-wrap" id="tabsWrap"></div>
-    <div class="user-info">
-      <div id="avatarBtn" onclick="openAvatarModal()" title="Сменить фото"></div>
-      <span id="userEmail"></span>
-      <button class="btn-logout" onclick="doLogout()">Выйти</button>
-    </div>
-  </div>
-  <div class="filters" id="filtersBar"></div>
-  <div class="stats-bar" id="statsBar"></div>
-  <div class="table-wrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
-</div>
-
-<div class="modal-bg" id="modalBg">
-<div class="modal">
-  <h3 id="modalTitle">Новая запись</h3>
-  <div class="form-grid">
-    <div class="form-group"><label>Дата</label><input type="date" id="fDate" readonly style="background:#f5f4f0;color:#888"></div>
-    <div class="form-group"><label>Время</label><input type="time" id="fTime" readonly style="background:#f5f4f0;color:#888"></div>
+<div class="form-group"><label>Дата</label><input type="date" id="fDate" readonly style="background:var(--bg);color:var(--muted)"></div>
+    <div class="form-group"><label>Время</label><input type="time" id="fTime" readonly style="background:var(--bg);color:var(--muted)"></div>
     <div class="form-group full"><label>ФИО</label><input type="text" id="fFio" placeholder="Иванов Иван Иванович"></div>
     <div class="form-group"><label>Телефон</label><input type="tel" id="fTel" placeholder="7 (900) 000-00-00"></div>
     <div class="form-group"><label>Округ</label>
       <select id="fOkrug"><option value="">—</option>
         <optgroup label="Санкт-Петербург">
-          <option>СПБ : СЗ</option><option>СПБ : СВ</option><option>СПБ : ВОСТОК</option>
-          <option>СПБ : ЮВ</option><option>СПБ : ЮЗ</option>
+          <option>СПБ : СЗ</option><option>СПБ : СВ</option><option>СПБ : ВОСТОК</option><option>СПБ : ЮВ</option><option>СПБ : ЮЗ</option>
         </optgroup>
         <optgroup label="Москва">
-          <option>МСК : САО</option><option>МСК : СВАО</option><option>МСК : СЗАО</option>
-          <option>МСК : ВАО</option><option>МСК : ЮАО</option><option>МСК : ЮВАО</option>
-          <option>МСК : ЮЗАО</option><option>МСК : ЗАО</option>
+          <option>МСК : САО</option><option>МСК : СВАО</option><option>МСК : СЗАО</option><option>МСК : ВАО</option><option>МСК : ЮАО</option><option>МСК : ЮВАО</option><option>МСК : ЮЗАО</option><option>МСК : ЗАО</option>
         </optgroup>
       </select>
     </div>
@@ -174,270 +34,225 @@ tr.drag-over td{border-top:2px solid var(--accent)!important}
 </div>
 </div>
 
-<!-- Avatar modal -->
+<!-- Avatar Modal -->
 <div class="modal-bg" id="avatarModalBg">
-<div class="avatar-modal">
+<div class="av-modal">
   <h3>Фото профиля</h3>
-  <div id="avatarPreviewWrap"></div>
-  <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+  <div id="avPreview"></div>
+  <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="saveAvatar(this)">
   <button class="btn-save" style="width:100%;margin-bottom:8px" onclick="document.getElementById('avatarFile').click()">Выбрать фото</button>
-  <button class="btn-cancel" style="width:100%" onclick="closeAvatarModal()">Закрыть</button>
+  <button class="btn-cancel" style="width:100%;margin-top:4px" onclick="document.getElementById('avatarModalBg').classList.remove('open')">Закрыть</button>
 </div>
 </div>
 
 <script>
-const SUPABASE_URL = 'https://orffvetweovwgowtprsv.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_NaTVWE-doecU4Au19gFLdg__qGD-fpH';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL='https://orffvetweovwgowtprsv.supabase.co';
+const SUPABASE_KEY='sb_publishable_NaTVWE-doecU4Au19gFLdg__qGD-fpH';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const EMAIL_MAP = {
-  'osipova@growfood.pro': 'Осипова А.',
-  'nasedko@growfood.pro': 'Наседко Е.',
-  'dupina@growfood.pro': 'Дюпина Е.',
-  'smolentseva@growfood.pro': 'Смоленцева К.',
-  'kislyakova@growfood.pro': 'Кислякова Е.',
-  'racheeva@growfood.pro': 'Рачеева Д.',
-  'stepakova@growfood.pro': 'Степакова М.',
-  'yakovleva@growfood.pro': 'Яковлева А.',
-  'a.yakovleva@growfood.pro': 'Яковлева А.',
-  'd.elsafadi@growfood.pro': 'Эль-Сафади Д.',
-  'ya.fedorova@growfood.pro': 'Федорова Я.',
-  's.fedorov@growfood.pro': 'Федоров С.',
+const EMAIL_MAP={
+  'osipova@growfood.pro':'Осипова А.',
+  'nasedko@growfood.pro':'Наседко Е.',
+  'dupina@growfood.pro':'Дюпина Е.',
+  'smolentseva@growfood.pro':'Смоленцева К.',
+  'kislyakova@growfood.pro':'Кислякова Е.',
+  'racheeva@growfood.pro':'Рачеева Д.',
+  'stepakova@growfood.pro':'Степакова М.',
+  'yakovleva@growfood.pro':'Яковлева А.',
+  'a.yakovleva@growfood.pro':'Яковлева А.',
+  'd.elsafadi@growfood.pro':'Эль-Сафади Д.',
+  'ya.fedorova@growfood.pro':'Федорова Я.',
+  's.fedorov@growfood.pro':'Федоров С.',
 };
+const ALL_RECRUITERS=['Осипова А.','Наседко Е.','Дюпина Е.','Смоленцева К.','Кислякова Е.','Рачеева Д.','Степакова М.','Яковлева А.'];
+const ADMIN_EMAILS=['d.elsafadi@growfood.pro','ya.fedorova@growfood.pro','stepakova@growfood.pro','yakovleva@growfood.pro','a.yakovleva@growfood.pro','s.fedorov@growfood.pro'];
+const SPB=['СПБ : СЗ','СПБ : СВ','СПБ : ВОСТОК','СПБ : ЮВ','СПБ : ЮЗ'];
+const MSK=['МСК : САО','МСК : СВАО','МСК : СЗАО','МСК : ВАО','МСК : ЮАО','МСК : ЮВАО','МСК : ЮЗАО','МСК : ЗАО'];
 
-const ALL_RECRUITERS = ['Осипова А.','Наседко Е.','Дюпина Е.','Смоленцева К.','Кислякова Е.','Рачеева Д.','Степакова М.','Яковлева А.'];
-const ADMIN_EMAILS = ['d.elsafadi@growfood.pro','ya.fedorova@growfood.pro','stepakova@growfood.pro','yakovleva@growfood.pro','a.yakovleva@growfood.pro','s.fedorov@growfood.pro'];
+let currentUser=null,isAdmin=false,myRecruiter=null;
+let allRows=[],currentTab=0,editingRowId=null;
+let filters={dateFrom:today(),dateTo:today(),okrug:'',da:'',status:'',city:'',fio:''};
+let dragSrcId=null;
 
-const SPB_OKRUGS = ['СПБ : СЗ','СПБ : СВ','СПБ : ВОСТОК','СПБ : ЮВ','СПБ : ЮЗ'];
-const MSK_OKRUGS = ['МСК : САО','МСК : СВАО','МСК : СЗАО','МСК : ВАО','МСК : ЮАО','МСК : ЮВАО','МСК : ЮЗАО','МСК : ЗАО'];
-const ALL_OKRUGS = [...SPB_OKRUGS, ...MSK_OKRUGS];
-
-let currentUser = null;
-let isAdmin = false;
-let myRecruiter = null;
-let allRows = [];
-let currentTab = 0;
-let editingRowId = null;
-let sortCol = 'created_at'; let sortDir = 1;
-let filters = {dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:'',fio:''};
-let dragSrcId = null;
+function today(){return new Date().toISOString().slice(0,10)}
+function fmtDate(d){if(!d)return'—';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
+function esc(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function cl(s){return(s||'').trim()}
 
 // AUTH
-async function doLogin() {
-  const email = document.getElementById('lEmail').value.trim();
-  const pass = document.getElementById('lPass').value;
-  document.getElementById('loginErr').classList.add('hidden');
-  const {data, error} = await sb.auth.signInWithPassword({email, password: pass});
-  if (error) { document.getElementById('loginErr').classList.remove('hidden'); return; }
-  document.getElementById('loginWelcome').classList.remove('hidden');
-  setTimeout(() => initUser(data.user), 1500);
+async function doLogin(){
+  const email=document.getElementById('lEmail').value.trim();
+  const pass=document.getElementById('lPass').value;
+  document.getElementById('loginErr').style.display='none';
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error){document.getElementById('loginErr').style.display='block';return;}
+  document.getElementById('loginWelcome').style.display='block';
+  setTimeout(()=>initUser(data.user),1500);
 }
 
-async function doLogout() {
+async function doLogout(){
   await sb.auth.signOut();
-  currentUser = null;
   document.getElementById('appWrap').classList.add('hidden');
-  document.getElementById('loginWrap').classList.remove('hidden');
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('loginWelcome').style.display='none';
 }
 
-function initUser(user) {
-  currentUser = user;
-  isAdmin = ADMIN_EMAILS.includes(user.email);
-  myRecruiter = EMAIL_MAP[user.email] || user.email;
-  document.getElementById('userEmail').textContent = myRecruiter;
-  renderAvatar();
-  document.getElementById('loginWrap').classList.add('hidden');
+function initUser(user){
+  currentUser=user;
+  isAdmin=ADMIN_EMAILS.includes(user.email);
+  myRecruiter=EMAIL_MAP[user.email]||user.email;
+  document.getElementById('userEmail').textContent=myRecruiter;
+  document.getElementById('loginWrap').style.display='none';
   document.getElementById('appWrap').classList.remove('hidden');
-  if (!isAdmin) {
-    currentTab = ALL_RECRUITERS.indexOf(myRecruiter);
-    if (currentTab < 0) currentTab = 0;
+  renderAvatar();
+  if(!isAdmin){
+    currentTab=ALL_RECRUITERS.indexOf(myRecruiter);
+    if(currentTab<0)currentTab=0;
   }
   loadData();
-  sb.channel('candidates').on('postgres_changes', {event:'*', schema:'public', table:'candidates'}, () => loadData()).subscribe();
-  // presence tracking
   updatePresence();
-  setInterval(updatePresence, 30000);
-  sb.channel('presence').on('postgres_changes', {event:'*', schema:'public', table:'user_presence'}, () => renderPresence()).subscribe();
+  setInterval(updatePresence,30000);
+  sb.channel('candidates').on('postgres_changes',{event:'*',schema:'public',table:'candidates'},()=>loadData()).subscribe();
+  sb.channel('presence').on('postgres_changes',{event:'*',schema:'public',table:'user_presence'},()=>renderPresence()).subscribe();
 }
 
-sb.auth.getSession().then(({data}) => {
-  if (data.session) initUser(data.session.user);
-});
+sb.auth.getSession().then(({data})=>{if(data.session)initUser(data.session.user);});
 
 // AVATAR
-function getAvatarKey() { return 'avatar_' + (currentUser?.email||''); }
-
-function renderAvatar() {
-  const key = getAvatarKey();
-  const src = localStorage.getItem(key);
-  const name = myRecruiter || '?';
-  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  const btn = document.getElementById('avatarBtn');
-  if (src) {
-    btn.innerHTML = `<img class="avatar" src="${src}" alt="avatar">`;
-  } else {
-    btn.innerHTML = `<div class="avatar-placeholder">${initials}</div>`;
-  }
+function avatarKey(){return'avatar_'+(currentUser?.email||'')}
+function renderAvatar(){
+  const src=localStorage.getItem(avatarKey());
+  const initials=(myRecruiter||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const btn=document.getElementById('avatarBtn');
+  btn.className='avatar-btn';
+  btn.innerHTML=src?`<img src="${src}" alt="">`:`${initials}`;
 }
-
-function openAvatarModal() {
-  const key = getAvatarKey();
-  const src = localStorage.getItem(key);
-  const name = myRecruiter || '?';
-  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  const wrap = document.getElementById('avatarPreviewWrap');
-  if (src) {
-    wrap.innerHTML = `<img class="avatar-preview" src="${src}">`;
-  } else {
-    wrap.innerHTML = `<div class="avatar-preview-placeholder">${initials}</div>`;
-  }
+function openAvatarModal(){
+  const src=localStorage.getItem(avatarKey());
+  const initials=(myRecruiter||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('avPreview').innerHTML=src
+    ?`<img class="av-preview" src="${src}">`
+    :`<div class="av-placeholder">${initials}</div>`;
   document.getElementById('avatarModalBg').classList.add('open');
 }
-
-function closeAvatarModal() { document.getElementById('avatarModalBg').classList.remove('open'); }
-
-function previewAvatar(input) {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const src = e.target.result;
-    localStorage.setItem(getAvatarKey(), src);
+function saveAvatar(input){
+  const file=input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    localStorage.setItem(avatarKey(),e.target.result);
     renderAvatar();
-    document.getElementById('avatarPreviewWrap').innerHTML = `<img class="avatar-preview" src="${src}">`;
+    document.getElementById('avPreview').innerHTML=`<img class="av-preview" src="${e.target.result}">`;
   };
-  reader.readAsDataURL(file);
+  r.readAsDataURL(file);
 }
 
 // PRESENCE
-async function updatePresence() {
-  if (!currentUser) return;
-  await sb.from('user_presence').upsert({email: currentUser.email, name: myRecruiter, last_seen: new Date().toISOString()});
+async function updatePresence(){
+  if(!currentUser)return;
+  await sb.from('user_presence').upsert({email:currentUser.email,name:myRecruiter,last_seen:new Date().toISOString()});
 }
-
-async function renderPresence() {
-  const {data} = await sb.from('user_presence').select('*');
-  if (!data) return;
-  const now = new Date();
-  const tabs = document.querySelectorAll('.tab');
-  const recs = getVisibleRecruiters();
-  tabs.forEach((tab, i) => {
-    const rec = recs[i];
-    const user = data.find(u => u.name === rec);
-    if (!user) return;
-    const diff = Math.floor((now - new Date(user.last_seen)) / 1000);
-    const isOnline = diff < 120;
-    const dot = tab.querySelector('.presence-dot');
-    if (dot) {
-      dot.style.background = isOnline ? '#1a7a4a' : '#ccc';
-      dot.title = isOnline ? 'Онлайн' : 'Был(а) ' + fmtAgo(diff);
-    }
+async function renderPresence(){
+  const{data}=await sb.from('user_presence').select('*');
+  if(!data)return;
+  const now=new Date();
+  document.querySelectorAll('.presence-dot').forEach(dot=>{
+    const rec=dot.dataset.rec;
+    const u=data.find(x=>x.name===rec);
+    if(!u)return;
+    const diff=Math.floor((now-new Date(u.last_seen))/1000);
+    dot.style.background=diff<120?'#34c759':'#ccc';
+    dot.title=diff<120?'Онлайн':'Был(а) '+fmtAgo(diff);
   });
 }
+function fmtAgo(s){if(s<60)return'только что';if(s<3600)return Math.floor(s/60)+' мин назад';if(s<86400)return Math.floor(s/3600)+' ч назад';return Math.floor(s/86400)+' дн назад';}
 
-function fmtAgo(sec) {
-  if (sec < 60) return 'только что';
-  if (sec < 3600) return Math.floor(sec/60) + ' мин назад';
-  if (sec < 86400) return Math.floor(sec/3600) + ' ч назад';
-  return Math.floor(sec/86400) + ' дн назад';
+function setSyncStatus(state,msg){
+  const el=document.getElementById('syncStatus');
+  el.className='sync-pill sync-'+state;
+  el.textContent=msg;
 }
 
-function syncStatus(state, msg) {
-  const el = document.getElementById('syncStatus');
-  el.className = 'sync-status sync-' + state;
-  el.textContent = msg;
-}
-
-async function loadData() {
-  syncStatus('loading', 'загрузка...');
-  const {data, error} = await sb.from('candidates').select('*').order('sort_order', {ascending: true}).order('created_at', {ascending: true});
-  if (error) { syncStatus('err', 'ошибка'); return; }
-  allRows = data || [];
-  syncStatus('ok', '● онлайн');
+async function loadData(){
+  setSyncStatus('loading','загрузка...');
+  const{data,error}=await sb.from('candidates').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:true});
+  if(error){setSyncStatus('err','ошибка');return;}
+  allRows=data||[];
+  setSyncStatus('ok','● онлайн');
   render();
 }
 
-function render() {
-  renderTabs();
-  renderFiltersBar();
-  const rows = filteredRows();
-  renderStats(rows);
-  renderTable(rows);
-}
+function render(){renderTabs();renderFilters();const rows=filteredRows();renderStats(rows);renderTable(rows);renderCards(rows);}
 
-function getVisibleRecruiters() {
-  if (isAdmin) return ALL_RECRUITERS;
-  return [myRecruiter];
-}
+function getRecruiters(){return isAdmin?ALL_RECRUITERS:[myRecruiter];}
 
-function renderTabs() {
-  const recs = getVisibleRecruiters();
-  if (recs.length === 1) {
-    document.getElementById('tabsWrap').innerHTML = `<div class="tab active">${recs[0]}</div>`;
-    return;
-  }
-  document.getElementById('tabsWrap').innerHTML = recs.map((r,i) =>
-    `<div class="tab ${i===currentTab?'active':''}" onclick="switchTab(${i})">${r} <span class="presence-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ccc;margin-left:4px;vertical-align:middle"></span></div>`
+function renderTabs(){
+  const recs=getRecruiters();
+  document.getElementById('tabsWrap').innerHTML=recs.map((r,i)=>
+    `<div class="tab ${i===currentTab?'active':''}" onclick="switchTab(${i})">${r}<span class="presence-dot" data-rec="${r}"></span></div>`
   ).join('');
   renderPresence();
 }
 
-function renderFiltersBar() {
-  const canAdd = isAdmin || myRecruiter === getVisibleRecruiters()[currentTab];
-  document.getElementById('filtersBar').innerHTML = `
-    <div class="filter-group"><label>Поиск ФИО</label><input type="text" value="${filters.fio}" placeholder="Иванов..." oninput="filters.fio=this.value;render()" style="border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'Golos Text',sans-serif;font-size:12px;background:#fff;color:var(--text);outline:none;width:140px"></div>
-    <div class="filter-group"><label>С</label><input type="date" value="${filters.dateFrom}" onchange="filters.dateFrom=this.value;render()"></div>
-    <div class="filter-group"><label>По</label><input type="date" value="${filters.dateTo}" onchange="filters.dateTo=this.value;render()"></div>
-    <div class="filter-group"><label>Округ</label>
-      <select onchange="filters.okrug=this.value;render()">
-        <option value="">Все</option>
-        <optgroup label="Санкт-Петербург">${SPB_OKRUGS.map(o=>`<option ${filters.okrug===o?'selected':''}>${o}</option>`).join('')}</optgroup>
-        <optgroup label="Москва">${MSK_OKRUGS.map(o=>`<option ${filters.okrug===o?'selected':''}>${o}</option>`).join('')}</optgroup>
-      </select>
+function renderFilters(){
+  const canAdd=isAdmin||myRecruiter===getRecruiters()[currentTab];
+  document.getElementById('filtersBar').innerHTML=`
+    <div class="filter-row">
+      <div class="f-item"><label>ФИО</label><input class="f-input f-input-wide" type="text" value="${esc(filters.fio)}" placeholder="Поиск..." oninput="filters.fio=this.value;render()"></div>
+      <div class="f-item"><label>С</label><input class="f-input f-input-date" type="date" value="${filters.dateFrom}" onchange="filters.dateFrom=this.value;render()"></div>
+      <div class="f-item"><label>По</label><input class="f-input f-input-date" type="date" value="${filters.dateTo}" onchange="filters.dateTo=this.value;render()"></div>
     </div>
-    <div class="filter-group"><label>Да/Нет</label>
-      <select onchange="filters.da=this.value;render()">
-        <option value="">Все</option>
-        <option ${filters.da==='да'?'selected':''} value="да">Да</option>
-        <option ${filters.da==='нет'?'selected':''} value="нет">Нет</option>
-        <option ${filters.da==='думает'?'selected':''} value="думает">Думает</option>
-      </select>
+    <div class="filter-row">
+      <div class="f-item"><label>Округ</label>
+        <select class="f-input" onchange="filters.okrug=this.value;render()">
+          <option value="">Все</option>
+          <optgroup label="СПБ">${SPB.map(o=>`<option ${filters.okrug===o?'selected':''}>${o}</option>`).join('')}</optgroup>
+          <optgroup label="МСК">${MSK.map(o=>`<option ${filters.okrug===o?'selected':''}>${o}</option>`).join('')}</optgroup>
+        </select>
+      </div>
+      <div class="f-item"><label>Да/Нет</label>
+        <select class="f-input" onchange="filters.da=this.value;render()">
+          <option value="">Все</option>
+          <option ${filters.da==='да'?'selected':''} value="да">Да</option>
+          <option ${filters.da==='нет'?'selected':''} value="нет">Нет</option>
+          <option ${filters.da==='думает'?'selected':''} value="думает">Думает</option>
+        </select>
+      </div>
+      <div class="f-item"><label>Статус</label>
+        <select class="f-input" onchange="filters.status=this.value;render()">
+          <option value="">Все</option>
+          ${['думает','недозвон','отказ','принят','оформление','стажировка','резерв','жду доки','проверка СБ','передан в логистику'].map(o=>`<option ${filters.status===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="f-item"><label>Город</label>
+        <select class="f-input" onchange="filters.city=this.value;render()">
+          <option value="">Все</option>
+          ${['Санкт-Петербург','Москва','Казань','Нижний Новгород','Воронеж'].map(o=>`<option ${filters.city===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn-clear" onclick="clearFilters()">Сбросить</button>
+      ${canAdd?`<button class="btn-add" onclick="openModal()">+ Запись</button>`:''}
     </div>
-    <div class="filter-group"><label>Статус</label>
-      <select onchange="filters.status=this.value;render()">
-        <option value="">Все</option>
-        ${['думает','недозвон','отказ','принят','оформление','стажировка','резерв','жду доки','проверка СБ','передан в логистику'].map(o=>`<option ${filters.status===o?'selected':''}>${o}</option>`).join('')}
-      </select>
-    </div>
-    <div class="filter-group"><label>Город</label>
-      <select onchange="filters.city=this.value;render()">
-        <option value="">Все</option>
-        ${['Санкт-Петербург','Москва','Казань','Нижний Новгород','Воронеж'].map(o=>`<option ${filters.city===o?'selected':''}>${o}</option>`).join('')}
-      </select>
-    </div>
-    <button class="btn-clear" onclick="clearFilters()">Сбросить</button>
-    ${canAdd ? `<button class="btn-add-row" onclick="openModal()">+ Запись</button>` : ''}
   `;
 }
 
-function filteredRows() {
-  const recs = getVisibleRecruiters();
-  const rec = recs[currentTab] || recs[0];
-  return allRows.filter(r => {
-    if (r.recruiter !== rec) return false;
-    if (filters.fio && !r.fio?.toLowerCase().includes(filters.fio.toLowerCase())) return false;
-    if (filters.dateFrom && r.date < filters.dateFrom) return false;
-    if (filters.dateTo && r.date > filters.dateTo) return false;
-    if (filters.okrug && r.okrug !== filters.okrug) return false;
-    if (filters.da && r.da !== filters.da) return false;
-    if (filters.status && r.status !== filters.status) return false;
-    if (filters.city && r.city !== filters.city) return false;
+function filteredRows(){
+  const rec=getRecruiters()[currentTab]||getRecruiters()[0];
+  return allRows.filter(r=>{
+    if(r.recruiter!==rec)return false;
+    if(filters.fio&&!r.fio?.toLowerCase().includes(filters.fio.toLowerCase()))return false;
+    if(filters.dateFrom&&r.date<filters.dateFrom)return false;
+    if(filters.dateTo&&r.date>filters.dateTo)return false;
+    if(filters.okrug&&r.okrug!==filters.okrug)return false;
+    if(filters.da&&r.da!==filters.da)return false;
+    if(filters.status&&r.status!==filters.status)return false;
+    if(filters.city&&r.city!==filters.city)return false;
     return true;
   });
 }
 
-function renderStats(rows) {
-  const total=rows.length, yes=rows.filter(r=>r.da==='да').length, no=rows.filter(r=>r.da==='нет').length, think=rows.filter(r=>r.da==='думает').length, pct=total?Math.round(yes/total*100):0;
-  document.getElementById('statsBar').innerHTML = `
+function renderStats(rows){
+  const total=rows.length,yes=rows.filter(r=>r.da==='да').length,no=rows.filter(r=>r.da==='нет').length,think=rows.filter(r=>r.da==='думает').length,pct=total?Math.round(yes/total*100):0;
+  document.getElementById('statsBar').innerHTML=`
     <div class="stat"><span class="stat-val">${total}</span><span class="stat-label">всего</span></div>
     <div class="stat yes"><span class="stat-val">${yes}</span><span class="stat-label">да (${pct}%)</span></div>
     <div class="stat no"><span class="stat-val">${no}</span><span class="stat-label">нет</span></div>
@@ -445,81 +260,99 @@ function renderStats(rows) {
   `;
 }
 
+function statusClass(s){
+  const map={'думает':'dumaet','недозвон':'nedozvon','отказ':'otkaz','принят':'prinyat','оформление':'oformlenie','стажировка':'stazhirovka','резерв':'rezerv','жду доки':'zhdu','проверка СБ':'sb','передан в логистику':'logistic'};
+  return map[s]||'empty';
+}
+
+function daBadge(v){
+  if(v==='да')return'<span class="chip da-yes">Да</span>';
+  if(v==='нет')return'<span class="chip da-no">Нет</span>';
+  if(v==='думает')return'<span class="chip da-think">Думает</span>';
+  return'<span class="chip s-empty">—</span>';
+}
+
 const COLS=[{key:'date',label:'Дата'},{key:'time',label:'Время'},{key:'fio',label:'ФИО'},{key:'tel',label:'Тел'},{key:'okrug',label:'Округ'},{key:'da',label:'Да/Нет'},{key:'status',label:'Статус'},{key:'jur',label:'Юр.Статус'},{key:'city',label:'Город'},{key:'comment',label:'Комментарий'}];
 
-function rowClass(s){if(s==='резерв')return 'row-rezerv';if(s==='жду доки')return 'row-zhdu';if(s==='проверка СБ')return 'row-sb';if(s==='передан в логистику')return 'row-logistic';return '';}
-
-function renderTable(rows) {
-  document.getElementById('thead').innerHTML = '<tr><th style="width:24px"></th>'+COLS.map(c=>`<th>${c.label}</th>`).join('')+'<th style="width:50px"></th></tr>';
-  if (!rows.length) { document.getElementById('tbody').innerHTML=`<tr><td colspan="${COLS.length+2}"><div class="empty-state">Нет записей. Нажмите «+ Запись» чтобы добавить.</div></td></tr>`; return; }
-  document.getElementById('tbody').innerHTML = rows.map(r => `
-    <tr class="${rowClass(r.status)}" draggable="true" data-id="${r.id}" ondblclick="openEditModal('${r.id}')">
-      <td><span class="drag-handle" title="Перетащить">⠿</span></td>
+function renderTable(rows){
+  document.getElementById('thead').innerHTML='<tr><th></th>'+COLS.map(c=>`<th>${c.label}</th>`).join('')+'<th></th></tr>';
+  if(!rows.length){document.getElementById('tbody').innerHTML=`<tr><td colspan="${COLS.length+2}"><div class="empty-state">Нет записей за выбранный период</div></td></tr>`;return;}
+  document.getElementById('tbody').innerHTML=rows.map(r=>`
+    <tr class="row-${statusClass(r.status)}" draggable="true" data-id="${r.id}" ondblclick="openEditModal('${r.id}')">
+      <td><span class="drag-handle">⠿</span></td>
       <td>${fmtDate(r.date)}</td><td>${r.time||'—'}</td>
-      <td style="font-weight:500">${r.fio||'—'}</td>
+      <td style="font-weight:600">${r.fio||'—'}</td>
       <td>${r.tel||'—'}</td><td>${r.okrug||'—'}</td>
-      <td>${daBadge(r.da)}</td><td>${r.status||'—'}</td>
+      <td>${daBadge(r.da)}</td>
+      <td>${r.status?`<span class="chip s-${statusClass(r.status)}">${r.status}</span>`:'—'}</td>
       <td>${r.jur||'—'}</td><td>${r.city||'—'}</td>
-      <td style="color:#555;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.comment)}">${r.comment||'—'}</td>
-      <td><button class="edit-btn" onclick="openEditModal('${r.id}')">✏️</button></td>
+      <td style="color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.comment)}">${r.comment||'—'}</td>
+      <td><button style="background:none;border:none;cursor:pointer;color:var(--blue);font-size:14px" onclick="openEditModal('${r.id}')">✏️</button></td>
     </tr>
   `).join('');
   initDrag();
 }
 
-// DRAG & DROP
-function initDrag() {
-  const rows = document.querySelectorAll('#tbody tr[draggable]');
-  rows.forEach(row => {
-    row.addEventListener('dragstart', e => { dragSrcId = row.dataset.id; row.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
-    row.addEventListener('dragend', () => { row.classList.remove('dragging'); document.querySelectorAll('#tbody tr').forEach(r=>r.classList.remove('drag-over')); });
-    row.addEventListener('dragover', e => { e.preventDefault(); document.querySelectorAll('#tbody tr').forEach(r=>r.classList.remove('drag-over')); row.classList.add('drag-over'); });
-    row.addEventListener('drop', async e => {
-      e.preventDefault();
-      row.classList.remove('drag-over');
-      if (dragSrcId === row.dataset.id) return;
-      const tbody = document.getElementById('tbody');
-      const allTr = [...tbody.querySelectorAll('tr[data-id]')];
-      const srcIdx = allTr.findIndex(r=>r.dataset.id===dragSrcId);
-      const dstIdx = allTr.findIndex(r=>r.dataset.id===row.dataset.id);
-      if (srcIdx < 0 || dstIdx < 0) return;
-      // reorder in allRows
-      const srcRow = allRows.find(r=>r.id===dragSrcId);
-      const dstRow = allRows.find(r=>r.id===row.dataset.id);
-      if (!srcRow || !dstRow) return;
-      const srcOrder = dstRow.sort_order ?? dstIdx;
-      const dstOrder = srcRow.sort_order ?? srcIdx;
-      await sb.from('candidates').update({sort_order: srcOrder}).eq('id', dragSrcId);
-      await sb.from('candidates').update({sort_order: dstOrder}).eq('id', row.dataset.id);
+function renderCards(rows){
+  const wrap=document.getElementById('cardsWrap');
+  if(!rows.length){wrap.innerHTML=`<div class="empty-state">Нет записей за выбранный период</div>`;return;}
+  wrap.innerHTML=rows.map(r=>`
+    <div class="card row-${statusClass(r.status)}" onclick="openEditModal('${r.id}')">
+      <div class="card-top">
+        <div class="card-name">${r.fio||'—'}</div>
+        <div class="card-time">${fmtDate(r.date)} ${r.time||''}</div>
+      </div>
+      <div class="card-tel">${r.tel||'—'}</div>
+      <div class="card-meta">
+        ${r.okrug?`<span class="chip s-empty">${r.okrug}</span>`:''}
+        ${daBadge(r.da)}
+        ${r.status?`<span class="chip s-${statusClass(r.status)}">${r.status}</span>`:''}
+        ${r.jur?`<span class="chip s-empty">${r.jur}</span>`:''}
+        ${r.city?`<span class="chip s-empty">${r.city}</span>`:''}
+      </div>
+      ${r.comment?`<div style="font-size:12px;color:var(--muted);margin-top:6px">${r.comment}</div>`:''}
+    </div>
+  `).join('');
+}
+
+function initDrag(){
+  document.querySelectorAll('#tbody tr[draggable]').forEach(row=>{
+    row.addEventListener('dragstart',e=>{dragSrcId=row.dataset.id;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+    row.addEventListener('dragend',()=>{row.classList.remove('dragging');document.querySelectorAll('#tbody tr').forEach(r=>r.classList.remove('drag-over'));});
+    row.addEventListener('dragover',e=>{e.preventDefault();document.querySelectorAll('#tbody tr').forEach(r=>r.classList.remove('drag-over'));row.classList.add('drag-over');});
+    row.addEventListener('drop',async e=>{
+      e.preventDefault();row.classList.remove('drag-over');
+      if(dragSrcId===row.dataset.id)return;
+      const src=allRows.find(r=>r.id===dragSrcId),dst=allRows.find(r=>r.id===row.dataset.id);
+      if(!src||!dst)return;
+      await sb.from('candidates').update({sort_order:dst.sort_order??0}).eq('id',dragSrcId);
+      await sb.from('candidates').update({sort_order:src.sort_order??0}).eq('id',row.dataset.id);
       await loadData();
     });
   });
 }
 
-function fmtDate(d){if(!d)return'—';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
-function fmtDateTime(){const n=new Date();return{date:n.toISOString().slice(0,10),time:n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')};}
-function esc(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
-function daBadge(v){if(v==='да')return'<span class="badge badge-yes">Да</span>';if(v==='нет')return'<span class="badge badge-no">Нет</span>';if(v==='думает')return'<span class="badge badge-think">Думает</span>';return'<span class="badge badge-empty">—</span>';}
-function clearFilters(){filters={dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:'',fio:''};render();}
-function switchTab(i){currentTab=i;filters={dateFrom:'',dateTo:'',okrug:'',da:'',status:'',city:'',fio:''};render();}
+function fmtDateTime(){const n=new Date();return{date:n.toISOString().slice(0,10),time:String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')};}
+function clearFilters(){filters={dateFrom:today(),dateTo:today(),okrug:'',da:'',status:'',city:'',fio:''};render();}
+function switchTab(i){currentTab=i;filters={dateFrom:today(),dateTo:today(),okrug:'',da:'',status:'',city:'',fio:''};render();}
 
-function openModal() {
+function openModal(){
   editingRowId=null;
   document.getElementById('modalTitle').textContent='Новая запись';
   document.getElementById('btnDel').style.display='none';
-  const dt = fmtDateTime();
+  const dt=fmtDateTime();
   document.getElementById('fDate').value=dt.date;
   document.getElementById('fTime').value=dt.time;
   ['fFio','fTel','fComment'].forEach(id=>document.getElementById(id).value='');
   ['fOkrug','fDa','fStatus','fJur','fCity'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('modalBg').classList.add('open');
-  setTimeout(()=>document.getElementById('fFio').focus(),100);
+  setTimeout(()=>document.getElementById('fFio').focus(),300);
 }
 
-function openEditModal(id) {
-  const r=allRows.find(x=>x.id===id); if(!r)return;
+function openEditModal(id){
+  const r=allRows.find(x=>x.id===id);if(!r)return;
   editingRowId=id;
-  document.getElementById('modalTitle').textContent='Редактировать запись';
+  document.getElementById('modalTitle').textContent='Редактировать';
   document.getElementById('btnDel').style.display='';
   document.getElementById('fDate').value=r.date||'';
   document.getElementById('fTime').value=r.time||'';
@@ -536,24 +369,23 @@ function openEditModal(id) {
 
 function closeModal(){document.getElementById('modalBg').classList.remove('open');}
 
-async function saveRow() {
-  const recs = getVisibleRecruiters();
-  const rec = recs[currentTab] || recs[0];
+async function saveRow(){
+  const rec=getRecruiters()[currentTab]||getRecruiters()[0];
   const data={recruiter:rec,date:document.getElementById('fDate').value,time:document.getElementById('fTime').value,fio:document.getElementById('fFio').value,tel:document.getElementById('fTel').value,okrug:document.getElementById('fOkrug').value,da:document.getElementById('fDa').value,status:document.getElementById('fStatus').value,jur:document.getElementById('fJur').value,city:document.getElementById('fCity').value,comment:document.getElementById('fComment').value};
-  if(editingRowId){ await sb.from('candidates').update(data).eq('id',editingRowId); }
-  else { await sb.from('candidates').insert(data); }
-  closeModal(); await loadData();
+  if(editingRowId){await sb.from('candidates').update(data).eq('id',editingRowId);}
+  else{await sb.from('candidates').insert(data);}
+  closeModal();await loadData();
 }
 
-async function deleteRow() {
+async function deleteRow(){
   if(!editingRowId)return;
   if(!confirm('Удалить запись?'))return;
   await sb.from('candidates').delete().eq('id',editingRowId);
-  closeModal(); await loadData();
+  closeModal();await loadData();
 }
 
 document.getElementById('modalBg').addEventListener('click',function(e){if(e.target===this)closeModal();});
-document.getElementById('avatarModalBg').addEventListener('click',function(e){if(e.target===this)closeAvatarModal();});
+document.getElementById('avatarModalBg').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 </script>
 </body>
 </html>
