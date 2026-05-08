@@ -597,6 +597,10 @@ function openEditModal(id){
 function closeModal(){document.getElementById('modalBg').classList.remove('open');}
 
 async function saveRow(){
+  // проверяем сессию
+  const {data: sessionData} = await sb.auth.getSession();
+  if(!sessionData.session){alert('Сессия истекла, войдите снова');doLogout();return;}
+  
   const rec=getRecruiters()[currentTab]||getRecruiters()[0];
   const data={recruiter:rec,date:document.getElementById('fDate').value,time:document.getElementById('fTime').value,fio:document.getElementById('fFio').value,tel:document.getElementById('fTel').value,okrug:document.getElementById('fOkrug').value,da:document.getElementById('fDa').value,status:document.getElementById('fStatus').value,jur:document.getElementById('fJur').value,city:document.getElementById('fCity').value,comment:document.getElementById('fComment').value};
   if(!data.fio){alert('Введите ФИО!');return;}
@@ -608,7 +612,7 @@ async function saveRow(){
     const res=await sb.from('candidates').insert(data);
     error=res.error;
   }
-  if(error){alert('Ошибка сохранения: '+error.message);return;}
+  if(error){alert('Ошибка: '+error.message+' | код: '+error.code);return;}
   closeModal();await loadData();
 }
 
