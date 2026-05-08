@@ -232,7 +232,7 @@ const ADMINS=['d.elsafadi@growfood.pro','ya.fedorova@growfood.pro','stepakova@gr
 const SPB=['СПБ : СЗ','СПБ : СВ','СПБ : ВОСТОК','СПБ : ЮВ','СПБ : ЮЗ'];
 const MSK=['МСК : САО','МСК : СВАО','МСК : СЗАО','МСК : ВАО','МСК : ЮАО','МСК : ЮВАО','МСК : ЮЗАО','МСК : ЗАО'];
 let CU=null,isAdmin=false,myRec=null,rows=[],tab=0,editId=null,dragId=null;
-let F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:''};
+let F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};
 let selected=new Set();
 function td(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
 function fd(d){if(!d)return'—';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
@@ -354,6 +354,7 @@ function renderFilters(){
   document.getElementById('filtersBar').innerHTML=`
     <div class="frow">
       <span class="flabel">ФИО</span><input class="finput finput-wide" type="text" value="${esc(F.fio)}" placeholder="Поиск..." id="fFio2">
+      <span class="flabel">Тел</span><input class="finput" type="text" value="${esc(F.tel||'')}" placeholder="+7..." id="fTel2" style="width:110px">
       <span class="flabel">С</span><input class="finput finput-date" type="date" value="${F.from}" id="fFrom">
       <span class="flabel">По</span><input class="finput finput-date" type="date" value="${F.to}" id="fTo">
     </div>
@@ -370,6 +371,7 @@ function renderFilters(){
       ${canAdd?'<button class="btn-new" id="newBtn">+ Запись</button>':''}
     </div>`;
   document.getElementById('fFio2').oninput=e=>{F.fio=e.target.value;render()};
+  document.getElementById('fTel2').oninput=e=>{F.tel=e.target.value;render()};
   document.getElementById('fFrom').onchange=e=>{F.from=e.target.value;loadData()};
   document.getElementById('fTo').onchange=e=>{F.to=e.target.value;loadData()};
   document.getElementById('fOkr').onchange=e=>{F.okrug=e.target.value;render()};
@@ -384,10 +386,20 @@ function filtered(){
   return rows.filter(r=>{
     if(r.recruiter!==rec)return false;
     if(F.fio&&!r.fio?.toLowerCase().includes(F.fio.toLowerCase()))return false;
+    if(F.tel&&!r.tel?.replace(/\s/g,'').includes(F.tel.replace(/\s/g,'')))return false;
     if(F.from&&r.date<F.from)return false;if(F.to&&r.date>F.to)return false;
     if(F.okrug&&r.okrug!==F.okrug)return false;if(F.da&&r.da!==F.da)return false;
     if(F.status&&r.status!==F.status)return false;if(F.city&&r.city!==F.city)return false;
     return true;
+  });
+}
+function copyPhone(tel){
+  const clean=tel.replace(/\s/g,'');
+  navigator.clipboard.writeText(clean).then(()=>{
+    const toast=document.createElement('div');
+    toast.textContent='📋 Номер скопирован';
+    toast.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;animation:fadeIn .2s';
+    document.body.appendChild(toast);setTimeout(()=>toast.remove(),2000);
   });
 }
 function renderStats(fr){
@@ -405,7 +417,7 @@ function renderTable(fr){
       <td><span class="drag-handle">⠿</span></td>
       <td>${fd(r.date)}</td><td>${r.time||'—'}</td>
       <td style="font-weight:600;min-width:140px">${r.fio||'—'}</td>
-      <td style="white-space:nowrap">${r.tel||'—'}</td>
+      <td style="white-space:nowrap;cursor:pointer;color:var(--blue)" onclick="copyPhone('${r.tel||''}')" title="Нажмите чтобы скопировать">${r.tel||'—'}</td>
       <td style="white-space:nowrap">${r.okrug||'—'}</td>
       <td>${daBadge(r.da)}</td><td>${stBadge(r.status)}</td>
       <td>${r.jur||'—'}</td><td>${r.city||'—'}</td>
