@@ -474,7 +474,7 @@ document.getElementById('loginBtn').onclick=async()=>{
 };
 document.getElementById('lPass').onkeydown=e=>{if(e.key==='Enter')document.getElementById('loginBtn').click()};
 document.getElementById('lEmail').onkeydown=e=>{if(e.key==='Enter')document.getElementById('lPass').focus()};
-document.getElementById('logoutBtn').onclick=async()=>{await saveScreenTime();await sb.auth.signOut();document.getElementById('appWrap').classList.add('hidden');document.getElementById('loginWrap').style.display='flex';document.getElementById('loginOk').style.display='none';};
+document.getElementById('logoutBtn').onclick=async()=>{saveScreenTime();await sb.auth.signOut();document.getElementById('appWrap').classList.add('hidden');document.getElementById('loginWrap').style.display='flex';document.getElementById('loginOk').style.display='none';};
 
 function initUser(user){
   CU=user;isAdmin=ADMINS.includes(user.email);myRec=EMAP[user.email]||user.email;
