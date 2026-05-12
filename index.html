@@ -115,7 +115,6 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
 .tel-wrap:focus-within{border-color:var(--accent)}
 .tel-prefix{font-size:14px;font-weight:500;color:var(--text);padding:10px 10px;background:#e8e8ed;border-right:1px solid var(--border);white-space:nowrap;display:flex;align-items:center;user-select:none}
 .tel-input{border:none!important;border-radius:0!important;background:var(--bg)!important;flex:1;padding:10px 12px;font-family:inherit;font-size:14px;color:var(--text);outline:none}
-/* CALENDAR */
 .cal-modal-wrap{background:var(--surface);border-radius:20px;width:380px;max-width:96vw;max-height:90vh;overflow-y:auto;padding:20px}
 .cal-modal-wrap h3{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
 .cal-nav{display:flex;align-items:center;gap:8px}
@@ -127,8 +126,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
 .cal-day.today{background:var(--accent);color:#fff;font-weight:700}
 .cal-day.today:hover{background:var(--accent-dark)}
 .cal-day.selected{background:#e8f5e9;color:var(--accent-dark);font-weight:600}
-.cal-day.weekend{color:var(--red)}
-.cal-day.holiday{color:var(--red);font-weight:600}
+.cal-day.weekend{color:var(--red)}.cal-day.holiday{color:var(--red);font-weight:600}
 .cal-day.other-month{color:#ccc}
 .cal-day-dot{width:5px;height:5px;border-radius:50%;background:var(--blue)}
 .cal-notes{border-top:1px solid var(--border);padding-top:12px}
@@ -143,12 +141,20 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
 .cal-add-note input:focus{border-color:var(--accent)}
 .cal-add-note select{border:1.5px solid var(--border);border-radius:var(--rs);padding:8px 8px;font-family:inherit;font-size:13px;outline:none;background:var(--bg);-webkit-appearance:none}
 .cal-add-note button{background:var(--accent);color:#fff;border:none;border-radius:var(--rs);padding:8px 12px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap}
-/* REMINDER popup */
 .reminder-popup{position:fixed;top:70px;right:16px;background:var(--surface);border:1.5px solid var(--accent);border-radius:16px;padding:16px 20px;box-shadow:var(--shm);z-index:9999;max-width:320px;animation:slideIn .3s ease}
 @keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
 .reminder-popup h4{font-size:14px;font-weight:600;color:var(--accent-dark);margin-bottom:4px}
 .reminder-popup p{font-size:13px;color:var(--text);margin-bottom:10px}
 .reminder-popup button{font-size:12px;padding:5px 14px;border:none;border-radius:20px;background:var(--accent);color:#fff;cursor:pointer}
+/* DASH PERIOD TABS */
+.period-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.period-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.period-btn.active{background:var(--accent-dark);color:#fff;border-color:var(--accent-dark)}
+.period-custom{display:flex;gap:6px;align-items:center}
+.period-custom input{border:1.5px solid var(--border);border-radius:var(--rs);padding:5px 8px;font-family:inherit;font-size:12px;background:var(--bg);color:var(--text);outline:none}
+.period-custom input:focus{border-color:var(--accent)}
+.btn-refresh{padding:6px 14px;border-radius:20px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px}
+.btn-refresh:active{opacity:.8}
 @media(max-width:599px){.table-wrap{display:none}.cards-wrap{display:flex}}
 </style>
 </head>
@@ -199,20 +205,29 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
     <div class="form-grid">
       <div class="fg"><label>Дата</label><input type="date" id="fDate" readonly></div>
       <div class="fg"><label>Время</label><input type="time" id="fTime" readonly></div>
-      <div class="fg full"><label>ФИО *</label><input type="text" id="fFio" placeholder="Иванов Иван Иванович"></div>
-      <div class="fg"><label>Телефон *</label>
-        <div class="tel-wrap"><span class="tel-prefix">+7</span><input type="tel" id="fTel" class="tel-input" placeholder="900 000-00-00" maxlength="15" oninput="this.value=this.value.replace(/[^0-9\s\-\(\)]/g,'')"></div>
+      <div class="fg full"><label>ФИО</label><input type="text" id="fFio" placeholder="— или введите имя"></div>
+      <div class="fg"><label>Телефон</label>
+        <div class="tel-wrap"><span class="tel-prefix">+7</span><input type="tel" id="fTel" class="tel-input" placeholder="— или номер" maxlength="15" oninput="this.value=this.value.replace(/[^0-9\s\-\(\)]/g,'')"></div>
       </div>
-      <div class="fg"><label>Округ *</label>
-        <select id="fOkrug"><option value="">—</option>
+      <div class="fg"><label>Округ</label>
+        <select id="fOkrug">
+          <option value="—">—</option>
           <optgroup label="Санкт-Петербург"><option>СПБ : СЗ</option><option>СПБ : СВ</option><option>СПБ : ВОСТОК</option><option>СПБ : ЮВ</option><option>СПБ : ЮЗ</option></optgroup>
           <optgroup label="Москва"><option>МСК : САО</option><option>МСК : СВАО</option><option>МСК : СЗАО</option><option>МСК : ВАО</option><option>МСК : ЮАО</option><option>МСК : ЮВАО</option><option>МСК : ЮЗАО</option><option>МСК : ЗАО</option></optgroup>
         </select>
       </div>
-      <div class="fg"><label>Да/Нет *</label><select id="fDa"><option value="">—</option><option value="да">Да</option><option value="нет">Нет</option><option value="думает">Думает</option></select></div>
-      <div class="fg"><label>Статус</label><select id="fStatus"><option value="">—</option><option>думает</option><option>недозвон</option><option>отказ</option><option>принят</option><option>оформление</option><option>стажировка</option><option>резерв</option><option>жду доки</option><option>проверка СБ</option><option>передан в логистику</option></select></div>
-      <div class="fg"><label>Юр. Статус</label><select id="fJur"><option value="">—</option><option>СМЗ</option><option>ИП</option><option>ТД</option><option>ГПХ</option></select></div>
-      <div class="fg"><label>Город</label><select id="fCity"><option value="">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Нижний Новгород</option><option>Воронеж</option><option>Другой</option></select></div>
+      <div class="fg"><label>Да/Нет</label>
+        <select id="fDa"><option value="—">—</option><option value="да">Да</option><option value="нет">Нет</option><option value="думает">Думает</option></select>
+      </div>
+      <div class="fg"><label>Статус</label>
+        <select id="fStatus"><option value="—">—</option><option>думает</option><option>недозвон</option><option>отказ</option><option>принят</option><option>оформление</option><option>стажировка</option><option>резерв</option><option>жду доки</option><option>проверка СБ</option><option>передан в логистику</option></select>
+      </div>
+      <div class="fg"><label>Юр. Статус</label>
+        <select id="fJur"><option value="—">—</option><option>СМЗ</option><option>ИП</option><option>ТД</option><option>ГПХ</option></select>
+      </div>
+      <div class="fg"><label>Город</label>
+        <select id="fCity"><option value="—">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Нижний Новгород</option><option>Воронеж</option><option>Другой</option></select>
+      </div>
       <div class="fg full"><label>Комментарий</label><textarea id="fComment" placeholder="Заметки..."></textarea></div>
     </div>
     <div class="modal-btns">
@@ -265,16 +280,11 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
       <div id="calNotesList"></div>
       <div class="cal-add-note">
         <select id="calNoteTime" style="width:90px">
-          <option value="09:00">09:00</option><option value="09:30">09:30</option>
-          <option value="10:00">10:00</option><option value="10:30">10:30</option>
-          <option value="11:00">11:00</option><option value="11:30">11:30</option>
-          <option value="12:00">12:00</option><option value="12:30">12:30</option>
-          <option value="13:00">13:00</option><option value="13:30">13:30</option>
-          <option value="14:00">14:00</option><option value="14:30">14:30</option>
-          <option value="15:00">15:00</option><option value="15:30">15:30</option>
-          <option value="16:00">16:00</option><option value="16:30">16:30</option>
-          <option value="17:00">17:00</option><option value="17:30">17:30</option>
-          <option value="18:00">18:00</option>
+          <option>09:00</option><option>09:30</option><option>10:00</option><option>10:30</option>
+          <option>11:00</option><option>11:30</option><option>12:00</option><option>12:30</option>
+          <option>13:00</option><option>13:30</option><option>14:00</option><option>14:30</option>
+          <option>15:00</option><option>15:30</option><option>16:00</option><option>16:30</option>
+          <option>17:00</option><option>17:30</option><option>18:00</option>
         </select>
         <input type="text" id="calNoteInput" placeholder="Добавить заметку...">
         <button id="calNoteAddBtn">+</button>
@@ -318,19 +328,18 @@ const ALL_R=['Осипова А.','Наседко Е.','Дюпина Е.','См�
 const ADMINS=['d.elsafadi@growfood.pro','ya.fedorova@growfood.pro','stepakova@growfood.pro','yakovleva@growfood.pro','a.yakovleva@growfood.pro','s.fedorov@growfood.pro'];
 const SPB=['СПБ : СЗ','СПБ : СВ','СПБ : ВОСТОК','СПБ : ЮВ','СПБ : ЮЗ'];
 const MSK=['МСК : САО','МСК : СВАО','МСК : СЗАО','МСК : ВАО','МСК : ЮАО','МСК : ЮВАО','МСК : ЮЗАО','МСК : ЗАО'];
-// Российские праздники 2026 (формат MM-DD)
 const RU_HOLIDAYS=['01-01','01-02','01-03','01-04','01-05','01-06','01-07','01-08','02-23','03-08','05-01','05-09','06-12','11-04'];
 
 let CU=null,isAdmin=false,myRec=null,rows=[],tab=0,editId=null,dragId=null;
 let F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};
 let selected=new Set();
-// экранное время
-let screenStart=Date.now();
-let screenSeconds=0;
-// календарь
+let screenStart=Date.now(),screenSeconds=0;
 let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
-let calSelectedDate=td();
-let calNotes=[];
+let calSelectedDate=td(),calNotes=[];
+
+// Дашборд период
+let dashTab='main',dashPeriod='week';
+let dashFrom='',dashTo='';
 
 function td(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
 function fd(d){if(!d)return'—';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
@@ -338,9 +347,11 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').repla
 function getRecs(){return isAdmin?ALL_R:[myRec]}
 function sClass(s){return{думает:'dumaet',недозвон:'nedozvon',отказ:'otkaz',принят:'prinyat',оформление:'oformlenie',стажировка:'stazhirovka',резерв:'rezerv','жду доки':'zhdu','проверка СБ':'sb','передан в логистику':'logistic'}[s]||''}
 function daBadge(v){if(v==='да')return'<span class="chip c-da-yes">Да</span>';if(v==='нет')return'<span class="chip c-da-no">Нет</span>';if(v==='думает')return'<span class="chip c-da-think">Думает</span>';return'<span class="chip c-empty">—</span>'}
-function stBadge(s){const c=sClass(s);return s?`<span class="chip c-${c}">${s}</span>`:'—'}
+function stBadge(s){const c=sClass(s);return s&&s!=='—'?`<span class="chip c-${c}">${s}</span>`:'—'}
 function setSyncing(st,msg){const el=document.getElementById('syncStatus');el.className='sync-pill sync-'+st;el.textContent=msg}
 function nowDT(){const n=new Date();return{date:n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'),time:String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')}}
+function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?`${h}ч ${m}м`:`${m}м`}
+function fdd(d){if(!d)return'';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
 
 function copyPhone(tel){
   if(!tel||tel==='—')return;
@@ -351,124 +362,78 @@ function copyPhone(tel){
   }).catch(()=>{});
 }
 
-// ---- SCREEN TIME ----
-function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?`${h}ч ${m}м`:`${m}м`}
+// вычисляем период для дашборда
+function getDashPeriod(){
+  const n=new Date();
+  if(dashPeriod==='today'){return{from:td(),to:td()};}
+  if(dashPeriod==='week'){const f=new Date(n);f.setDate(n.getDate()-6);return{from:f.getFullYear()+'-'+String(f.getMonth()+1).padStart(2,'0')+'-'+String(f.getDate()).padStart(2,'0'),to:td()};}
+  if(dashPeriod==='month'){const f=new Date(n.getFullYear(),n.getMonth(),1);return{from:f.getFullYear()+'-'+String(f.getMonth()+1).padStart(2,'0')+'-01',to:td()};}
+  if(dashPeriod==='custom'){return{from:dashFrom||td(),to:dashTo||td()};}
+  return{from:td(),to:td()};
+}
 
+// ---- SCREEN TIME ----
 async function saveScreenTime(){
   if(!CU)return;
   const elapsed=Math.floor((Date.now()-screenStart)/1000);
   screenSeconds+=elapsed;screenStart=Date.now();
-  const date=td();
-  await sb.from('screen_time').upsert({email:CU.email,name:myRec,date,seconds:screenSeconds},{onConflict:'email,date'}).catch(()=>{});
+  await sb.from('screen_time').upsert({email:CU.email,name:myRec,date:td(),seconds:screenSeconds},{onConflict:'email,date'}).catch(()=>{});
 }
-
-// периодически сохраняем и при уходе со страницы
 setInterval(saveScreenTime,60000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)saveScreenTime();else screenStart=Date.now();});
 
-// ---- CALENDAR & NOTES ----
+// ---- CALENDAR ----
 function calKey(){return'cal_notes_'+(CU?.email||'')}
-
-function loadCalNotes(){
-  try{calNotes=JSON.parse(localStorage.getItem(calKey())||'[]')}catch{calNotes=[]}
-  checkReminders();
-  updateCalBadge();
-}
-
-function saveCalNotes(){
-  localStorage.setItem(calKey(),JSON.stringify(calNotes));
-  updateCalBadge();
-}
-
-function updateCalBadge(){
-  const today=td();const hasToday=calNotes.some(n=>n.date===today);
-  document.getElementById('calBadge').style.display=hasToday?'block':'none';
-}
-
+function loadCalNotes(){try{calNotes=JSON.parse(localStorage.getItem(calKey())||'[]')}catch{calNotes=[]}checkReminders();updateCalBadge();}
+function saveCalNotes(){localStorage.setItem(calKey(),JSON.stringify(calNotes));updateCalBadge();}
+function updateCalBadge(){const today=td();document.getElementById('calBadge').style.display=calNotes.some(n=>n.date===today)?'block':'none';}
 function checkReminders(){
-  const now=new Date();
-  const dateStr=td();
+  const now=new Date();const dateStr=td();
   const timeStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  calNotes.forEach(n=>{
-    if(n.date===dateStr&&n.time===timeStr&&!n.shown){
-      n.shown=true;saveCalNotes();showReminder(n);
-    }
-  });
+  calNotes.forEach(n=>{if(n.date===dateStr&&n.time===timeStr&&!n.shown){n.shown=true;saveCalNotes();showReminder(n);}});
 }
 setInterval(checkReminders,30000);
-
 function showReminder(note){
-  const el=document.createElement('div');
-  el.className='reminder-popup';
+  const el=document.createElement('div');el.className='reminder-popup';
   el.innerHTML=`<h4>⏰ Напоминание ${note.time}</h4><p>${esc(note.note)}</p><button onclick="this.closest('.reminder-popup').remove()">Понятно</button>`;
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),30000);
+  document.body.appendChild(el);setTimeout(()=>el.remove(),30000);
 }
-
-// Render calendar
 const MONTHS_RU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const DAYS_RU=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-
 function renderCalendar(){
-  const title=`${MONTHS_RU[calMonth]} ${calYear}`;
-  document.getElementById('calMonthTitle').textContent=title;
+  document.getElementById('calMonthTitle').textContent=`${MONTHS_RU[calMonth]} ${calYear}`;
   const grid=document.getElementById('calGrid');
   grid.innerHTML=DAYS_RU.map(d=>`<div class="cal-day-header">${d}</div>`).join('');
-  const first=new Date(calYear,calMonth,1);
-  let startDow=(first.getDay()+6)%7; // Пн=0
+  const first=new Date(calYear,calMonth,1);let startDow=(first.getDay()+6)%7;
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
-  const prevDays=new Date(calYear,calMonth,0).getDate();
-  const todayStr=td();
-  // prev month
-  for(let i=startDow-1;i>=0;i--){
-    const d=prevDays-i;const ds=`${calYear}-${String(calMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    grid.innerHTML+=`<div class="cal-day other-month">${d}</div>`;
-  }
+  const prevDays=new Date(calYear,calMonth,0).getDate();const todayStr=td();
+  for(let i=startDow-1;i>=0;i--){grid.innerHTML+=`<div class="cal-day other-month">${prevDays-i}</div>`;}
   for(let d=1;d<=daysInMonth;d++){
     const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const mmdd=dateStr.slice(5);
-    const isHoliday=RU_HOLIDAYS.includes(mmdd);
-    const dow=new Date(calYear,calMonth,d).getDay();
-    const isWeekend=dow===0||dow===6;
-    const isToday=dateStr===todayStr;
-    const isSel=dateStr===calSelectedDate;
+    const mmdd=dateStr.slice(5);const isHoliday=RU_HOLIDAYS.includes(mmdd);
+    const dow=new Date(calYear,calMonth,d).getDay();const isWeekend=dow===0||dow===6;
+    const isToday=dateStr===todayStr;const isSel=dateStr===calSelectedDate;
     const hasNote=calNotes.some(n=>n.date===dateStr);
-    const cls=['cal-day',isToday?'today':'',isSel&&!isToday?'selected':'',isHoliday?'holiday':isWeekend?'weekend':'','other-month'===''?'':''].filter(Boolean).join(' ');
+    const cls=['cal-day',isToday?'today':'',isSel&&!isToday?'selected':'',isHoliday?'holiday':isWeekend?'weekend':''].filter(Boolean).join(' ');
     grid.innerHTML+=`<div class="${cls}" onclick="calSelectDate('${dateStr}')">${d}${hasNote?'<div class="cal-day-dot"></div>':''}</div>`;
   }
-  // fill remaining
   const total=startDow+daysInMonth;const rem=(7-total%7)%7;
   for(let d=1;d<=rem;d++){grid.innerHTML+=`<div class="cal-day other-month">${d}</div>`;}
   renderCalNotes();
 }
-
-function calSelectDate(dateStr){
-  calSelectedDate=dateStr;renderCalendar();
-}
-
+function calSelectDate(dateStr){calSelectedDate=dateStr;renderCalendar();}
 function renderCalNotes(){
   const notes=calNotes.filter(n=>n.date===calSelectedDate).sort((a,b)=>a.time.localeCompare(b.time));
-  const p=fd(calSelectedDate);
-  document.getElementById('calNotesTitle').textContent=`Заметки на ${p}`;
+  document.getElementById('calNotesTitle').textContent=`Заметки на ${fd(calSelectedDate)}`;
   const list=document.getElementById('calNotesList');
   if(!notes.length){list.innerHTML=`<div style="font-size:12px;color:var(--muted);padding:8px 0">Нет заметок</div>`;return;}
-  list.innerHTML=notes.map(n=>`<div class="cal-note-item">
-    <span class="cal-note-time">${n.time}</span>
-    <span class="cal-note-text">${esc(n.note)}</span>
-    <button class="cal-note-del" onclick="delCalNote('${n.id}')">✕</button>
-  </div>`).join('');
+  list.innerHTML=notes.map(n=>`<div class="cal-note-item"><span class="cal-note-time">${n.time}</span><span class="cal-note-text">${esc(n.note)}</span><button class="cal-note-del" onclick="delCalNote('${n.id}')">✕</button></div>`).join('');
 }
-
 function delCalNote(id){calNotes=calNotes.filter(n=>n.id!==id);saveCalNotes();renderCalendar();}
-
 document.getElementById('calNoteAddBtn').onclick=()=>{
-  const text=document.getElementById('calNoteInput').value.trim();
-  const time=document.getElementById('calNoteTime').value;
-  if(!text)return;
-  calNotes.push({id:Date.now().toString(36),date:calSelectedDate,time,note:text,shown:false});
-  saveCalNotes();
-  document.getElementById('calNoteInput').value='';
-  renderCalendar();
+  const text=document.getElementById('calNoteInput').value.trim();const time=document.getElementById('calNoteTime').value;
+  if(!text)return;calNotes.push({id:Date.now().toString(36),date:calSelectedDate,time,note:text,shown:false});
+  saveCalNotes();document.getElementById('calNoteInput').value='';renderCalendar();
 };
 document.getElementById('calNoteInput').onkeydown=e=>{if(e.key==='Enter')document.getElementById('calNoteAddBtn').click()};
 document.getElementById('calPrev').onclick=()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar()};
@@ -496,8 +461,7 @@ document.getElementById('moveConfirmBtn').onclick=async function(){
   this.textContent='Переношу...';this.disabled=true;
   const ids=[...selected];for(const id of ids){await sb.from('candidates').update({date:newDate}).eq('id',id);}
   this.textContent='Перенести';this.disabled=false;
-  document.getElementById('moveBg').classList.remove('open');
-  clearSelection();F.from=newDate;F.to=newDate;await loadData();
+  document.getElementById('moveBg').classList.remove('open');clearSelection();F.from=newDate;F.to=newDate;await loadData();
 };
 
 // ---- AUTH ----
@@ -518,7 +482,6 @@ function initUser(user){
   document.getElementById('loginWrap').style.display='none';document.getElementById('appWrap').classList.remove('hidden');
   renderAvatar();if(!isAdmin){tab=ALL_R.indexOf(myRec);if(tab<0)tab=0}
   loadCalNotes();
-  // загружаем текущее экранное время за сегодня
   sb.from('screen_time').select('seconds').eq('email',user.email).eq('date',td()).single().then(({data})=>{if(data)screenSeconds=data.seconds||0;});
   loadData();updatePresence();setInterval(updatePresence,30000);
   sb.channel('c1').on('postgres_changes',{event:'*',schema:'public',table:'candidates'},()=>loadData()).subscribe();
@@ -552,7 +515,7 @@ async function loadData(){
   render();
 }
 
-let dashMode=false,dashTab='main';
+let dashMode=false;
 
 function renderTabs(){
   const recs=getRecs();
@@ -573,14 +536,28 @@ function render(){
 
 async function renderDashboard(){
   const dw=document.getElementById('dashWrap');if(!dw)return;
-  const to=td();const fromD=new Date();fromD.setDate(fromD.getDate()-6);
-  const from=fromD.getFullYear()+'-'+String(fromD.getMonth()+1).padStart(2,'0')+'-'+String(fromD.getDate()).padStart(2,'0');
+  const{from,to}=getDashPeriod();
 
   dw.innerHTML=`<div style="padding:12px 16px;width:100%;max-width:900px;margin:0 auto">
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      <button onclick="setDashTab('main')" id="dtbMain" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;background:${dashTab==='main'?'var(--accent-dark)':'var(--bg)'};color:${dashTab==='main'?'#fff':'var(--text)'}">📊 Статистика</button>
-      <button onclick="setDashTab('time')" id="dtbTime" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;background:${dashTab==='time'?'var(--accent-dark)':'var(--bg)'};color:${dashTab==='time'?'#fff':'var(--text)'}">⏱ Экранное время</button>
+    <!-- Вкладки -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <button onclick="setDashTab('main')" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;background:${dashTab==='main'?'var(--accent-dark)':'var(--bg)'};color:${dashTab==='main'?'#fff':'var(--text)'}">📊 Статистика</button>
+      <button onclick="setDashTab('time')" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;background:${dashTab==='time'?'var(--accent-dark)':'var(--bg)'};color:${dashTab==='time'?'#fff':'var(--text)'}">⏱ Экранное время</button>
     </div>
+    <!-- Период -->
+    <div class="period-tabs">
+      <button class="period-btn ${dashPeriod==='today'?'active':''}" onclick="setPeriod('today')">Сегодня</button>
+      <button class="period-btn ${dashPeriod==='week'?'active':''}" onclick="setPeriod('week')">7 дней</button>
+      <button class="period-btn ${dashPeriod==='month'?'active':''}" onclick="setPeriod('month')">Месяц</button>
+      <button class="period-btn ${dashPeriod==='custom'?'active':''}" onclick="setPeriod('custom')">Период</button>
+      ${dashPeriod==='custom'?`<div class="period-custom">
+        <input type="date" id="dashFrom" value="${dashFrom||from}" onchange="dashFrom=this.value">
+        <span style="color:var(--muted);font-size:12px">—</span>
+        <input type="date" id="dashTo" value="${dashTo||to}" onchange="dashTo=this.value">
+      </div>`:''}
+      <button class="btn-refresh" onclick="refreshDash()">🔄 Обновить</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${fdd(from)} — ${fdd(to)}</div>
     <div id="dashContent"><div style="text-align:center;padding:40px;color:var(--muted)">Загрузка...</div></div>
   </div>`;
 
@@ -590,6 +567,16 @@ async function renderDashboard(){
 
 function setDashTab(t){dashTab=t;renderDashboard();}
 window.setDashTab=setDashTab;
+function setPeriod(p){dashPeriod=p;if(p!=='custom'){dashFrom='';dashTo='';}renderDashboard();}
+window.setPeriod=setPeriod;
+function refreshDash(){
+  if(dashPeriod==='custom'){
+    const f=document.getElementById('dashFrom');const t=document.getElementById('dashTo');
+    if(f)dashFrom=f.value;if(t)dashTo=t.value;
+  }
+  renderDashboard();
+}
+window.refreshDash=refreshDash;
 
 async function renderDashMain(from,to){
   const{data,error}=await sb.from('candidates').select('recruiter,status,da').gte('date',from).lte('date',to);
@@ -598,10 +585,10 @@ async function renderDashMain(from,to){
   const SC={'думает':'#eef2ff','недозвон':'#fff7ed','отказ':'#fef2f2','принят':'#f0fdf4','оформление':'#ecfeff','стажировка':'#faf5ff','резерв':'#ede9fe','жду доки':'#fdf2f8','проверка СБ':'#fefce8','передан в логистику':'#f0fdf4'};
   const ST={'думает':'#3730a3','недозвон':'#c2410c','отказ':'#b91c1c','принят':'#15803d','оформление':'#0e7490','стажировка':'#7e22ce','резерв':'#5b21b6','жду доки':'#9d174d','проверка СБ':'#854d0e','передан в логистику':'#166534'};
   const stats={};ALL_R.forEach(r=>{stats[r]={total:0,logistic:0,statuses:{}}});
-  data.forEach(row=>{if(!stats[row.recruiter])return;stats[row.recruiter].total++;if(row.status==='передан в логистику')stats[row.recruiter].logistic++;if(row.status)stats[row.recruiter].statuses[row.status]=(stats[row.recruiter].statuses[row.status]||0)+1;});
+  data.forEach(row=>{if(!stats[row.recruiter])return;stats[row.recruiter].total++;if(row.status==='передан в логистику')stats[row.recruiter].logistic++;if(row.status&&row.status!=='—')stats[row.recruiter].statuses[row.status]=(stats[row.recruiter].statuses[row.status]||0)+1;});
   const rating=[...ALL_R].sort((a,b)=>stats[b].logistic-stats[a].logistic);const maxL=Math.max(...ALL_R.map(r=>stats[r].logistic),1);
   document.getElementById('dashContent').innerHTML=`
-    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">${fdd(from)} — ${fdd(to)} · Всего: <strong>${data.length}</strong></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Всего анкет: <strong>${data.length}</strong></div>
     <div style="background:var(--surface);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--sh)">
       <div style="font-size:12px;font-weight:600;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px">🏆 Рейтинг — передано в логистику</div>
       ${rating.map((r,i)=>{const pct=Math.round(stats[r].logistic/maxL*100);const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';return`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px;font-weight:500">${medal} ${r}</span><span style="font-size:13px;font-weight:600;color:#15803d">${stats[r].logistic} <span style="font-weight:400;color:var(--muted);font-size:11px">(${stats[r].total?Math.round(stats[r].logistic/stats[r].total*100):0}%)</span></span></div><div style="background:#f2f2f7;border-radius:4px;height:6px;overflow:hidden"><div style="background:#34c759;height:100%;width:${pct}%;border-radius:4px"></div></div></div>`}).join('')}
@@ -612,42 +599,33 @@ async function renderDashMain(from,to){
 }
 
 async function renderDashTime(){
-  // последние 14 дней
-  const toD=new Date(),fromD=new Date();fromD.setDate(fromD.getDate()-13);
-  const from=fromD.getFullYear()+'-'+String(fromD.getMonth()+1).padStart(2,'0')+'-'+String(fromD.getDate()).padStart(2,'0');
-  const to=td();
+  const{from,to}=getDashPeriod();
   const{data,error}=await sb.from('screen_time').select('*').gte('date',from).lte('date',to).order('date',{ascending:false});
   if(error){document.getElementById('dashContent').innerHTML='<div style="color:var(--muted)">Ошибка загрузки экранного времени</div>';return;}
-  const rows=data||[];
-  // группируем по пользователю
+  const stRows=data||[];
   const byUser={};
-  rows.forEach(r=>{if(!byUser[r.name])byUser[r.name]={total:0,days:{}};byUser[r.name].total+=r.seconds||0;byUser[r.name].days[r.date]=(byUser[r.name].days[r.date]||0)+(r.seconds||0);});
+  stRows.forEach(r=>{if(!byUser[r.name])byUser[r.name]={total:0,days:{}};byUser[r.name].total+=r.seconds||0;byUser[r.name].days[r.date]=(byUser[r.name].days[r.date]||0)+(r.seconds||0);});
   const users=Object.keys(byUser).sort((a,b)=>byUser[b].total-byUser[a].total);
-  // список дат
-  const dates=[];for(let d=new Date(fromD);d<=toD;d.setDate(d.getDate()+1)){dates.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));}
+  const dates=[];const fromD=new Date(from);const toD=new Date(to);
+  for(let d=new Date(fromD);d<=toD;d.setDate(d.getDate()+1)){dates.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));}
   document.getElementById('dashContent').innerHTML=`
-    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Экранное время за 14 дней</div>
     <div style="background:var(--surface);border-radius:16px;padding:16px;box-shadow:var(--sh);overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px">
-        <thead>
-          <tr>
-            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border)">Рекрутер</th>
-            ${dates.map(d=>`<th style="padding:4px 6px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap">${fd(d).slice(0,5)}</th>`).join('')}
-            <th style="padding:6px 10px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border)">Итого</th>
-          </tr>
-        </thead>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">
+        <thead><tr>
+          <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border)">Рекрутер</th>
+          ${dates.map(d=>`<th style="padding:4px 6px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap">${fd(d).slice(0,5)}</th>`).join('')}
+          <th style="padding:6px 10px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border)">Итого</th>
+        </tr></thead>
         <tbody>
           ${users.length?users.map(u=>`<tr>
             <td style="padding:8px 10px;font-weight:500;border-bottom:1px solid var(--border)">${u}</td>
-            ${dates.map(d=>{const s=byUser[u].days[d]||0;return`<td style="padding:6px;text-align:center;border-bottom:1px solid var(--border);color:${s>3600?'var(--accent-dark)':s>0?'var(--text)':'var(--muted)'};background:${s>3600?'#e8f5e9':s>0?'':''};">${s>0?fmtTime(s):'—'}</td>`}).join('')}
+            ${dates.map(d=>{const s=byUser[u].days[d]||0;return`<td style="padding:6px;text-align:center;border-bottom:1px solid var(--border);color:${s>3600?'var(--accent-dark)':s>0?'var(--text)':'var(--muted)'};background:${s>3600?'#e8f5e9':''};">${s>0?fmtTime(s):'—'}</td>`}).join('')}
             <td style="padding:8px 10px;font-weight:700;border-bottom:1px solid var(--border);color:var(--accent-dark)">${fmtTime(byUser[u].total)}</td>
-          </tr>`).join(''):'<tr><td colspan="100" style="padding:20px;text-align:center;color:var(--muted)">Нет данных — данные появятся когда пользователи войдут в CRM</td></tr>'}
+          </tr>`).join(''):'<tr><td colspan="100" style="padding:20px;text-align:center;color:var(--muted)">Нет данных за выбранный период</td></tr>'}
         </tbody>
       </table>
     </div>`;
 }
-
-function fdd(d){if(!d)return'';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
 
 function renderFilters(){
   const recs=getRecs();const canAdd=isAdmin||(myRec===recs[tab]);
@@ -730,7 +708,7 @@ function renderCards(fr){
       <div onclick="openEdit('${r.id}')">
         <div class="card-top"><div class="card-name">${r.fio||'—'}</div><div class="card-time">${fd(r.date)} ${r.time||''}</div></div>
         <div class="card-tel" onclick="event.stopPropagation();copyPhone('${esc(r.tel||'')}')">${r.tel||'—'}</div>
-        <div class="card-chips">${r.okrug?`<span class="chip c-empty">${r.okrug}</span>`:''}${daBadge(r.da)}${stBadge(r.status)}${r.jur?`<span class="chip c-empty">${r.jur}</span>`:''}${r.city?`<span class="chip c-empty">${r.city}</span>`:''}</div>
+        <div class="card-chips">${r.okrug&&r.okrug!=='—'?`<span class="chip c-empty">${r.okrug}</span>`:''}${daBadge(r.da)}${stBadge(r.status)}${r.jur&&r.jur!=='—'?`<span class="chip c-empty">${r.jur}</span>`:''}${r.city&&r.city!=='—'?`<span class="chip c-empty">${r.city}</span>`:''}</div>
         ${r.comment?`<div class="card-comment">${r.comment}</div>`:''}
       </div>
     </div>`}).join('');
@@ -749,7 +727,7 @@ function openModal(){
   editId=null;document.getElementById('modalTitle').textContent='Новая запись';document.getElementById('delBtn').classList.add('hidden');
   const dt=nowDT();document.getElementById('fDate').value=dt.date;document.getElementById('fTime').value=dt.time;
   document.getElementById('fFio').value='';document.getElementById('fTel').value='';document.getElementById('fComment').value='';
-  ['fOkrug','fDa','fStatus','fJur','fCity'].forEach(id=>document.getElementById(id).value='');
+  ['fOkrug','fDa','fStatus','fJur','fCity'].forEach(id=>{document.getElementById(id).value='—';});
   document.getElementById('modalBg').classList.add('open');setTimeout(()=>document.getElementById('fFio').focus(),300);
 }
 
@@ -759,9 +737,9 @@ function openEdit(id){
   document.getElementById('fDate').value=r.date||'';document.getElementById('fTime').value=r.time||'';
   document.getElementById('fFio').value=r.fio||'';
   const tel=r.tel||'';document.getElementById('fTel').value=tel.startsWith('+7')?tel.slice(2):tel;
-  document.getElementById('fOkrug').value=r.okrug||'';document.getElementById('fDa').value=r.da||'';
-  document.getElementById('fStatus').value=r.status||'';document.getElementById('fJur').value=r.jur||'';
-  document.getElementById('fCity').value=r.city||'';document.getElementById('fComment').value=r.comment||'';
+  document.getElementById('fOkrug').value=r.okrug||'—';document.getElementById('fDa').value=r.da||'—';
+  document.getElementById('fStatus').value=r.status||'—';document.getElementById('fJur').value=r.jur||'—';
+  document.getElementById('fCity').value=r.city||'—';document.getElementById('fComment').value=r.comment||'';
   document.getElementById('modalBg').classList.add('open');
 }
 
@@ -771,11 +749,20 @@ document.getElementById('modalBg').onclick=function(e){if(e.target===this)this.c
 document.getElementById('saveBtn').onclick=async function(){
   const rec=getRecs()[tab]||getRecs()[0];
   const telRaw=document.getElementById('fTel').value.trim();
-  const d={recruiter:rec,date:document.getElementById('fDate').value,time:document.getElementById('fTime').value,fio:document.getElementById('fFio').value.trim(),tel:telRaw?'+7'+telRaw.replace(/^\+?7?/,''):'',okrug:document.getElementById('fOkrug').value,da:document.getElementById('fDa').value,status:document.getElementById('fStatus').value,jur:document.getElementById('fJur').value,city:document.getElementById('fCity').value,comment:document.getElementById('fComment').value.trim()};
-  if(!d.fio){alert('⚠️ Введите ФИО');document.getElementById('fFio').focus();return}
-  if(!telRaw){alert('⚠️ Введите телефон');document.getElementById('fTel').focus();return}
-  if(!d.okrug){alert('⚠️ Выберите округ');document.getElementById('fOkrug').focus();return}
-  if(!d.da){alert('⚠️ Укажите Да/Нет');document.getElementById('fDa').focus();return}
+  const fioVal=document.getElementById('fFio').value.trim();
+  const d={
+    recruiter:rec,
+    date:document.getElementById('fDate').value,
+    time:document.getElementById('fTime').value,
+    fio:fioVal||'—',
+    tel:telRaw?'+7'+telRaw.replace(/^\+?7?/,''):'—',
+    okrug:document.getElementById('fOkrug').value||'—',
+    da:document.getElementById('fDa').value||'—',
+    status:document.getElementById('fStatus').value||'—',
+    jur:document.getElementById('fJur').value||'—',
+    city:document.getElementById('fCity').value||'—',
+    comment:document.getElementById('fComment').value.trim()
+  };
   this.textContent='Сохраняю...';this.disabled=true;
   let saved=false;
   if(editId){const{error}=await sb.from('candidates').update(d).eq('id',editId);if(!error){saved=true}else{addToQueue({type:'update',data:d,rowId:editId});saved=true;}}
