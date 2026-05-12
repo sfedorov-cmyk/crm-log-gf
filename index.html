@@ -75,14 +75,14 @@ tr.selected td{background:#e8f5e9!important}
 .card.selected .card-check{background:var(--accent);border-color:var(--accent);color:#fff}
 .chip{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
 .c-empty{background:#f2f2f7;color:var(--muted)}.c-da-yes{background:#e5f9ee;color:#1a7a4a}.c-da-no{background:#ffe5e5;color:#c0392b}.c-da-think{background:#fff4e0;color:#b06000}
-.c-dumaet{background:#eef2ff;color:#3730a3}.c-nedozvon{background:#fff7ed;color:#c2410c}.c-otkaz{background:#fef2f2;color:#b91c1c}.c-prinyat{background:#f0fdf4;color:#15803d}
-.c-oformlenie{background:#ecfeff;color:#0e7490}.c-stazhirovka{background:#faf5ff;color:#7e22ce}.c-rezerv{background:#ede9fe;color:#5b21b6}
-.c-zhdu{background:#fdf2f8;color:#9d174d}.c-sb{background:#fefce8;color:#854d0e}.c-logistic{background:#f0fdf4;color:#166534}
-.r-dumaet td{background:#f8f9ff!important}.r-nedozvon td{background:#fffbf5!important}.r-otkaz td{background:#fff5f5!important}.r-prinyat td{background:#f0fdf4!important}
-.r-oformlenie td{background:#f0fbfd!important}.r-stazhirovka td{background:#fdf8ff!important}.r-rezerv td{background:#f5f3ff!important}
-.r-zhdu td{background:#fff0f8!important}.r-sb td{background:#fefde8!important}.r-logistic td{background:#f0fdf4!important}
-.r-dumaet{background:#f8f9ff}.r-nedozvon{background:#fffbf5}.r-otkaz{background:#fff5f5}.r-prinyat{background:#f0fdf4}
-.r-oformlenie{background:#f0fbfd}.r-stazhirovka{background:#fdf8ff}.r-rezerv{background:#f5f3ff}.r-zhdu{background:#fff0f8}.r-sb{background:#fefde8}.r-logistic{background:#f0fdf4}
+.c-dumaet{background:#eef2ff;color:#3730a3}.c-nedozvon{background:#f2f2f7;color:#8e8e93}.c-otkaz{background:#fef2f2;color:#b91c1c}.c-prinyat{background:#f0fdf4;color:#15803d}
+.c-oformlenie{background:#ecfeff;color:#0e7490}.c-stazhirovka{background:#faf5ff;color:#7e22ce}.c-rezerv{background:#dbeafe;color:#1d4ed8}
+.c-zhdu{background:#fce7f3;color:#9d174d}.c-sb{background:#fef9c3;color:#854d0e}.c-logistic{background:#dcfce7;color:#15803d}
+.r-dumaet td{background:#f8f9ff!important}.r-nedozvon td{background:#f9f9f9!important}.r-otkaz td{background:#fff5f5!important}.r-prinyat td{background:#f0fdf4!important}
+.r-oformlenie td{background:#f0fbfd!important}.r-stazhirovka td{background:#fdf8ff!important}.r-rezerv td{background:#eff6ff!important}
+.r-zhdu td{background:#fdf2f8!important}.r-sb td{background:#fefce8!important}.r-logistic td{background:#dcfce7!important}
+.r-dumaet{background:#f8f9ff}.r-nedozvon{background:#f9f9f9}.r-otkaz{background:#fff5f5}.r-prinyat{background:#f0fdf4}
+.r-oformlenie{background:#f0fbfd}.r-stazhirovka{background:#fdf8ff}.r-rezerv{background:#eff6ff}.r-zhdu{background:#fdf2f8}.r-sb{background:#fefce8}.r-logistic{background:#dcfce7}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-end;justify-content:center}
 .modal-bg.open{display:flex}
 @media(min-width:600px){.modal-bg{align-items:center}}
@@ -582,8 +582,8 @@ async function renderDashMain(from,to){
   const{data,error}=await sb.from('candidates').select('recruiter,status,da').gte('date',from).lte('date',to);
   if(error||!data){document.getElementById('dashContent').innerHTML='<div style="color:var(--muted)">Ошибка загрузки</div>';return;}
   const STATS=['думает','недозвон','отказ','принят','оформление','стажировка','резерв','жду доки','проверка СБ','передан в логистику'];
-  const SC={'думает':'#eef2ff','недозвон':'#fff7ed','отказ':'#fef2f2','принят':'#f0fdf4','оформление':'#ecfeff','стажировка':'#faf5ff','резерв':'#ede9fe','жду доки':'#fdf2f8','проверка СБ':'#fefce8','передан в логистику':'#f0fdf4'};
-  const ST={'думает':'#3730a3','недозвон':'#c2410c','отказ':'#b91c1c','принят':'#15803d','оформление':'#0e7490','стажировка':'#7e22ce','резерв':'#5b21b6','жду доки':'#9d174d','проверка СБ':'#854d0e','передан в логистику':'#166534'};
+  const SC={'думает':'#eef2ff','недозвон':'#f2f2f7','отказ':'#fef2f2','принят':'#f0fdf4','оформление':'#ecfeff','стажировка':'#faf5ff','резерв':'#dbeafe','жду доки':'#fce7f3','проверка СБ':'#fef9c3','передан в логистику':'#dcfce7'};
+  const ST={'думает':'#3730a3','недозвон':'#8e8e93','отказ':'#b91c1c','принят':'#15803d','оформление':'#0e7490','стажировка':'#7e22ce','резерв':'#1d4ed8','жду доки':'#9d174d','проверка СБ':'#854d0e','передан в логистику':'#15803d'};
   const stats={};ALL_R.forEach(r=>{stats[r]={total:0,logistic:0,statuses:{}}});
   data.forEach(row=>{if(!stats[row.recruiter])return;stats[row.recruiter].total++;if(row.status==='передан в логистику')stats[row.recruiter].logistic++;if(row.status&&row.status!=='—')stats[row.recruiter].statuses[row.status]=(stats[row.recruiter].statuses[row.status]||0)+1;});
   const rating=[...ALL_R].sort((a,b)=>stats[b].logistic-stats[a].logistic);const maxL=Math.max(...ALL_R.map(r=>stats[r].logistic),1);
