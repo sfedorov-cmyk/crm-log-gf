@@ -346,14 +346,58 @@ let infoMode=false;
 // INFO DATA — хранится в localStorage
 const INFO_KEY='hrcrm_info_v2';
 const INFO_DEFAULT={
-  warehouses:{updated:'',text:'МСК:\nЮЖ — Ступинский проезд д.1 (ЮАО, ЮЗО)\nСЕВЕР — Северянинский проезд 1 стр.7 (САО, СВАО, СЗАО, ВАО)\n\nСПБ:\n4-й Предпортовый проезд, д.31'},
-  schedule:{updated:'',text:'МСК:\nУтро: с 05:00-08:40, до 12-13:00\nВечер: с 15:30-17:30, до 23-00:00\n\nСПБ:\nУтро: с 05:00-08:40, до 12-13:00\nВечер: с 15:30-17:30, до 23-00:00\n\nСмена 150, Ин 212'},
-  rates:{updated:'',text:'Базовая смена: 150-200 руб.\nДоплата за область:\n• +2: Королёв, Балашиха, Мытищи, Химки, Красногорск, Подольск\n• +3: Щёлково, Лыткарино, Троицк, Зеленоград\n• +4: Одинцово, Троицк, Жуковский, Видное\n• +5: Солнечногорск, Серпухов\n• +6: МСК-ОПТИ-1500\nОплата частичной парковки: 201 руб.'},
-  docs_smz:{updated:'',text:'1. Паспорт РФ (разворот с фото, регистрация)\n2. СНИЛС\n3. ИНН\n4. Фото (разворот с фото, рег.)\n5. Актуальный номер телефона\n6. Электронная почта\n7. Банковские реквизиты\n8. Фактическое место проживания'},
-  docs_ip:{updated:'',text:'1. Паспорт РФ (разворот с фото, регистрация)\n2. Документы о регистрации ИП\n3. СНИЛС\n4. ОКВ(Д) 53.20\n5. УСН (6% доход)\n6. Актуальный номер телефона\n7. Электронная почта\n8. Наименование тв\n9. Фактическое место проживания'},
-  referral:{updated:'',text:'Акция "Приведи друга":\nПриведи друга к нам в курьерскую службу GF и получи бонус.\n\nБаллы зачисляются после того как друг отработает 3 смены.\n\nИнструкция:\n1. Скачать приложение "Мой налог" (mynalog.ru/tax/mobile)\n2. Пройти регистрацию в приложении (Можно через госуслуги)\n3. Прочти справку-Справки с постановкой-2020 и нажми перезапустить'},
-  script:{updated:'',text:'1. Приветствие\nДобрый день! Беспокоит компания GrowFood. Смотрю ваше резюме. Вам интересна работа курьером с возможностью делать это на личном автомобиле?\n\n2. Место проживания\nПодскажите пожалуйста в каком районе города Вы проживаете?\n\n3. Загрузки\nЗагрузка у нас осуществляется на Ступинском проезде, д.1 (для юга). Далеко ли Вам добираться до данного адреса?\n\n4. СМЗ или ИП\nУ вас открыт смз/ип? Если нет открыть "удалённо". Это займёт не более 15-20 минут.\n\n5. Ставка/точки\nРасскажите нам о предпочтительных частях города для приёма и доставки, мобильных связях, бесплатно или через посредников. Один человек — Приведи друга!\n\n6. Выплаты\nВыплаты раз в неделю по прошедшей неделе по четвергам (мб по средам) или раз в две недели.\n\n7. Вопросы\nОтвечаете ли вы на сообщения? Если да — оставить уточняющие вопросы по занятости. Давите спросить напрямую то, какие вопросы по вакансии у кандидата\n\n8. Оформление\nСообщаем, что если прошло более 2-х рабочих дней с вашим аккаунтом, которые необходимо заполнить в анкете 2-3 раза — согласование от нас придёт. Менеджер по оформлению с вами свяжется.\n\n9. Прощание\nПеречень документов переходит нам (из анкеты и описи) и ПРОВЕРКА СБ: подтвердить/отклонить.'},
-  cities:{updated:'',text:'Город | Адрес склада | Загрузка | Ставка\nМСК | ЮЖ: Ступинский проезд д.1 | Утро: 05:00-08:40, до 12-13:00 | Смена 150, Ин 212\nМСК | СЕВЕР: Северянинский проезд 1, стр.7 | Вечер: 15:30-17:30, до 23:00 | Смена 173, Ин 179\nСПБ | 4-й Предпортовый проезд, д.31 | Утро: 05:00-08:40, Вечер: 15:30-17:30 | Смена 195, Ин 195\nТольятти | Баковка д.12 (Центральный район) | Вечер: 16-17:00, до 23-00:00 | Смена 180 руб.\nНижний Новгород | Чкаловская 19г (Московский район) | Вечер: 16-17:00, до 25-00:00 | Смена 160 руб.\nСамара | Аэропорт, Волжское шоссе 128 (Кировский р-н) | Утро: 6-7:00, Вечер: 16-17:30, до 22-23:00 | Смена 160 руб.\nКазань | ул. Васильченко 20 д (Московский район) | Вечер: 16-17:30, до 23-00:00 | Смена 160 руб.\nЕкатеринбург | Монтажников 225б (Железнодорожный р-н) | Вечер: 16-17:30, до 25-00:00 | Смена 150 руб.\nВоронеж | Зорлада, 4/62 (Коминтерновский р-н) | Вечер: 16-17:30, до 23-00:00 | Смена 180 руб.'}
+  request_regions:{updated:'',rows:[
+    {city:'Тольятти',count:0,status:'стоп',conditions:''},
+    {city:'Нижний Новгород',count:0,status:'стоп',conditions:''},
+    {city:'Самара',count:0,status:'стоп',conditions:'Ср и Вс вечер'},
+    {city:'Казань',count:0,status:'стоп',conditions:''},
+    {city:'Екатеринбург',count:0,status:'стоп',conditions:''},
+    {city:'Воронеж',count:0,status:'стоп',conditions:''}
+  ]},
+  request_msk:{updated:'',period:'02.12-08.12',rows:[
+    {name:'Мамедов Сарван',okrug:'САО',count:0,status:'стоп',conditions:'в вс вечер и пн утро обязательный выход на работу! СРОЧНО на область Химки-Сходня-Подрезково-Лобня-зелик'},
+    {name:'Мустафаев Джавад',okrug:'СВАО',count:0,status:'стоп',conditions:'В Область и город, цао и объяснить что районы не закрепляются, смены могут быть как в центре так и в области в вс вечер и пн'},
+    {name:'Блиев Анзор',okrug:'СЗАО',count:0,status:'берём',conditions:'постоянка. По всему СЗАО'},
+    {name:'Васиев Евгений',okrug:'ВАО',count:1,status:'берём',conditions:'по всему ВАО (мск и область)'},
+    {name:'Ерофеев Сергей',okrug:'ЮВАО',count:0,status:'стоп',conditions:''},
+    {name:'Мосолов Фамиль',okrug:'ЮАО',count:0,status:'стоп',conditions:''},
+    {name:'Осипов Сергей',okrug:'ЮЗАО',count:0,status:'стоп',conditions:''},
+    {name:'Полякова Дарья',okrug:'ЗАО',count:1,status:'берём',conditions:'с подработками в ЮЗАО-универсал. вс вечер пн утро обязательно! Проживающие в зао работа в районе Фили Кутузовский'},
+    {name:'',okrug:'ЦАО(СВАО)',count:1,status:'берём',conditions:'Тверской, Красносельский, Басманный, Мещанский, Пресня, Китай Город, Таганская. ВОСКР-ВЕЧЕР И ПОН-УТРО! без этих смен не берём!'}
+  ]},
+  request_spb:{updated:'',rows:[
+    {okrug:'ЮЗ',count:0,status:'стоп',conditions:'пт сб воскр'},
+    {okrug:'ЮВ',count:0,status:'стоп',conditions:''},
+    {okrug:'СЗ',count:3,status:'берём',conditions:'сб и воскр-вечер'},
+    {okrug:'СВ',count:0,status:'стоп',conditions:'универсалы'},
+    {okrug:'Восток',count:0,status:'стоп',conditions:'и утро и вечер, любые дни-универсалы'},
+    {okrug:'Центр',count:1,status:'берём',conditions:'ЦЕНТР ЮВ: утро/вечер'}
+  ]},
+  cities:{updated:'',rows:[
+    {city:'МСК',address:'ЮЖ: Ступинский проезд д.1',schedule_am:'Утро: с 05:00-08:40, до 12-13:00',schedule_pm:'Вечер: с 15:30-17:30, до 23-00:00',rate_am:'Смз 205, Ин 212',rate_pm:'Смз 173, Ин 179'},
+    {city:'СПБ',address:'4-й Предпортовый проезд, д.5Л',schedule_am:'Утро: с 05:00-08:40, до 12-13:00',schedule_pm:'Вечер: с 15:30-17:30, до 23-00:00',rate_am:'Смз 180, Ин 195',rate_pm:'Смз 155, Ин 160'},
+    {city:'Тольятти',address:'Баковка д.12 (Центральный район)',schedule_am:'',schedule_pm:'Вечер: с 16-17:00, до 23-00:00',rate_am:'',rate_pm:'Смена 160 руб.'},
+    {city:'Нижний Новгород',address:'Чаадаева 19г (Московский район)',schedule_am:'Утро: с 6-7:00, до 12-13:00',schedule_pm:'Вечер: с 16-17:00, до 23-00:00',rate_am:'Утро: 182 руб.',rate_pm:'Вечер: 160 руб.'},
+    {city:'Самара',address:'Агропарк, Волжское шоссе 108 (Кировский р-н)',schedule_am:'Утро: с 6-7:00, до 12-13:00',schedule_pm:'Вечер: с 16-17:30, до 22-23:00',rate_am:'Утро: 200 руб.',rate_pm:'Вечер: 160 руб.'},
+    {city:'Казань',address:'ул. Васильченко 20 д (Московский район)',schedule_am:'Утро: с 6-7:00, до 12-13:00',schedule_pm:'Вечер: с 16-17:30, до 23-00:00',rate_am:'Утро: 182 руб.',rate_pm:'Вечер: 160 руб.'},
+    {city:'Екатеринбург',address:'Монтажников 22Б (Железнодорожный р-н)',schedule_am:'',schedule_pm:'Вечер: с 16-17:30, до 25-00:00',rate_am:'',rate_pm:'Смена 150 руб.'},
+    {city:'Воронеж',address:'Торпедо, 45В (Коминтерновский район)',schedule_am:'',schedule_pm:'Вечер: с 16-17:30, до 23-00:00',rate_am:'',rate_pm:'Смена 180 руб.'}
+  ]},
+  docs:{updated:'',smz:['Справка о постановке на учет СМЗ','ИНН','СНИЛС','Паспорт РФ (разворот с фото, регистрация)','Банковские реквизиты (АЛЬФА!!!) тбанк','Актуальный номер телефона','Электронная почта','Наименование тт','Фактическое место проживания'],
+    ip:['Паспорт РФ (разворот с фото, регистрация)','Документы о регистрации ИП','Реквизиты расчетного счета ИП','ОКВЭД 53.20','УСН 6% доход','Актуальный номер телефона','Электронная почта','Наименование тт','Фактическое место проживания']},
+  referral:{updated:'',text:'Приведи друга к нам в курьерскую службу ГФ и получи бонус.\n\nВажно: кандидат который пришел от вас, должен сказать рекрутеру вашу фамилию, чтобы бонус сработал.'},
+  smz_instruction:{updated:'',steps:['Скачать приложение "Мой налог" (appstore, playmarket)','Пройти регистрацию в приложении (Можно через госуслуги)','Прочее-Справки-Справка о постановке-2026 г-переслать!']},
+  script:{updated:'',rows:[
+    {step:'1. Приветствие',text:'Добрый день, вас беспокоит компания GrowFood. Меня зовут Яна, нашла ваше резюме на НН, скажите пожалуйста, заинтересованы ли в вакансии водитель курьер на личном авомобиле?'},
+    {step:'2. Место проживания',text:'Подскажите пожалуйста, в каком районе города проживаете?'},
+    {step:'3. Загрузка',text:'Загрузка у нас осуществляется на Ступинском проезде д.1 (и другие рц), было бы удобно добираться до склада? (рассказать про время загрузки и развозки и смены утро/вечер)'},
+    {step:'4. СМЗ или ИП',text:'Подскажите пожалуйста, какой юридический статус у вас открыт смз или ип? Если не открыт — "Будет возможность открыть что-то из этого?"'},
+    {step:'5. Стоимость точек',text:'Рассказать про стоимость точек, доп оплата: онлайн чаевые, доплаты за пригород, мобильная связь бесплатная через приложение, также рассказать про акцию Приведи Друга!'},
+    {step:'6. Выплаты',text:'Выплаты раз в неделю за прошлую неделю по четвергам смс (на крту альфа банка или тинькофф), если нет возможности работать с этими банками уточняем, с какими могут — ип выплаты по пятницам за прошлую неделю (любой банк)'},
+    {step:'7. Вопросы',text:'Уточнить про соц сети (тг, вк, ватцап), есть ли они и у вас в веренный ли пользователь? Далее спросить остались ли какие вопросы по вакансии?'},
+    {step:'8. Оформление',text:'Оформление у нас все происходит онлайн, я вам сейчас скину перечень документов, который необходимо заполнить в анкете 2-3 раза — согласование от нас придёт. Менеджер по оформлению с вами свяжется, куда удобнее для вас было бы скинуть перечень? (тг, ватцап, почта)'},
+    {step:'9. Прощаемся',text:'Перечень документов перешлю вам на (вк, вт, почта) и буду ждать от вас обратной связи! Всего доброго, досвидания!'}
+  ]}
 };
 
 function getInfoData(){try{return JSON.parse(localStorage.getItem(INFO_KEY)||'null')||INFO_DEFAULT}catch{return INFO_DEFAULT}}
@@ -363,60 +407,175 @@ function fmtInfoDate(){const n=new Date();return`${String(n.getDate()).padStart(
 function renderInfo(){
   const iw=document.getElementById('infoWrap');
   const d=getInfoData();
-  const sections=[
-    {key:'warehouses',icon:'🏭',title:'Склады и адреса'},
-    {key:'schedule',icon:'⏰',title:'График работы'},
-    {key:'rates',icon:'💰',title:'Ставки и доплаты за область'},
-    {key:'cities',icon:'🏙️',title:'Города — адреса и ставки'},
-    {key:'docs_smz',icon:'📄',title:'Документы СМЗ'},
-    {key:'docs_ip',icon:'📋',title:'Документы ИП'},
-    {key:'referral',icon:'🎁',title:'Акция "Приведи друга"'},
-    {key:'script',icon:'🎙️',title:'Скрипт по интервью'},
-  ];
-  iw.innerHTML=`<div style="max-width:900px;margin:0 auto;padding-bottom:24px">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <div style="font-size:17px;font-weight:700">📚 База знаний</div>
-      <div style="font-size:12px;color:var(--muted)">Нажмите ✏️ для редактирования раздела</div>
-    </div>
-    ${sections.map(s=>`
-      <div class="info-section" id="sec-${s.key}">
-        <div class="info-section-header">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:18px">${s.icon}</span>
-            <span class="info-section-title">${s.title}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            ${d[s.key].updated?`<span class="info-updated">обновлено: ${d[s.key].updated}</span>`:''}
-            <button class="info-edit-btn" onclick="toggleInfoEdit('${s.key}',this)">✏️ Редактировать</button>
-          </div>
-        </div>
-        <textarea class="info-textarea" id="info-${s.key}" readonly rows="${Math.min(20,Math.max(4,d[s.key].text.split('\n').length+1))}">${d[s.key].text}</textarea>
+
+  function secHeader(icon,title,key){return`<div class="info-section-header"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">${icon}</span><span class="info-section-title">${title}</span></div>${d[key].updated?`<span class="info-updated">обновлено: ${d[key].updated}</span>`:''}</div>`;}
+  function statusBadge(s){return s==='берём'?'<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">берём</span>':'<span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">стоп</span>';}
+  function statusToggle(key,idx,cur){return`<button onclick="toggleStatus('${key}',${idx})" style="background:${cur==='берём'?'#dcfce7':'#fee2e2'};color:${cur==='берём'?'#15803d':'#b91c1c'};border:none;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">${cur}</button>`;}
+  function countSpinner(key,idx,val){return`<div style="display:flex;align-items:center;gap:4px"><button onclick="changeCount('${key}',${idx},-1)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">−</button><span style="min-width:20px;text-align:center;font-weight:700;font-size:14px">${val}</span><button onclick="changeCount('${key}',${idx},1)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">+</button></div>`;}
+  function editableCell(key,idx,field,val,style=''){return`<td style="padding:7px 10px;border-bottom:1px solid var(--border);${style}" contenteditable="true" onblur="saveCell('${key}',${idx},'${field}',this.textContent)">${val||''}</td>`;}
+
+  iw.innerHTML=`<div style="max-width:1000px;margin:0 auto;padding-bottom:24px">
+  <div style="font-size:17px;font-weight:700;margin-bottom:16px">📚 База знаний</div>
+
+  <!-- ЗАПРОС РЕГИОНЫ -->
+  <div class="info-section">
+    ${secHeader('📍','Текущий запрос — Регионы','request_regions')}
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Город</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Кол-во</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Статус</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Условия</th>
+      </tr></thead>
+      <tbody>${d.request_regions.rows.map((r,i)=>`<tr>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:500">${r.city}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${countSpinner('request_regions',i,r.count)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${statusToggle('request_regions',i,r.status)}</td>
+        ${editableCell('request_regions',i,'conditions',r.conditions,'min-width:150px')}
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>
+
+  <!-- ЗАПРОС МСК -->
+  <div class="info-section">
+    ${secHeader('🏙️','Текущий запрос — Москва','request_msk')}
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Рекрутер</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Округ</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Кол-во</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Статус</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Условия / Пожелание</th>
+      </tr></thead>
+      <tbody>${d.request_msk.rows.map((r,i)=>`<tr style="background:${r.status==='берём'?'#f0fdf4':'#fff5f5'}">
+        ${editableCell('request_msk',i,'name',r.name,'font-weight:500')}
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent-dark)">${r.okrug}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${countSpinner('request_msk',i,r.count)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${statusToggle('request_msk',i,r.status)}</td>
+        ${editableCell('request_msk',i,'conditions',r.conditions,'min-width:200px;font-size:12px')}
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>
+
+  <!-- ЗАПРОС СПБ -->
+  <div class="info-section">
+    ${secHeader('🌊','Текущий запрос — Санкт-Петербург','request_spb')}
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Район</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Потребность</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Статус</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Условия</th>
+      </tr></thead>
+      <tbody>${d.request_spb.rows.map((r,i)=>`<tr style="background:${r.status==='берём'?'#f0fdf4':'#fff5f5'}">
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent-dark)">${r.okrug}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${countSpinner('request_spb',i,r.count)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${statusToggle('request_spb',i,r.status)}</td>
+        ${editableCell('request_spb',i,'conditions',r.conditions,'min-width:150px')}
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>
+
+  <!-- ГОРОДА -->
+  <div class="info-section">
+    ${secHeader('🏭','Города — склады и ставки','cities')}
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Город</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Адрес склада</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Загрузка утро</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Загрузка вечер</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Ставка утро</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Ставка вечер</th>
+      </tr></thead>
+      <tbody>${d.cities.rows.map((r,i)=>`<tr>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent-dark)">${r.city}</td>
+        ${editableCell('cities',i,'address',r.address,'min-width:180px')}
+        ${editableCell('cities',i,'schedule_am',r.schedule_am,'min-width:120px;font-size:12px')}
+        ${editableCell('cities',i,'schedule_pm',r.schedule_pm,'min-width:120px;font-size:12px')}
+        ${editableCell('cities',i,'rate_am',r.rate_am,'font-weight:500;color:var(--accent-dark)')}
+        ${editableCell('cities',i,'rate_pm',r.rate_pm,'font-weight:500;color:var(--accent-dark)')}
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>
+
+  <!-- ДОКУМЕНТЫ -->
+  <div class="info-section">
+    ${secHeader('📄','Документы','docs')}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--accent-dark);margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px">СМЗ</div>
+        ${d.docs.smz.map((item,i)=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:11px;font-weight:700;color:var(--muted);min-width:16px">${i+1}.</span>
+          <span contenteditable="true" onblur="saveDocItem('smz',${i},this.textContent)" style="font-size:13px;flex:1;outline:none;cursor:text">${item}</span>
+        </div>`).join('')}
       </div>
-    `).join('')}
-    <div style="font-size:11px;color:var(--muted);text-align:center;padding:8px">Данные хранятся локально на этом устройстве</div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px">ИП</div>
+        ${d.docs.ip.map((item,i)=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:11px;font-weight:700;color:var(--muted);min-width:16px">${i+1}.</span>
+          <span contenteditable="true" onblur="saveDocItem('ip',${i},this.textContent)" style="font-size:13px;flex:1;outline:none;cursor:text">${item}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- АКЦИЯ + ИНСТРУКЦИЯ -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="info-section">
+      ${secHeader('🎁','Акция "Приведи друга"','referral')}
+      <textarea class="info-textarea" id="info-referral" readonly rows="5">${d.referral.text}</textarea>
+      <button class="info-edit-btn" onclick="toggleInfoEdit('referral',this)" style="margin-top:8px">✏️ Редактировать</button>
+    </div>
+    <div class="info-section">
+      ${secHeader('📱','Инструкция: как взять справку СМЗ','smz_instruction')}
+      ${d.smz_instruction.steps.map((s,i)=>`<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="background:var(--accent);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</span>
+        <span contenteditable="true" onblur="saveSmzStep(${i},this.textContent)" style="font-size:13px;outline:none;cursor:text">${s}</span>
+      </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- СКРИПТ -->
+  <div class="info-section">
+    ${secHeader('🎙️','Скрипт по интервью','script')}
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);width:140px;text-transform:uppercase">Шаг</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Текст</th>
+      </tr></thead>
+      <tbody>${d.script.rows.map((r,i)=>`<tr>
+        <td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent-dark);vertical-align:top;font-size:12px">${r.step}</td>
+        ${editableCell('script',i,'text',r.text,'line-height:1.5;font-size:13px')}
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);text-align:center;padding:8px">Данные хранятся локально на этом устройстве</div>
   </div>`;
 }
 
 function toggleInfoEdit(key,btn){
-  const ta=document.getElementById('info-'+key);
-  if(ta.readOnly){
-    ta.readOnly=false;ta.style.background='#fff';ta.style.borderColor='var(--accent)';
-    btn.textContent='💾 Сохранить';btn.classList.add('editing');
-    ta.focus();
-  } else {
-    const d=getInfoData();
-    d[key].text=ta.value;d[key].updated=fmtInfoDate();
-    saveInfoData(d);
-    ta.readOnly=true;ta.style.background='var(--bg)';ta.style.borderColor='transparent';
-    btn.textContent='✏️ Редактировать';btn.classList.remove('editing');
-    // обновить дату
-    const header=document.querySelector(`#sec-${key} .info-updated`);
-    if(header)header.textContent='обновлено: '+d[key].updated;
-    else{const hdr=document.querySelector(`#sec-${key} .info-section-header div:last-child`);
-      const span=document.createElement('span');span.className='info-updated';span.textContent='обновлено: '+d[key].updated;hdr.insertBefore(span,btn);}
-  }
+  const ta=document.getElementById('info-'+key);if(!ta)return;
+  if(ta.readOnly){ta.readOnly=false;ta.style.background='#fff';ta.style.borderColor='var(--accent)';btn.textContent='💾 Сохранить';btn.classList.add('editing');ta.focus();}
+  else{const d=getInfoData();d[key].text=ta.value;d[key].updated=fmtInfoDate();saveInfoData(d);ta.readOnly=true;ta.style.background='var(--bg)';ta.style.borderColor='transparent';btn.textContent='✏️ Редактировать';btn.classList.remove('editing');}
 }
 window.toggleInfoEdit=toggleInfoEdit;
+
+function toggleStatus(key,idx){const d=getInfoData();d[key].rows[idx].status=d[key].rows[idx].status==='стоп'?'берём':'стоп';d[key].updated=fmtInfoDate();saveInfoData(d);renderInfo();}
+window.toggleStatus=toggleStatus;
+
+function changeCount(key,idx,delta){const d=getInfoData();d[key].rows[idx].count=Math.max(0,d[key].rows[idx].count+delta);d[key].updated=fmtInfoDate();saveInfoData(d);renderInfo();}
+window.changeCount=changeCount;
+
+function saveCell(key,idx,field,val){const d=getInfoData();d[key].rows[idx][field]=val.trim();d[key].updated=fmtInfoDate();saveInfoData(d);}
+window.saveCell=saveCell;
+
+function saveDocItem(type,idx,val){const d=getInfoData();d.docs[type][idx]=val.trim();d.docs.updated=fmtInfoDate();saveInfoData(d);}
+window.saveDocItem=saveDocItem;
+
+function saveSmzStep(idx,val){const d=getInfoData();d.smz_instruction.steps[idx]=val.trim();d.smz_instruction.updated=fmtInfoDate();saveInfoData(d);}
+window.saveSmzStep=saveSmzStep;
 
 function td(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
 function fd(d){if(!d)return'—';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
@@ -828,3 +987,4 @@ document.getElementById('delBtn').onclick=async function(){
 </script>
 </body>
 </html>
+
