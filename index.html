@@ -344,7 +344,7 @@ let dashTab='main',dashPeriod='week',dashFrom='',dashTo='';
 let infoMode=false;
 
 // INFO DATA — хранится в localStorage
-const INFO_KEY='hrcrm_info_v4';
+// Info data now stored in Supabase
 const INFO_DEFAULT={
   request_regions:{updated:'',rows:[
     {city:'Тольятти',count:0,status:'стоп',conditions:''},
@@ -387,6 +387,20 @@ const INFO_DEFAULT={
     ip:['Паспорт РФ (разворот с фото, регистрация)','Документы о регистрации ИП','Реквизиты расчетного счета ИП','ОКВЭД 53.20','УСН 6% доход','Актуальный номер телефона','Электронная почта','Наименование тт','Фактическое место проживания']},
   referral:{updated:'',text:'Приведи друга к нам в курьерскую службу ГФ и получи бонус.\n\nВажно: кандидат который пришел от вас, должен сказать рекрутеру вашу фамилию, чтобы бонус сработал.'},
   smz_instruction:{updated:'',steps:['Скачать приложение "Мой налог" (appstore, playmarket)','Пройти регистрацию в приложении (Можно через госуслуги)','Прочее-Справки-Справка о постановке-2026 г-переслать!']},
+  manual:{updated:'',sections:[
+    {title:'Вход в систему',text:'Откройте ссылку CRM в браузере. Введите корпоративный email и пароль → нажмите «Войти». После входа появится приветствие «Продуктивного дня 🌿».'},
+    {title:'Вкладки рекрутеров',text:'Каждый рекрутер видит только свою вкладку. Рядом с именем — цветная точка: 🟢 зелёная — онлайн прямо сейчас, ⚫ серая — офлайн. Администраторы видят все вкладки.'},
+    {title:'Добавление записи',text:'Нажмите кнопку «+ Запись» справа. Заполните нужные поля — все необязательны, можно поставить прочерк. Дата и время заполняются автоматически. Нажмите «Сохранить».'},
+    {title:'Редактирование записи',text:'Нажмите кнопку ✏️ справа от строки — откроется форма редактирования. Внесите изменения и нажмите «Сохранить». Для удаления нажмите кнопку «Удалить» в форме.'},
+    {title:'Копирование телефона',text:'Нажмите на номер телефона в таблице — он автоматически скопируется в буфер обмена. Появится подсказка «📋 Номер скопирован».'},
+    {title:'Статусы',text:'Каждый статус выделяется своим цветом строки. Недозвон — серый, Отказ — красный, Принят — зелёный, Оформление — голубой, Стажировка — фиолетовый, Резерв — синий, Жду доки — розовый, Проверка СБ — жёлтый, Передан в логистику — насыщенный зелёный.'},
+    {title:'Фильтры и поиск',text:'Используйте строку фильтров для поиска по ФИО, телефону, дате, округу, статусу и городу. По умолчанию показывается только сегодняшний день. Кнопка «Сбросить» возвращает к сегодняшней дате.'},
+    {title:'Групповые действия',text:'Отметьте записи галочками слева. Появится тёмная панель внизу: «📅 Перенести дату» — переносит выбранные записи на новую дату, «🗑 Удалить» — удаляет с подтверждением. Кнопка «Отменить» снимает выделение.'},
+    {title:'Личный календарь',text:'Нажмите кнопку 📅 в верхней панели. Красные даты — выходные и праздники. Кликните на дату → выберите время → введите заметку → нажмите «+». В нужное время появится всплывающее напоминание.'},
+    {title:'Офлайн режим',text:'CRM работает без интернета. При отключении появится жёлтый баннер «🔴 Офлайн режим». Записи сохраняются локально и синхронизируются при восстановлении связи. Если синхронизация зависла — нажмите «Сбросить» в синем баннере.'},
+    {title:'Раздел Инфо',text:'Вкладка 📚 Инфо содержит базу знаний команды: текущий запрос по районам МСК и СПБ, города со складами и ставками, документы для оформления, скрипт интервью. Каждый блок можно редактировать прямо в браузере — кликните на ячейку.'},
+    {title:'Фото профиля',text:'Нажмите на свою аватарку в правом верхнем углу → «Выбрать фото» → выберите фото с устройства. Фото сохраняется в браузере.'}
+  ]},
   script:{updated:'',rows:[
     {step:'1. Приветствие',text:'Добрый день, вас беспокоит компания GrowFood. Меня зовут Яна, нашла ваше резюме на НН, скажите пожалуйста, заинтересованы ли в вакансии водитель курьер на личном авомобиле?'},
     {step:'2. Место проживания',text:'Подскажите пожалуйста, в каком районе города проживаете?'},
@@ -400,12 +414,28 @@ const INFO_DEFAULT={
   ]}
 };
 
-function getInfoData(){try{return JSON.parse(localStorage.getItem(INFO_KEY)||'null')||INFO_DEFAULT}catch{return INFO_DEFAULT}}
-function saveInfoData(d){localStorage.setItem(INFO_KEY,JSON.stringify(d))}
+let _infoCache=null;
 function fmtInfoDate(){const n=new Date();return`${String(n.getDate()).padStart(2,'0')}.${String(n.getMonth()+1).padStart(2,'0')}.${n.getFullYear()} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`}
+function getInfoData(){return _infoCache||INFO_DEFAULT;}
+async function loadInfoData(){
+  try{
+    const{data,error}=await sb.from('info_data').select('*');
+    if(error||!data||!data.length){_infoCache=JSON.parse(JSON.stringify(INFO_DEFAULT));return;}
+    const merged=JSON.parse(JSON.stringify(INFO_DEFAULT));
+    data.forEach(row=>{try{if(merged[row.key]!==undefined)merged[row.key]=JSON.parse(row.value);}catch(e){}});
+    _infoCache=merged;
+  }catch(e){_infoCache=JSON.parse(JSON.stringify(INFO_DEFAULT));}
+}
+async function saveInfoData(d){
+  _infoCache=d;
+  const saves=Object.keys(d).map(key=>sb.from('info_data').upsert({key,value:JSON.stringify(d[key]),updated_at:new Date().toISOString(),updated_by:myRec||''},{onConflict:'key'}));
+  await Promise.all(saves).catch(e=>console.warn('info save error',e));
+}
 
-function renderInfo(){
+async function renderInfo(){
   const iw=document.getElementById('infoWrap');
+  iw.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">Загрузка...</div>';
+  await loadInfoData();
   const d=getInfoData();
 
   function secHeader(icon,title,key){return`<div class="info-section-header"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">${icon}</span><span class="info-section-title">${title}</span></div>${d[key].updated?`<span class="info-updated">обновлено: ${d[key].updated}</span>`:''}</div>`;}
@@ -553,6 +583,17 @@ function renderInfo(){
         ${editableCell('script',i,'text',r.text,'line-height:1.5;font-size:13px')}
       </tr>`).join('')}</tbody>
     </table>
+  </div>
+
+  <!-- ИНСТРУКЦИЯ -->
+  <div class="info-section">
+    <div class="info-section-header"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">📖</span><span class="info-section-title">Инструкция по работе с CRM</span></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+      ${d.manual.sections.map((s,i)=>`<div style="background:var(--bg);border-radius:12px;padding:12px 14px">
+        <div style="font-size:12px;font-weight:700;color:var(--accent-dark);margin-bottom:6px">${i+1}. ${s.title}</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.5">${s.text}</div>
+      </div>`).join('')}
+    </div>
   </div>
 
   <div style="font-size:11px;color:var(--muted);text-align:center;padding:8px">Данные хранятся локально на этом устройстве</div>
@@ -726,6 +767,7 @@ function initUser(user){
   loadData();updatePresence();setInterval(updatePresence,20000);
   sb.channel('c1').on('postgres_changes',{event:'*',schema:'public',table:'candidates'},()=>loadData()).subscribe();
   sb.channel('c2').on('postgres_changes',{event:'*',schema:'public',table:'user_presence'},()=>renderPresence()).subscribe();
+  sb.channel('c3').on('postgres_changes',{event:'*',schema:'public',table:'info_data'},()=>{if(infoMode)renderInfo();}).subscribe();
   setInterval(syncQueue,30000);
 }
 sb.auth.getSession().then(({data})=>{if(data?.session)initUser(data.session.user)});
