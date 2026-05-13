@@ -39,6 +39,8 @@ body,html{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);colo
 .tabs-wrap::-webkit-scrollbar{display:none}
 .tab{padding:10px 14px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;color:var(--muted);flex-shrink:0;display:flex;align-items:center;gap:5px;transition:color .15s,border-color .15s}
 .tab.active{color:var(--accent-dark);border-bottom-color:var(--accent)}
+.tab.tab-deactiv{color:#ff3b30}
+.tab.tab-deactiv.active{color:#c0392b;border-bottom-color:#ff3b30}
 .pdot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0}
 .filters{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;flex-direction:column;gap:6px;flex-shrink:0}
 .frow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -176,6 +178,35 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
 .info-script-text{font-size:13px;color:var(--text);line-height:1.5}
 .status-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .status-dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:middle}
+/* ДЕАКТИВ */
+.deactiv-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px}
+.deactiv-section{background:var(--surface);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--sh)}
+.deactiv-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.deactiv-title{font-size:17px;font-weight:700;color:#c0392b;display:flex;align-items:center;gap:8px}
+.deactiv-badge{background:#fee2e2;color:#b91c1c;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px}
+.deactiv-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.deactiv-table{width:100%;border-collapse:collapse;font-size:13px}
+.deactiv-table th{background:#fff5f5;padding:8px 10px;text-align:left;font-weight:600;font-size:11px;color:#b91c1c;border-bottom:1px solid #fecaca;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+.deactiv-table td{padding:10px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.deactiv-table tr:hover td{background:#fff5f5}
+.deactiv-cards{display:flex;flex-direction:column;gap:10px}
+.deactiv-card{background:var(--surface);border-radius:14px;padding:14px 16px;box-shadow:var(--sh);border-left:3px solid #ff3b30}
+.deactiv-card-name{font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px}
+.deactiv-card-meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.deactiv-card-chips{display:flex;gap:5px;flex-wrap:wrap}
+.deactiv-reason{background:#fff5f5;color:#b91c1c;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+.deactiv-empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.deactiv-empty-icon{font-size:48px;margin-bottom:12px}
+.btn-deactiv-add{font-size:13px;font-weight:600;padding:8px 18px;border:none;border-radius:20px;background:#ff3b30;color:#fff;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn-deactiv-add:hover{opacity:.85}
+.deactiv-modal-wrap{background:var(--surface);border-radius:20px;padding:24px;width:460px;max-width:96vw;max-height:90vh;overflow-y:auto}
+.deactiv-modal-wrap h3{font-size:16px;font-weight:700;margin-bottom:16px;color:#c0392b}
+.deactiv-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.deactiv-stat{background:#fff5f5;border-radius:10px;padding:8px 14px;text-align:center;flex:1;min-width:80px}
+.deactiv-stat-val{font-size:20px;font-weight:700;color:#b91c1c}
+.deactiv-stat-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+@media(max-width:599px){.deactiv-table{display:none}.deactiv-cards{display:flex}}
+@media(min-width:600px){.deactiv-cards{display:none}}
 @media(max-width:599px){.table-wrap{display:none}.cards-wrap{display:flex}.info-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -217,6 +248,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="cards-wrap" id="cardsWrap"></div>
   <div id="dashWrap" style="display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column"></div>
   <div class="info-wrap hidden" id="infoWrap"></div>
+  <div class="deactiv-wrap hidden" id="deactivWrap"></div>
 </div>
 
 <!-- Row Modal -->
@@ -250,6 +282,40 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
     </div>
   </div>
 </div>
+
+<!-- Deactiv Modal -->
+<div class="modal-bg" id="deactivModalBg">
+  <div class="deactiv-modal-wrap">
+    <div class="modal-handle"></div>
+    <h3>⛔ Добавить в деактив</h3>
+    <div class="form-grid">
+      <div class="fg full"><label>ФИО</label><input type="text" id="dFio" placeholder="Фамилия Имя Отчество"></div>
+      <div class="fg"><label>Телефон</label>
+        <div class="tel-wrap"><span class="tel-prefix">+7</span><input type="tel" id="dTel" class="tel-input" placeholder="номер" maxlength="15" oninput="this.value=this.value.replace(/[^0-9\s\-\(\)]/g,'')"></div>
+      </div>
+      <div class="fg"><label>Город</label>
+        <select id="dCity"><option value="—">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Нижний Новгород</option><option>Воронеж</option><option>Другой</option></select>
+      </div>
+      <div class="fg"><label>Причина деактивации</label>
+        <select id="dReason"><option value="—">—</option><option>Прогул</option><option>Нарушение правил</option><option>Конфликт</option><option>Мошенничество</option><option>Долг</option><option>Другое</option></select>
+      </div>
+      <div class="fg"><label>Округ</label>
+        <select id="dOkrug"><option value="—">—</option>
+          <optgroup label="Санкт-Петербург"><option>СПБ : СЗ</option><option>СПБ : СВ</option><option>СПБ : ВОСТОК</option><option>СПБ : ЮВ</option><option>СПБ : ЮЗ</option></optgroup>
+          <optgroup label="Москва"><option>МСК : САО</option><option>МСК : СВАО</option><option>МСК : СЗАО</option><option>МСК : ВАО</option><option>МСК : ЮАО</option><option>МСК : ЮВАО</option><option>МСК : ЮЗАО</option><option>МСК : ЗАО</option></optgroup>
+        </select>
+      </div>
+      <div class="fg"><label>Дата деактивации</label><input type="date" id="dDate"></div>
+      <div class="fg full"><label>Комментарий</label><textarea id="dComment" placeholder="Подробности..."></textarea></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="dCancelBtn">Отмена</button>
+      <button class="btn-del hidden" id="dDelBtn">Удалить</button>
+      <button class="btn-save" style="background:#ff3b30" id="dSaveBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="moveBg">
   <div class="move-modal">
     <div class="modal-handle"></div>
@@ -342,9 +408,189 @@ let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
 let calSelectedDate=td(),calNotes=[];
 let dashTab='main',dashPeriod='week',dashFrom='',dashTo='';
 let infoMode=false;
+let deactivMode=false;
+let deactivEditId=null;
+let deactivRows=[];
+let deactivFilter={fio:'',city:'',reason:''};
 
-// INFO DATA — хранится в localStorage
-// Info data now stored in Supabase
+// ===================== DEACTIV =====================
+async function loadDeactivData(){
+  try{
+    const{data,error}=await sb.from('deactivated').select('*').order('deactiv_date',{ascending:false}).limit(2000);
+    if(error)throw error;
+    deactivRows=data||[];
+  }catch(e){
+    // fallback to localStorage
+    try{deactivRows=JSON.parse(localStorage.getItem('hrcrm_deactiv')||'[]');}catch{deactivRows=[];}
+  }
+}
+
+function saveDeactivLocal(){localStorage.setItem('hrcrm_deactiv',JSON.stringify(deactivRows));}
+
+function deactivFiltered(){
+  return deactivRows.filter(r=>{
+    if(deactivFilter.fio&&!r.fio?.toLowerCase().includes(deactivFilter.fio.toLowerCase()))return false;
+    if(deactivFilter.city&&r.city!==deactivFilter.city)return false;
+    if(deactivFilter.reason&&r.reason!==deactivFilter.reason)return false;
+    return true;
+  });
+}
+
+async function renderDeactiv(){
+  const wrap=document.getElementById('deactivWrap');
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">Загрузка...</div>';
+  await loadDeactivData();
+  const fr=deactivFiltered();
+  const cities=[...new Set(deactivRows.map(r=>r.city).filter(Boolean))];
+  const reasons=['Прогул','Нарушение правил','Конфликт','Мошенничество','Долг','Другое'];
+
+  wrap.innerHTML=`<div style="max-width:1000px;margin:0 auto;padding-bottom:24px">
+    <div class="deactiv-header">
+      <div class="deactiv-title">⛔ Деактив! <span class="deactiv-badge">${deactivRows.length} чел.</span></div>
+      <button class="btn-deactiv-add" onclick="openDeactivModal()">+ Добавить</button>
+    </div>
+
+    <div class="deactiv-stats">
+      <div class="deactiv-stat"><div class="deactiv-stat-val">${deactivRows.length}</div><div class="deactiv-stat-lbl">Всего</div></div>
+      <div class="deactiv-stat"><div class="deactiv-stat-val">${deactivRows.filter(r=>r.reason==='Прогул').length}</div><div class="deactiv-stat-lbl">Прогул</div></div>
+      <div class="deactiv-stat"><div class="deactiv-stat-val">${deactivRows.filter(r=>r.reason==='Мошенничество').length}</div><div class="deactiv-stat-lbl">Мошенничество</div></div>
+      <div class="deactiv-stat"><div class="deactiv-stat-val">${deactivRows.filter(r=>r.reason==='Долг').length}</div><div class="deactiv-stat-lbl">Долг</div></div>
+    </div>
+
+    <div class="deactiv-section">
+      <div class="deactiv-filters">
+        <input class="finput finput-wide" type="text" placeholder="Поиск по ФИО..." id="dFio2" value="${deactivFilter.fio}" oninput="deactivFilter.fio=this.value;renderDeactiv()">
+        <select class="finput" id="dCity2" onchange="deactivFilter.city=this.value;renderDeactiv()">
+          <option value="">Все города</option>
+          ${cities.map(c=>`<option${deactivFilter.city===c?' selected':''}>${c}</option>`).join('')}
+        </select>
+        <select class="finput" id="dReason2" onchange="deactivFilter.reason=this.value;renderDeactiv()">
+          <option value="">Все причины</option>
+          ${reasons.map(r=>`<option${deactivFilter.reason===r?' selected':''}>${r}</option>`).join('')}
+        </select>
+        <button class="btn-reset" onclick="deactivFilter={fio:'',city:'',reason:''};renderDeactiv()">Сбросить</button>
+        <span style="font-size:12px;color:var(--muted);margin-left:4px">Найдено: ${fr.length}</span>
+      </div>
+
+      ${fr.length===0?`<div class="deactiv-empty"><div class="deactiv-empty-icon">✅</div><div style="font-size:15px;font-weight:500;margin-bottom:6px">Список пуст</div><div style="font-size:13px">Деактивированных нет</div></div>`:`
+      <div style="overflow-x:auto">
+        <table class="deactiv-table">
+          <thead><tr>
+            <th>Дата</th><th>ФИО</th><th>Телефон</th><th>Город</th><th>Округ</th><th>Причина</th><th>Комментарий</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${fr.map(r=>`<tr>
+              <td style="white-space:nowrap;color:var(--muted);font-size:12px">${fd(r.deactiv_date)||'—'}</td>
+              <td style="font-weight:600;min-width:140px">${r.fio||'—'}</td>
+              <td style="cursor:pointer;color:var(--blue);white-space:nowrap" onclick="copyPhone('${esc(r.tel||'')}')">${r.tel||'—'}</td>
+              <td>${r.city||'—'}</td>
+              <td style="font-size:12px">${r.okrug||'—'}</td>
+              <td><span class="deactiv-reason">${r.reason||'—'}</span></td>
+              <td style="color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${esc(r.comment)}">${r.comment||'—'}</td>
+              <td><button onclick="openDeactivEdit('${r.id}')" style="background:none;border:none;cursor:pointer;font-size:15px">✏️</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="deactiv-cards">
+        ${fr.map(r=>`<div class="deactiv-card" onclick="openDeactivEdit('${r.id}')">
+          <div class="deactiv-card-name">${r.fio||'—'}</div>
+          <div class="deactiv-card-meta">${fd(r.deactiv_date)||''} · ${r.city||''} ${r.okrug?'· '+r.okrug:''}</div>
+          <div class="deactiv-card-chips">
+            ${r.tel?`<span class="chip c-empty" onclick="event.stopPropagation();copyPhone('${esc(r.tel)}')">${r.tel}</span>`:''}
+            ${r.reason&&r.reason!=='—'?`<span class="deactiv-reason">${r.reason}</span>`:''}
+          </div>
+          ${r.comment?`<div style="font-size:12px;color:var(--muted);margin-top:6px">${r.comment}</div>`:''}
+        </div>`).join('')}
+      </div>`}
+    </div>
+  </div>`;
+}
+window.renderDeactiv=renderDeactiv;
+
+function openDeactivModal(){
+  deactivEditId=null;
+  document.getElementById('dFio').value='';
+  document.getElementById('dTel').value='';
+  document.getElementById('dCity').value='—';
+  document.getElementById('dReason').value='—';
+  document.getElementById('dOkrug').value='—';
+  document.getElementById('dDate').value=td();
+  document.getElementById('dComment').value='';
+  document.getElementById('dDelBtn').classList.add('hidden');
+  document.getElementById('deactivModalBg').classList.add('open');
+  setTimeout(()=>document.getElementById('dFio').focus(),300);
+}
+window.openDeactivModal=openDeactivModal;
+
+function openDeactivEdit(id){
+  const r=deactivRows.find(x=>x.id===id);if(!r)return;
+  deactivEditId=id;
+  document.getElementById('dFio').value=r.fio||'';
+  const tel=r.tel||'';document.getElementById('dTel').value=tel.startsWith('+7')?tel.slice(2):tel;
+  document.getElementById('dCity').value=r.city||'—';
+  document.getElementById('dReason').value=r.reason||'—';
+  document.getElementById('dOkrug').value=r.okrug||'—';
+  document.getElementById('dDate').value=r.deactiv_date||td();
+  document.getElementById('dComment').value=r.comment||'';
+  document.getElementById('dDelBtn').classList.remove('hidden');
+  document.getElementById('deactivModalBg').classList.add('open');
+}
+window.openDeactivEdit=openDeactivEdit;
+
+document.getElementById('dCancelBtn').onclick=()=>document.getElementById('deactivModalBg').classList.remove('open');
+document.getElementById('deactivModalBg').onclick=function(e){if(e.target===this)this.classList.remove('open')};
+
+document.getElementById('dSaveBtn').onclick=async function(){
+  const telRaw=document.getElementById('dTel').value.trim();
+  const d={
+    fio:document.getElementById('dFio').value.trim()||'—',
+    tel:telRaw?'+7'+telRaw.replace(/^\+?7?/,''):'—',
+    city:document.getElementById('dCity').value||'—',
+    reason:document.getElementById('dReason').value||'—',
+    okrug:document.getElementById('dOkrug').value||'—',
+    deactiv_date:document.getElementById('dDate').value||td(),
+    comment:document.getElementById('dComment').value.trim(),
+    added_by:myRec||''
+  };
+  this.textContent='Сохраняю...';this.disabled=true;
+  try{
+    if(deactivEditId){
+      const{error}=await sb.from('deactivated').update(d).eq('id',deactivEditId);
+      if(error)throw error;
+    }else{
+      const{error}=await sb.from('deactivated').insert(d);
+      if(error)throw error;
+    }
+  }catch(e){
+    // fallback localStorage
+    if(deactivEditId){
+      const idx=deactivRows.findIndex(r=>r.id===deactivEditId);
+      if(idx>=0)deactivRows[idx]={...deactivRows[idx],...d};
+    }else{
+      deactivRows.unshift({...d,id:'local_'+Date.now()});
+    }
+    saveDeactivLocal();
+  }
+  this.textContent='Сохранить';this.disabled=false;
+  document.getElementById('deactivModalBg').classList.remove('open');
+  await renderDeactiv();
+};
+
+document.getElementById('dDelBtn').onclick=async function(){
+  if(!deactivEditId||!confirm('Удалить запись из деактива?'))return;
+  try{
+    await sb.from('deactivated').delete().eq('id',deactivEditId);
+  }catch(e){
+    deactivRows=deactivRows.filter(r=>r.id!==deactivEditId);
+    saveDeactivLocal();
+  }
+  document.getElementById('deactivModalBg').classList.remove('open');
+  await renderDeactiv();
+};
+// ===================== END DEACTIV =====================
+
+// INFO DATA
 const INFO_DEFAULT={
   request_regions:{updated:'',rows:[
     {city:'Тольятти',count:0,status:'стоп',conditions:''},
@@ -399,6 +645,7 @@ const INFO_DEFAULT={
     {title:'Личный календарь',text:'Нажмите кнопку 📅 в верхней панели. Красные даты — выходные и праздники. Кликните на дату → выберите время → введите заметку → нажмите «+». В нужное время появится всплывающее напоминание.'},
     {title:'Офлайн режим',text:'CRM работает без интернета. При отключении появится жёлтый баннер «🔴 Офлайн режим». Записи сохраняются локально и синхронизируются при восстановлении связи. Если синхронизация зависла — нажмите «Сбросить» в синем баннере.'},
     {title:'Раздел Инфо',text:'Вкладка 📚 Инфо содержит базу знаний команды: текущий запрос по районам МСК и СПБ, города со складами и ставками, документы для оформления, скрипт интервью. Каждый блок можно редактировать прямо в браузере — кликните на ячейку.'},
+    {title:'Деактив',text:'Вкладка ⛔ Деактив! — чёрный список. Кнопка «+ Добавить» открывает форму. Можно искать по ФИО, городу, причине. При клике на запись — редактирование.'},
     {title:'Фото профиля',text:'Нажмите на свою аватарку в правом верхнем углу → «Выбрать фото» → выберите фото с устройства. Фото сохраняется в браузере.'}
   ]},
   script:{updated:'',rows:[
@@ -439,7 +686,6 @@ async function renderInfo(){
   const d=getInfoData();
 
   function secHeader(icon,title,key){return`<div class="info-section-header"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">${icon}</span><span class="info-section-title">${title}</span></div>${d[key].updated?`<span class="info-updated">обновлено: ${d[key].updated}</span>`:''}</div>`;}
-  function statusBadge(s){return s==='берём'?'<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">берём</span>':'<span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">стоп</span>';}
   function statusToggle(key,idx,cur){return`<button onclick="toggleStatus('${key}',${idx})" style="background:${cur==='берём'?'#dcfce7':'#fee2e2'};color:${cur==='берём'?'#15803d':'#b91c1c'};border:none;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">${cur}</button>`;}
   function countSpinner(key,idx,val){return`<div style="display:flex;align-items:center;gap:4px"><button onclick="changeCount('${key}',${idx},-1)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">−</button><span style="min-width:20px;text-align:center;font-weight:700;font-size:14px">${val}</span><button onclick="changeCount('${key}',${idx},1)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">+</button></div>`;}
   function editableCell(key,idx,field,val,style=''){return`<td style="padding:7px 10px;border-bottom:1px solid var(--border);${style}" contenteditable="true" onblur="saveCell('${key}',${idx},'${field}',this.textContent)">${val||''}</td>`;}
@@ -447,7 +693,6 @@ async function renderInfo(){
   iw.innerHTML=`<div style="max-width:1000px;margin:0 auto;padding-bottom:24px">
   <div style="font-size:17px;font-weight:700;margin-bottom:16px">📚 База знаний</div>
 
-  <!-- ЗАПРОС РЕГИОНЫ -->
   <div class="info-section">
     ${secHeader('📍','Текущий запрос — Регионы','request_regions')}
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -466,7 +711,6 @@ async function renderInfo(){
     </table></div>
   </div>
 
-  <!-- ЗАПРОС МСК -->
   <div class="info-section">
     ${secHeader('🏙️','Текущий запрос — Москва','request_msk')}
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -487,7 +731,6 @@ async function renderInfo(){
     </table></div>
   </div>
 
-  <!-- ЗАПРОС СПБ -->
   <div class="info-section">
     ${secHeader('🌊','Текущий запрос — Санкт-Петербург','request_spb')}
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -510,7 +753,6 @@ async function renderInfo(){
     </table></div>
   </div>
 
-  <!-- ГОРОДА -->
   <div class="info-section">
     ${secHeader('🏭','Города — склады и ставки','cities')}
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -533,7 +775,6 @@ async function renderInfo(){
     </table></div>
   </div>
 
-  <!-- ДОКУМЕНТЫ -->
   <div class="info-section">
     ${secHeader('📄','Документы','docs')}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -554,7 +795,6 @@ async function renderInfo(){
     </div>
   </div>
 
-  <!-- АКЦИЯ + ИНСТРУКЦИЯ -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
     <div class="info-section">
       ${secHeader('🎁','Акция "Приведи друга"','referral')}
@@ -570,7 +810,6 @@ async function renderInfo(){
     </div>
   </div>
 
-  <!-- СКРИПТ -->
   <div class="info-section">
     ${secHeader('🎙️','Скрипт по интервью','script')}
     <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -585,7 +824,6 @@ async function renderInfo(){
     </table>
   </div>
 
-  <!-- ИНСТРУКЦИЯ -->
   <div class="info-section">
     <div class="info-section-header"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">📖</span><span class="info-section-title">Инструкция по работе с CRM</span></div></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
@@ -768,6 +1006,7 @@ function initUser(user){
   sb.channel('c1').on('postgres_changes',{event:'*',schema:'public',table:'candidates'},()=>loadData()).subscribe();
   sb.channel('c2').on('postgres_changes',{event:'*',schema:'public',table:'user_presence'},()=>renderPresence()).subscribe();
   sb.channel('c3').on('postgres_changes',{event:'*',schema:'public',table:'info_data'},()=>{if(infoMode)renderInfo();}).subscribe();
+  sb.channel('c4').on('postgres_changes',{event:'*',schema:'public',table:'deactivated'},()=>{if(deactivMode)renderDeactiv();}).subscribe();
   setInterval(syncQueue,30000);
 }
 sb.auth.getSession().then(({data})=>{if(data?.session)initUser(data.session.user)});
@@ -784,10 +1023,8 @@ async function updatePresence(){
   if(!CU)return;
   try{await sb.from('user_presence').upsert({email:CU.email,name:myRec,last_seen:new Date().toISOString()},{onConflict:'email'});}catch(e){}
 }
-// обновляем присутствие при возврате на вкладку
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)updatePresence();});
 window.addEventListener('focus',()=>updatePresence());
-// каждые 20 сек вместо 30
 
 async function renderPresence(){const{data}=await sb.from('user_presence').select('*');if(!data)return;const now=new Date();document.querySelectorAll('.pdot').forEach(dot=>{const u=data.find(x=>x.name===dot.dataset.rec);if(!u)return;const diff=Math.floor((now-new Date(u.last_seen))/1000);dot.style.background=diff<120?'#34c759':'#ccc';dot.title=diff<120?'Онлайн':fmtAgo(diff);});}
 function fmtAgo(s){if(s<60)return'только что';if(s<3600)return Math.floor(s/60)+' мин назад';return Math.floor(s/3600)+' ч назад'}
@@ -806,13 +1043,15 @@ let dashMode=false;
 
 function renderTabs(){
   const recs=getRecs();
-  let tabs=recs.map((r,i)=>`<div class="tab${!dashMode&&!infoMode&&i===tab?' active':''}" data-i="${i}">${r}<span class="pdot" data-rec="${r}"></span></div>`).join('');
+  let tabs=recs.map((r,i)=>`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&i===tab?' active':''}" data-i="${i}">${r}<span class="pdot" data-rec="${r}"></span></div>`).join('');
   if(isAdmin)tabs+=`<div class="tab${dashMode?' active':''}" data-dash="1">📊 Дашборд</div>`;
+  tabs+=`<div class="tab tab-deactiv${deactivMode?' active':''}" data-deactiv="1">⛔ Деактив!</div>`;
   tabs+=`<div class="tab${infoMode?' active':''}" data-info="1">📚 Инфо</div>`;
   document.getElementById('tabsWrap').innerHTML=tabs;
-  document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;infoMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()}});
-  const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=()=>{dashMode=true;infoMode=false;clearSelection();render();};
-  const it=document.querySelector('.tab[data-info]');if(it)it.onclick=()=>{infoMode=true;dashMode=false;clearSelection();render();};
+  document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;infoMode=false;deactivMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()}});
+  const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=()=>{dashMode=true;infoMode=false;deactivMode=false;clearSelection();render();};
+  const dact=document.querySelector('.tab[data-deactiv]');if(dact)dact.onclick=()=>{deactivMode=true;infoMode=false;dashMode=false;clearSelection();render();};
+  const it=document.querySelector('.tab[data-info]');if(it)it.onclick=()=>{infoMode=true;dashMode=false;deactivMode=false;clearSelection();render();};
   renderPresence();
 }
 
@@ -820,19 +1059,23 @@ function render(){
   renderTabs();
   const dw=document.getElementById('dashWrap');const tw=document.querySelector('.table-wrap');const cw=document.getElementById('cardsWrap');
   const fb=document.getElementById('filtersBar');const sb2=document.getElementById('statsBar');const bb=document.getElementById('bulkBar');
-  const iw=document.getElementById('infoWrap');
-  if(infoMode){
+  const iw=document.getElementById('infoWrap');const dacw=document.getElementById('deactivWrap');
+  if(deactivMode){
     fb.style.display='none';sb2.style.display='none';bb.classList.remove('show');
     if(tw)tw.style.display='none';if(cw)cw.style.display='none';if(dw)dw.style.display='none';
-    iw.classList.remove('hidden');renderInfo();
+    iw.classList.add('hidden');dacw.classList.remove('hidden');renderDeactiv();
+  } else if(infoMode){
+    fb.style.display='none';sb2.style.display='none';bb.classList.remove('show');
+    if(tw)tw.style.display='none';if(cw)cw.style.display='none';if(dw)dw.style.display='none';
+    iw.classList.remove('hidden');dacw.classList.add('hidden');renderInfo();
   } else if(dashMode){
     fb.style.display='none';sb2.style.display='none';bb.classList.remove('show');
     if(tw)tw.style.display='none';if(cw)cw.style.display='none';if(dw)dw.style.display='flex';
-    iw.classList.add('hidden');renderDashboard();
+    iw.classList.add('hidden');dacw.classList.add('hidden');renderDashboard();
   } else {
     fb.style.display='';sb2.style.display='';
     if(tw)tw.style.display='';if(cw)cw.style.display='';if(dw)dw.style.display='none';
-    iw.classList.add('hidden');renderFilters();const fr=filtered();renderStats(fr);renderTable(fr);renderCards(fr);
+    iw.classList.add('hidden');dacw.classList.add('hidden');renderFilters();const fr=filtered();renderStats(fr);renderTable(fr);renderCards(fr);
   }
 }
 
