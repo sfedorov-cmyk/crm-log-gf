@@ -355,23 +355,23 @@ const INFO_DEFAULT={
     {city:'Воронеж',count:0,status:'стоп',conditions:''}
   ]},
   request_msk:{updated:'',period:'02.12-08.12',rows:[
-    {name:'Мамедов Сарван',okrug:'САО',count:0,status:'стоп',conditions:'в вс вечер и пн утро обязательный выход на работу! СРОЧНО на область Химки-Сходня-Подрезково-Лобня-зелик'},
-    {name:'Мустафаев Джавад',okrug:'СВАО',count:0,status:'стоп',conditions:'В Область и город, цао и объяснить что районы не закрепляются, смены могут быть как в центре так и в области в вс вечер и пн'},
-    {name:'Блиев Анзор',okrug:'СЗАО',count:0,status:'берём',conditions:'постоянка. По всему СЗАО'},
-    {name:'Васиев Евгений',okrug:'ВАО',count:1,status:'берём',conditions:'по всему ВАО (мск и область)'},
-    {name:'Ерофеев Сергей',okrug:'ЮВАО',count:0,status:'стоп',conditions:''},
-    {name:'Мосолов Фамиль',okrug:'ЮАО',count:0,status:'стоп',conditions:''},
-    {name:'Осипов Сергей',okrug:'ЮЗАО',count:0,status:'стоп',conditions:''},
-    {name:'Полякова Дарья',okrug:'ЗАО',count:1,status:'берём',conditions:'с подработками в ЮЗАО-универсал. вс вечер пн утро обязательно! Проживающие в зао работа в районе Фили Кутузовский'},
-    {name:'',okrug:'ЦАО(СВАО)',count:1,status:'берём',conditions:'Тверской, Красносельский, Басманный, Мещанский, Пресня, Китай Город, Таганская. ВОСКР-ВЕЧЕР И ПОН-УТРО! без этих смен не берём!'}
+    {brigadir:'Мамедов Сарван',nastavnik:'',okrug:'САО',count:0,status:'стоп',wish:'в вс вечер и пн утро обязательный выход на работу! СРОЧНО на область Химки-Сходня-Подрезково-Лобня-зелик'},
+    {brigadir:'Мустафаев Джавад',nastavnik:'',okrug:'СВАО',count:0,status:'стоп',wish:'В Область и город, цао и объяснить что районы не закрепляются, смены могут быть как в центре так и в области в вс вечер и пн'},
+    {brigadir:'Блиев Анзор',nastavnik:'',okrug:'СЗАО',count:0,status:'берём',wish:'постоянка. По всему СЗАО'},
+    {brigadir:'Васиев Евгений',nastavnik:'',okrug:'ВАО',count:1,status:'берём',wish:'по всему ВАО (мск и область)'},
+    {brigadir:'Ерофеев Сергей',nastavnik:'',okrug:'ЮВАО',count:0,status:'стоп',wish:''},
+    {brigadir:'Мосолов Фамиль',nastavnik:'',okrug:'ЮАО',count:0,status:'стоп',wish:''},
+    {brigadir:'Осипов Сергей',nastavnik:'',okrug:'ЮЗАО',count:0,status:'стоп',wish:''},
+    {brigadir:'Полякова Дарья',nastavnik:'',okrug:'ЗАО',count:1,status:'берём',wish:'с подработками в ЮЗАО-универсал. вс вечер пн утро обязательно! Проживающие в зао работа в районе Фили Кутузовский'},
+    {brigadir:'',nastavnik:'',okrug:'ЦАО(СВАО)',count:1,status:'берём',wish:'Тверской, Красносельский, Басманный, Мещанский, Пресня, Китай Город, Таганская. ВОСКР-ВЕЧЕР И ПОН-УТРО! без этих смен не берём!'}
   ]},
   request_spb:{updated:'',rows:[
-    {okrug:'ЮЗ',count:0,status:'стоп',conditions:'пт сб воскр'},
-    {okrug:'ЮВ',count:0,status:'стоп',conditions:''},
-    {okrug:'СЗ',count:3,status:'берём',conditions:'сб и воскр-вечер'},
-    {okrug:'СВ',count:0,status:'стоп',conditions:'универсалы'},
-    {okrug:'Восток',count:0,status:'стоп',conditions:'и утро и вечер, любые дни-универсалы'},
-    {okrug:'Центр',count:1,status:'берём',conditions:'ЦЕНТР ЮВ: утро/вечер'}
+    {brigadir:'',nastavnik:'',okrug:'ЮЗ',count:0,status:'стоп',wish:'пт сб воскр'},
+    {brigadir:'',nastavnik:'',okrug:'ЮВ',count:0,status:'стоп',wish:''},
+    {brigadir:'',nastavnik:'',okrug:'СЗ',count:3,status:'берём',wish:'сб и воскр-вечер'},
+    {brigadir:'',nastavnik:'',okrug:'СВ',count:0,status:'стоп',wish:'универсалы'},
+    {brigadir:'',nastavnik:'',okrug:'Восток',count:0,status:'стоп',wish:'и утро и вечер, любые дни-универсалы'},
+    {brigadir:'',nastavnik:'',okrug:'Центр',count:1,status:'берём',wish:'ЦЕНТР ЮВ: утро/вечер'}
   ]},
   cities:{updated:'',rows:[
     {city:'МСК',address:'ЮЖ: Ступинский проезд д.1',schedule_am:'Утро: с 05:00-08:40, до 12-13:00',schedule_pm:'Вечер: с 15:30-17:30, до 23-00:00',rate_am:'Смз 205, Ин 212',rate_pm:'Смз 173, Ин 179'},
@@ -441,7 +441,7 @@ function renderInfo(){
     ${secHeader('🏙️','Текущий запрос — Москва','request_msk')}
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
       <thead><tr>
-        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Рекрутер</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Бригадир</th>
         <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Округ</th>
         <th style="background:#f2f2f7;padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Кол-во</th>
         <th style="background:#f2f2f7;padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Статус</th>
@@ -462,16 +462,20 @@ function renderInfo(){
     ${secHeader('🌊','Текущий запрос — Санкт-Петербург','request_spb')}
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
       <thead><tr>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Бригадир</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Наставник</th>
         <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Район</th>
         <th style="background:#f2f2f7;padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Потребность</th>
         <th style="background:#f2f2f7;padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Статус</th>
-        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Условия</th>
+        <th style="background:#f2f2f7;padding:8px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase">Пожелание</th>
       </tr></thead>
       <tbody>${d.request_spb.rows.map((r,i)=>`<tr style="background:${r.status==='берём'?'#f0fdf4':'#fff5f5'}">
+        ${editableCell('request_spb',i,'brigadir',r.brigadir,'font-weight:500;min-width:120px')}
+        ${editableCell('request_spb',i,'nastavnik',r.nastavnik,'min-width:100px')}
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent-dark)">${r.okrug}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${countSpinner('request_spb',i,r.count)}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${statusToggle('request_spb',i,r.status)}</td>
-        ${editableCell('request_spb',i,'conditions',r.conditions,'min-width:150px')}
+        ${editableCell('request_spb',i,'wish',r.wish,'min-width:150px')}
       </tr>`).join('')}</tbody>
     </table></div>
   </div>
@@ -987,4 +991,3 @@ document.getElementById('delBtn').onclick=async function(){
 </script>
 </body>
 </html>
-
