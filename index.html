@@ -344,7 +344,7 @@ let dashTab='main',dashPeriod='week',dashFrom='',dashTo='';
 let infoMode=false;
 
 // INFO DATA — хранится в localStorage
-const INFO_KEY='hrcrm_info_v3';
+const INFO_KEY='hrcrm_info_v4';
 const INFO_DEFAULT={
   request_regions:{updated:'',rows:[
     {city:'Тольятти',count:0,status:'стоп',conditions:''},
@@ -614,10 +614,15 @@ function getDashPeriod(){
 async function saveScreenTime(){
   if(!CU)return;
   const elapsed=Math.floor((Date.now()-screenStart)/1000);
+  if(elapsed<1)return;
   screenSeconds+=elapsed;screenStart=Date.now();
-  await sb.from('screen_time').upsert({email:CU.email,name:myRec,date:td(),seconds:screenSeconds},{onConflict:'email,date'}).catch(()=>{});
+  const row={email:CU.email,name:myRec,date:td(),seconds:screenSeconds,updated_at:new Date().toISOString()};
+  try{
+    const{error}=await sb.from('screen_time').upsert(row,{onConflict:'email,date'});
+    if(error)console.warn('screen_time upsert error:',error.message);
+  }catch(e){console.warn('screen_time error:',e);}
 }
-setInterval(saveScreenTime,60000);
+setInterval(saveScreenTime,30000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)saveScreenTime();else screenStart=Date.now();});
 
 function calKey(){return'cal_notes_'+(CU?.email||'')}
@@ -718,7 +723,7 @@ function initUser(user){
   renderAvatar();if(!isAdmin){tab=ALL_R.indexOf(myRec);if(tab<0)tab=0}
   loadCalNotes();
   sb.from('screen_time').select('seconds').eq('email',user.email).eq('date',td()).single().then(({data})=>{if(data)screenSeconds=data.seconds||0;});
-  loadData();updatePresence();setInterval(updatePresence,30000);
+  loadData();updatePresence();setInterval(updatePresence,20000);
   sb.channel('c1').on('postgres_changes',{event:'*',schema:'public',table:'candidates'},()=>loadData()).subscribe();
   sb.channel('c2').on('postgres_changes',{event:'*',schema:'public',table:'user_presence'},()=>renderPresence()).subscribe();
   setInterval(syncQueue,30000);
@@ -733,7 +738,15 @@ document.getElementById('avFile').onchange=function(){const file=this.files[0];i
 document.getElementById('avCloseBtn').onclick=()=>document.getElementById('avModalBg').classList.remove('open');
 document.getElementById('avModalBg').onclick=function(e){if(e.target===this)this.classList.remove('open')};
 
-async function updatePresence(){if(!CU)return;await sb.from('user_presence').upsert({email:CU.email,name:myRec,last_seen:new Date().toISOString()})}
+async function updatePresence(){
+  if(!CU)return;
+  try{await sb.from('user_presence').upsert({email:CU.email,name:myRec,last_seen:new Date().toISOString()},{onConflict:'email'});}catch(e){}
+}
+// обновляем присутствие при возврате на вкладку
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)updatePresence();});
+window.addEventListener('focus',()=>updatePresence());
+// каждые 20 сек вместо 30
+
 async function renderPresence(){const{data}=await sb.from('user_presence').select('*');if(!data)return;const now=new Date();document.querySelectorAll('.pdot').forEach(dot=>{const u=data.find(x=>x.name===dot.dataset.rec);if(!u)return;const diff=Math.floor((now-new Date(u.last_seen))/1000);dot.style.background=diff<120?'#34c759':'#ccc';dot.title=diff<120?'Онлайн':fmtAgo(diff);});}
 function fmtAgo(s){if(s<60)return'только что';if(s<3600)return Math.floor(s/60)+' мин назад';return Math.floor(s/3600)+' ч назад'}
 
