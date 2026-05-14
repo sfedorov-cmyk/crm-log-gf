@@ -195,6 +195,7 @@ tr:hover td{background:var(--bg3)!important}
       <div class="sync-dot" id="syncDot"></div>
       <span class="sync-label" id="syncStatus">онлайн</span>
       <button class="btn" id="themeBtn" onclick="toggleTheme()" title="Переключить тему" style="font-size:16px;padding:5px 10px">🌙</button>
+      <button class="btn" id="pasteBtn" onclick="pasteRecord()" title="Вставить из буфера">📋 Вставить</button>
       <button class="btn btn-gold" id="addBtn">+ Запись</button>
     </div>
   </div>
@@ -573,6 +574,82 @@ function clearFilters(){
 }
 document.getElementById('addBtn').onclick=openModal;
 sb.channel('nastavniki_rt').on('postgres_changes',{event:'*',schema:'public',table:'nastavniki'},()=>loadData()).subscribe();
+// ПАРСИНГ ТЕКСТА АККАУНТА
+function parseAccountText(text){
+  const result={};
+  // ФИО
+  const fio=text.match(/ФИО[:\s]+([^
+
+]+)/i);
+  if(fio)result.name=fio[1].trim();
+  // Район/Округ
+  const okrug=text.match(/Район[:\s]+([^
+
+]+)/i);
+  if(okrug)result.okrug=okrug[1].trim();
+  // Регион (для определения города)
+  const region=text.match(/Регион[:\s]+([^
+
+]+)/i);
+  if(region)result.region=region[1].trim();
+  // Телефон
+  const phone=text.match(/(?:Номер телефона|Телефон)[:\s]+([^
+
+]+)/i);
+  if(phone)result.phone=phone[1].trim();
+  // Телеграм
+  const tg=text.match(/Телеграм[:\s]+(@[^\s
+
+]+)/i);
+  if(tg)result.tg=tg[1].trim();
+  // Логин
+  const login=text.match(/Логин[:\s`]+([^\s
+
+`]+)/i);
+  if(login)result.login=login[1].trim();
+  return result;
+}
+
+// Маппинг районов из текста аккаунта к значениям в селекте
+const OKRUG_ALIAS={
+  'вао':'ВАО','сао':'САО','свао':'СВАО','сзао':'СЗАО','юао':'ЮАО',
+  'ювао':'ЮВАО','юзао':'ЮЗАО','зао':'ЗАО','цао':'ЦАО',
+  'юз':'ЮЗ','юв':'ЮВ','св':'СВ','сз':'СЗ','восток':'Восток','центр':'Центр',
+  'юго-запад':'ЮЗ','юго-восток':'ЮВ','северо-восток':'СВ','северо-запад':'СЗ'
+};
+
+async function pasteRecord(){
+  let text='';
+  try{text=await navigator.clipboard.readText();}catch(e){
+    text=prompt('Вставьте текст аккаунта:');
+    if(!text)return;
+  }
+  if(!text.trim())return;
+  const parsed=parseAccountText(text);
+  // Открываем модалку
+  openModal();
+  // Заполняем поля
+  if(parsed.name)document.getElementById('fName').value=parsed.name;
+  // Определяем дату — сегодня
+  document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
+  // Округ
+  if(parsed.okrug){
+    const key=parsed.okrug.toLowerCase().trim();
+    const mapped=OKRUG_ALIAS[key]||parsed.okrug;
+    const sel=document.getElementById('fOkrug');
+    // ищем опцию
+    for(let o of sel.options){if(o.value===mapped||o.text===mapped){sel.value=o.value;break;}}
+    autoFillNastavnik();
+  }
+  // Комментарий — добавляем телеграм и телефон
+  const parts=[];
+  if(parsed.tg)parts.push('TG: '+parsed.tg);
+  if(parsed.phone)parts.push('📞 '+parsed.phone);
+  if(parsed.login)parts.push('Login: '+parsed.login);
+  if(parts.length)document.getElementById('fComment').value=parts.join(' | ');
+}
+window.pasteRecord=pasteRecord;
+
 loadTariffs();
 loadData();
 
