@@ -245,6 +245,13 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
     <button class="bulk-btn bulk-clear" id="bulkClearBtn">Отменить</button>
   </div>
   <div class="stats-bar" id="statsBar"></div>
+  <!-- Copy-paste bar -->
+  <div id="copyBar" style="display:none;background:#1a1a2e;padding:8px 14px;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap">
+    <span style="font-size:13px;font-weight:500;color:#a78bfa">📋 Скопировано:</span>
+    <span id="copyBarName" style="font-size:13px;color:#fff;font-weight:600"></span>
+    <button onclick="showPasteModal()" style="font-size:12px;font-weight:600;padding:5px 14px;border:none;border-radius:20px;background:#7c3aed;color:#fff;cursor:pointer">📅 Вставить на другой день</button>
+    <button onclick="clearCopy()" style="font-size:12px;padding:5px 12px;border:none;border-radius:20px;background:transparent;color:#8e8e93;border:1px solid #3a3a3c;cursor:pointer">✕ Отменить</button>
+  </div>
   <div class="table-wrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
   <div class="cards-wrap" id="cardsWrap"></div>
   <div id="dashWrap" style="display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column"></div>
@@ -1263,7 +1270,7 @@ function renderTable(fr){
       <td>${daBadge(r.da)}</td><td>${stBadge(r.status)}</td>
       <td>${r.jur||'—'}</td><td>${r.city||'—'}</td>
       <td style="color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.comment)}">${r.comment||'—'}</td>
-      <td><button onclick="openEdit('${r.id}')" style="background:none;border:none;cursor:pointer;font-size:15px">✏️</button></td>
+      <td style="white-space:nowrap"><button onclick="copyRow('${r.id}')" title="Копировать строку" style="background:none;border:none;cursor:pointer;font-size:15px">📋</button><button onclick="openEdit('${r.id}')" style="background:none;border:none;cursor:pointer;font-size:15px">✏️</button></td>
     </tr>`}).join('');
   initDrag();
 }
@@ -1274,6 +1281,7 @@ function renderCards(fr){
   wrap.innerHTML=fr.map(r=>{const sc=sClass(r.status);const chk=selected.has(r.id);return`
     <div class="card${sc?' r-'+sc:''} ${chk?'selected':''}" data-id="${r.id}">
       <div class="card-check" onclick="event.stopPropagation();toggleSelect('${r.id}')">${chk?'✓':''}</div>
+      <button onclick="event.stopPropagation();copyRow('${r.id}')" title="Копировать" style="position:absolute;top:12px;right:40px;background:none;border:none;cursor:pointer;font-size:14px;opacity:.6" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">📋</button>
       <div onclick="openEdit('${r.id}')">
         <div class="card-top"><div class="card-name">${r.fio||'—'}</div><div class="card-time">${fd(r.date)} ${r.time||''}</div></div>
         <div class="card-tel" onclick="event.stopPropagation();copyPhone('${esc(r.tel||'')}')">${r.tel||'—'}</div>
@@ -1376,6 +1384,77 @@ async function takeScreenshot(){
     console.error('Screenshot error:',e);
   }
 }
+
+// ===== COPY-PASTE ROW =====
+let copiedRow=null;
+
+function copyRow(id){
+  const r=rows.find(x=>x.id===id);
+  if(!r)return;
+  copiedRow=r;
+  document.getElementById('copyBarName').textContent=(r.fio||'—')+' · '+(r.tel||'—');
+  document.getElementById('copyBar').style.display='flex';
+  const t=document.createElement('div');
+  t.textContent='📋 Строка скопирована';
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#7c3aed;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999';
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2000);
+}
+window.copyRow=copyRow;
+
+function clearCopy(){
+  copiedRow=null;
+  document.getElementById('copyBar').style.display='none';
+}
+window.clearCopy=clearCopy;
+
+function showPasteModal(){
+  if(!copiedRow)return;
+  const r=copiedRow;
+  document.getElementById('pasteInfo').textContent='Копия: '+(r.fio||'—')+' · '+(r.tel||'—')+' · '+(r.status||'—');
+  document.getElementById('pasteDate').value=td();
+  document.getElementById('pasteBg').classList.add('open');
+}
+window.showPasteModal=showPasteModal;
+
+document.getElementById('pasteCancelBtn').onclick=()=>document.getElementById('pasteBg').classList.remove('open');
+document.getElementById('pasteBg').onclick=function(e){if(e.target===this)this.classList.remove('open')};
+
+document.getElementById('pasteConfirmBtn').onclick=async function(){
+  if(!copiedRow)return;
+  const newDate=document.getElementById('pasteDate').value;
+  if(!newDate){alert('Выберите дату');return}
+  this.textContent='Вставляю...';this.disabled=true;
+  const rec=getRecs()[tab]||getRecs()[0];
+  const d={recruiter:rec,date:newDate,time:copiedRow.time||'',fio:copiedRow.fio||'—',tel:copiedRow.tel||'—',okrug:copiedRow.okrug||'—',da:copiedRow.da||'—',status:copiedRow.status||'—',jur:copiedRow.jur||'—',city:copiedRow.city||'—',comment:copiedRow.comment||''};
+  const{error}=await sb.from('candidates').insert(d);
+  this.textContent='Вставить';this.disabled=false;
+  document.getElementById('pasteBg').classList.remove('open');
+  if(!error){
+    F.from=newDate;F.to=newDate;
+    await loadData();
+    const t=document.createElement('div');
+    t.textContent='✅ Вставлено на '+fd(newDate);
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#248a3d;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999';
+    document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+  }else{alert('Ошибка: '+error.message);}
+}
+// ===== END COPY-PASTE =====
 </script>
+<!-- Paste Modal -->
+<div class="modal-bg" id="pasteBg">
+  <div class="move-modal">
+    <div class="modal-handle"></div>
+    <h3 style="margin-bottom:6px">📋 Вставить строку</h3>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px" id="pasteInfo"></div>
+    <div class="fg" style="margin-bottom:20px">
+      <label>Дата вставки</label>
+      <input type="date" id="pasteDate" class="finput" style="width:100%;padding:10px 12px;font-size:14px">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="pasteCancelBtn">Отмена</button>
+      <button class="btn-save" style="background:#7c3aed" id="pasteConfirmBtn">Вставить</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
