@@ -1129,13 +1129,11 @@ function renderTabs(){
   const recs=getRecs();
   let tabs=recs.map((r,i)=>`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&i===tab?' active':''}" data-i="${i}">  ${r} <span class="pdot" data-rec="${r}" style="display:inline;font-size:12px">🤍</span></div>`).join('');
   if(isAdmin)tabs+=`<div class="tab${dashMode?' active':''}" data-dash="1">📊 Дашборд</div>`;
-  tabs+=`<div class="tab tab-deactiv${deactivMode?' active':''}" data-deactiv="1">⛔ Деактив!</div>`;
   tabs+=`<div class="tab${vacationMode?' active':''}" data-vacation="1">🌴 Отпуска</div>`;
   tabs+=`<div class="tab${infoMode?' active':''}" data-info="1">📚 Инфо</div>`;
   document.getElementById('tabsWrap').innerHTML=tabs;
   document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;infoMode=false;deactivMode=false;vacationMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()}});
   const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=()=>{dashMode=true;infoMode=false;deactivMode=false;vacationMode=false;clearSelection();render();};
-  const dact=document.querySelector('.tab[data-deactiv]');if(dact)dact.onclick=()=>{deactivMode=true;infoMode=false;dashMode=false;vacationMode=false;clearSelection();render();};
   const it=document.querySelector('.tab[data-info]');if(it)it.onclick=()=>{infoMode=true;dashMode=false;deactivMode=false;vacationMode=false;clearSelection();render();};
   const vt=document.querySelector('.tab[data-vacation]');if(vt)vt.onclick=()=>{vacationMode=true;infoMode=false;dashMode=false;deactivMode=false;clearSelection();render();};
   renderPresence();
