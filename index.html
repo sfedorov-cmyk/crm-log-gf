@@ -1504,7 +1504,7 @@ function fmtPeriod(p){
 function renderVacation(){
   loadVacationData();
   const wrap = document.getElementById('vacationWrap');
-  const canEdit = isAdmin;
+  const canEdit = isAdmin || (CU && CU.email === 'ya.fedorova@growfood.pro');
   const now = new Date();
   const currentYear = now.getFullYear();
 
