@@ -1416,28 +1416,34 @@ function showPasteModal(){
 }
 window.showPasteModal=showPasteModal;
 
-document.getElementById('pasteCancelBtn').onclick=()=>document.getElementById('pasteBg').classList.remove('open');
-document.getElementById('pasteBg').onclick=function(e){if(e.target===this)this.classList.remove('open')};
-
-document.getElementById('pasteConfirmBtn').onclick=async function(){
-  if(!copiedRow)return;
-  const newDate=document.getElementById('pasteDate').value;
-  if(!newDate){alert('Выберите дату');return}
-  this.textContent='Вставляю...';this.disabled=true;
-  const rec=getRecs()[tab]||getRecs()[0];
-  const d={recruiter:rec,date:newDate,time:copiedRow.time||'',fio:copiedRow.fio||'—',tel:copiedRow.tel||'—',okrug:copiedRow.okrug||'—',da:copiedRow.da||'—',status:copiedRow.status||'—',jur:copiedRow.jur||'—',city:copiedRow.city||'—',comment:copiedRow.comment||''};
-  const{error}=await sb.from('candidates').insert(d);
-  this.textContent='Вставить';this.disabled=false;
-  document.getElementById('pasteBg').classList.remove('open');
-  if(!error){
-    F.from=newDate;F.to=newDate;
-    await loadData();
-    const t=document.createElement('div');
-    t.textContent='✅ Вставлено на '+fd(newDate);
-    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#248a3d;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999';
-    document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
-  }else{alert('Ошибка: '+error.message);}
+function initPaste(){
+  const cancelBtn=document.getElementById('pasteCancelBtn');
+  const confirmBtn=document.getElementById('pasteConfirmBtn');
+  const bg=document.getElementById('pasteBg');
+  if(!cancelBtn||!confirmBtn||!bg)return;
+  bg.onclick=function(e){if(e.target===this)this.classList.remove('open')};
+  cancelBtn.onclick=()=>bg.classList.remove('open');
+  confirmBtn.onclick=async function(){
+    if(!copiedRow)return;
+    const newDate=document.getElementById('pasteDate').value;
+    if(!newDate){alert('Выберите дату');return}
+    this.textContent='Вставляю...';this.disabled=true;
+    const rec=getRecs()[tab]||getRecs()[0];
+    const d={recruiter:rec,date:newDate,time:copiedRow.time||'',fio:copiedRow.fio||'—',tel:copiedRow.tel||'—',okrug:copiedRow.okrug||'—',da:copiedRow.da||'—',status:copiedRow.status||'—',jur:copiedRow.jur||'—',city:copiedRow.city||'—',comment:copiedRow.comment||''};
+    const{error}=await sb.from('candidates').insert(d);
+    this.textContent='Вставить';this.disabled=false;
+    bg.classList.remove('open');
+    if(!error){
+      F.from=newDate;F.to=newDate;
+      await loadData();
+      const t=document.createElement('div');
+      t.textContent='✅ Вставлено на '+fd(newDate);
+      t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#248a3d;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999';
+      document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+    }else{alert('Ошибка: '+error.message);}
+  };
 }
+document.addEventListener('DOMContentLoaded', initPaste);
 // ===== END COPY-PASTE =====
 </script>
 <!-- Paste Modal -->
