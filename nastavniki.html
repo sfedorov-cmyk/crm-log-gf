@@ -179,6 +179,12 @@ tr:hover td{background:var(--bg3)!important}
 .edit-btn{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;padding:4px 8px;color:var(--text2);transition:all .15s}
 .edit-btn:hover{border-color:var(--gold-dim);color:var(--gold)}
 
+/* INLINE EDIT */
+.inline-cell:hover{background:var(--gold-bg)}
+.inline-date{border-radius:4px}
+.inline-date:hover{background:var(--gold-bg)!important}
+.inline-select{border-radius:4px;-webkit-appearance:none;appearance:none;padding:2px 4px}
+.inline-select:hover{background:var(--gold-bg)!important}
 /* OKRUG */
 .okrug-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-dim);opacity:.8}
 </style>
@@ -249,6 +255,7 @@ tr:hover td{background:var(--bg3)!important}
       <thead>
         <tr>
           <th>Дата аккаунта</th>
+          <th>Дата выхода</th>
           <th>ФИО курьера</th>
           <th>Округ</th>
           <th>Наставник</th>
@@ -277,7 +284,15 @@ tr:hover td{background:var(--bg3)!important}
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <h3 id="modalTitle">Новая запись</h3>
+    <div class="fg"><label>Вкладка</label>
+      <select id="fCity">
+        <option value="spb">🌊 СПБ — Васильев</option>
+        <option value="msk_yug">🏙️ МСК Юг — Осипов / Гусейнов</option>
+        <option value="msk_sever">🏙️ МСК Север — Мустафаев / Гусейнов</option>
+      </select>
+    </div>
     <div class="fg"><label>Дата аккаунта</label><input type="date" id="fDate"></div>
+    <div class="fg"><label>Дата первого выхода</label><input type="date" id="fDateFirst"></div>
     <div class="fg"><label>ФИО курьера</label><input type="text" id="fName" placeholder="Иванов Иван Иванович"></div>
     <div class="fg"><label>Округ</label>
       <select id="fOkrug" onchange="autoFillNastavnik()">
@@ -419,22 +434,88 @@ function getFiltered(){
     return true;
   });
 }
+function inlineEdit(id, field, value, type='text'){
+  return `<span class="inline-cell" contenteditable="true" data-id="${id}" data-field="${field}" 
+    onblur="saveInline(this)" 
+    onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+    style="outline:none;cursor:text;display:inline-block;min-width:40px;border-radius:4px;padding:1px 4px;transition:background .15s"
+    onfocus="this.style.background='var(--gold-bg)';this.style.boxShadow='0 0 0 1.5px var(--gold)'"
+    onfocusout="this.style.background='';this.style.boxShadow=''"
+  >${value||''}</span>`;
+}
+
+function inlineDate(id, field, value){
+  return `<input type="date" class="inline-date" data-id="${id}" data-field="${field}" value="${value||''}"
+    onchange="saveInlineVal(this)"
+    style="border:none;background:transparent;color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;outline:none;width:100px"
+    onfocus="this.style.background='var(--gold-bg)'"
+    onblur="this.style.background='transparent'"
+  >`;
+}
+
+function inlineSmeny(id, value){
+  const opts=[0,1,2,3,4,5].map(n=>`<option value="${n}" ${+value===n?'selected':''}>${n}${n===5?'+':''}</option>`).join('');
+  return `<select class="inline-select" data-id="${id}" data-field="smeny" onchange="saveInlineVal(this);updateSumCell(this)"
+    style="border:none;background:transparent;color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;outline:none;text-align:center"
+  >${opts}</select>`;
+}
+
+function inlineBonus(id, value){
+  const opts=['none','unpaid','paid'].map(v=>`<option value="${v}" ${value===v?'selected':''}>${bonusLabel(v)}</option>`).join('');
+  return `<select class="inline-select" data-id="${id}" data-field="bonus" onchange="saveInlineVal(this)"
+    style="border:none;background:transparent;color:var(--text);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;outline:none"
+  >${opts}</select>`;
+}
+
+function updateSumCell(el){
+  const smeny=+el.value;
+  const bonus=calcBonus(smeny);
+  const row=el.closest('tr');
+  if(row){
+    const sumCell=row.querySelector('.sum-cell');
+    if(sumCell)sumCell.innerHTML=bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>';
+  }
+}
+
+async function saveInline(el){
+  const id=el.dataset.id;
+  const field=el.dataset.field;
+  const val=el.textContent.trim();
+  const r=rows.find(x=>x.id===id);
+  if(r)r[field]=val;
+  await sb.from('nastavniki').update({[field]:val}).eq('id',id);
+}
+
+async function saveInlineVal(el){
+  const id=el.dataset.id;
+  const field=el.dataset.field;
+  const val=field==='smeny'?+el.value:el.value;
+  const r=rows.find(x=>x.id===id);
+  if(r)r[field]=val;
+  await sb.from('nastavniki').update({[field]:val}).eq('id',id);
+}
+
+window.saveInline=saveInline;
+window.saveInlineVal=saveInlineVal;
+window.updateSumCell=updateSumCell;
+
 function renderTable(){
   const fr=getFiltered();
   const tbody=document.getElementById('tbody');
-  if(!fr.length){tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="icon">📋</div>Нет записей</div></td></tr>`;return;}
+  if(!fr.length){tbody.innerHTML=`<tr><td colspan="11"><div class="empty-state"><div class="icon">📋</div>Нет записей</div></td></tr>`;return;}
   tbody.innerHTML=fr.map(r=>{
     const bonus=calcBonus(r.smeny);
     return`<tr class="${statusClass(r.status)}">
-      <td style="color:var(--text2);font-size:12px">${fd(r.date_account)}</td>
-      <td style="font-weight:600">${r.name||'—'}</td>
+      <td style="font-size:12px">${inlineDate(r.id,'date_account',r.date_account)}</td>
+      <td style="font-size:12px">${inlineDate(r.id,'date_first_shift',r.date_first_shift)}</td>
+      <td style="font-weight:600">${inlineEdit(r.id,'name',r.name)}</td>
       <td>${r.okrug?`<span class="okrug-tag">${r.okrug}</span>`:'—'}</td>
-      <td style="font-weight:500;color:var(--gold)">${r.nastavnik||'—'}</td>
+      <td style="color:var(--gold)">${inlineEdit(r.id,'nastavnik',r.nastavnik)}</td>
       <td><button class="sbadge ${statusBadgeClass(r.status)}" onclick="cycleStatus('${r.id}','${r.status}')">${statusLabel(r.status)}</button></td>
-      <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.comment||''}">${r.comment||'—'}</td>
-      <td style="text-align:center;font-weight:700;font-size:15px">${r.smeny||0}</td>
-      <td style="text-align:center">${bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>'}</td>
-      <td><span class="bchip ${bonusClass(r.bonus)}">${bonusLabel(r.bonus)}</span></td>
+      <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.comment||''}">${inlineEdit(r.id,'comment',r.comment)}</td>
+      <td style="text-align:center">${inlineSmeny(r.id,r.smeny)}</td>
+      <td style="text-align:center" class="sum-cell">${bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>'}</td>
+      <td>${inlineBonus(r.id,r.bonus)}</td>
       <td><button class="edit-btn" onclick="openEdit('${r.id}')">✏️</button></td>
     </tr>`;
   }).join('');
@@ -516,8 +597,9 @@ function openModal(){
   editId=null;
   document.getElementById('modalTitle').textContent='Новая запись';
   document.getElementById('delBtn').classList.add('hidden');
+  document.getElementById('fCity').value=currentTab;
   document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
-  ['fName','fComment'].forEach(id=>document.getElementById(id).value='');
+  ['fName','fComment','fDateFirst'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fOkrug').value='';
   document.getElementById('fNastavnik').value='';
   document.getElementById('fStatus').value='works';
@@ -532,6 +614,7 @@ function openEdit(id){
   document.getElementById('modalTitle').textContent='Редактировать запись';
   document.getElementById('delBtn').classList.remove('hidden');
   document.getElementById('fDate').value=r.date_account||'';
+  document.getElementById('fDateFirst').value=r.date_first_shift||'';
   document.getElementById('fName').value=r.name||'';
   document.getElementById('fOkrug').value=r.okrug||'';
   document.getElementById('fNastavnik').value=r.nastavnik||'';
@@ -555,7 +638,7 @@ function autoFillNastavnik(){
 function closeModal(){document.getElementById('modalBg').classList.remove('open');}
 document.getElementById('modalBg').onclick=function(e){if(e.target===this)closeModal();};
 async function saveRecord(){
-  const d={city:currentTab,date_account:document.getElementById('fDate').value,name:document.getElementById('fName').value.trim(),okrug:document.getElementById('fOkrug').value,nastavnik:document.getElementById('fNastavnik').value.trim(),status:document.getElementById('fStatus').value,comment:document.getElementById('fComment').value.trim(),smeny:+document.getElementById('fSmeny').value,bonus:document.getElementById('fBonus').value};
+  const d={city:document.getElementById('fCity').value||currentTab,date_account:document.getElementById('fDate').value,date_first_shift:document.getElementById('fDateFirst').value,name:document.getElementById('fName').value.trim(),okrug:document.getElementById('fOkrug').value,nastavnik:document.getElementById('fNastavnik').value.trim(),status:document.getElementById('fStatus').value,comment:document.getElementById('fComment').value.trim(),smeny:+document.getElementById('fSmeny').value,bonus:document.getElementById('fBonus').value};
   if(!d.name){alert('Введите ФИО курьера');return;}
   if(editId){await sb.from('nastavniki').update(d).eq('id',editId);}
   else{await sb.from('nastavniki').insert(d);}
@@ -654,3 +737,4 @@ function toggleTheme(){
 </script>
 </body>
 </html>
+
