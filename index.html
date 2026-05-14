@@ -1533,7 +1533,7 @@ function renderVacation(){
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <span style="font-size:12px;color:rgba(255,255,255,.8)">${group.members.length} чел.</span>
-          ${canEdit ? `<button onclick="vacationAddMember(${gi})" style="font-size:12px;padding:4px 12px;border:none;border-radius:20px;background:rgba(255,255,255,.25);color:#fff;cursor:pointer">+ Сотрудник</button>` : ''}
+          ${canEdit ? `<button onclick="vacationAddMember(${gi})" style="font-size:12px;padding:4px 12px;border:none;border-radius:20px;background:rgba(255,255,255,.25);color:#fff;cursor:pointer">+ Сотрудник</button><button onclick="vacationDelGroup(${gi})" title="Удалить группу" style="font-size:12px;padding:4px 12px;border:none;border-radius:20px;background:rgba(255,80,80,.35);color:#fff;cursor:pointer;margin-left:4px">🗑 Удалить группу</button>` : ''}
         </div>
       </div>
 
@@ -1605,6 +1605,13 @@ function vacationSaveGroupName(gi, name){
   saveVacationData();
 }
 window.vacationSaveGroupName = vacationSaveGroupName;
+
+function vacationDelGroup(gi){
+  if(!confirm('Удалить группу «' + vacationData[gi].group + '» со всеми сотрудниками?')) return;
+  vacationData.splice(gi, 1);
+  saveVacationData(); renderVacation();
+}
+window.vacationDelGroup = vacationDelGroup;
 
 function vacationAddGroup(){
   vacationData.push({group:'Новая группа',color:'#e3f2fd',accent:'#1976d2',members:[]});
