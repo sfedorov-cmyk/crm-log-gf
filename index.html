@@ -226,6 +226,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="topbar">
     <div class="logo">HR GF</div>
     <span class="sync-pill sync-loading" id="syncStatus">загрузка...</span>
+    <button onclick="location.reload(true)" title="Обновить страницу (Ctrl+Shift+R)" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🔄 Обновить</button>
     <button id="screenshotBtn" title="Скриншот экрана" onclick="takeScreenshot()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📸 Скрин</button>
     <div class="topbar-right">
       <span id="queueBadge" style="display:none;font-size:11px;background:#fff3cd;color:#856404;padding:3px 8px;border-radius:20px;font-weight:500"></span>
