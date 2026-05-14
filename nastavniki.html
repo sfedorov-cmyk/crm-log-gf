@@ -279,7 +279,7 @@ tr:hover td{background:var(--bg3)!important}
     <div class="fg"><label>Дата аккаунта</label><input type="date" id="fDate"></div>
     <div class="fg"><label>ФИО курьера</label><input type="text" id="fName" placeholder="Иванов Иван Иванович"></div>
     <div class="fg"><label>Округ</label>
-      <select id="fOkrug">
+      <select id="fOkrug" onchange="autoFillNastavnik()">
         <option value="">—</option>
         <optgroup label="СПБ"><option>ЮЗ</option><option>ЮВ</option><option>СЗ</option><option>СВ</option><option>Восток</option><option>Центр</option></optgroup>
         <optgroup label="МСК"><option>САО</option><option>СВАО</option><option>СЗАО</option><option>ВАО</option><option>ЮАО</option><option>ЮВАО</option><option>ЮЗАО</option><option>ЗАО</option><option>ЦАО</option></optgroup>
@@ -327,6 +327,37 @@ const SKEY='sb_publishable_NaTVWE-doecU4Au19gFLdg__qGD-fpH';
 const sb=supabase.createClient(SURL,SKEY);
 
 let currentTab='spb',currentView='table',rows=[],editId=null;
+
+// Словарь наставников по районам
+const NASTAVNIK_MAP={
+  spb:{
+    'ЮЗ':'Лабузов Дмитрий',
+    'ЮВ':'Степанова Ольга',
+    'Восток':'Штоколов Николай',
+    'СВ':'Пинчук Виктор',
+    'СЗ':'Шорохов Максим'
+  },
+  msk_yug:{
+    'СЗАО':'Цой Влас',
+    'СВАО':'Подосиновиков Максим',
+    'САО':'Морозов Максим',
+    'ВАО':'Морозов Максим',
+    'ЮВАО':'Гаргалык Андрей',
+    'ЮАО':'Дмитриев Алексей',
+    'ЮЗАО':'Никулин Максим',
+    'ЗАО':'Прокофьева Инга'
+  },
+  msk_sever:{
+    'СЗАО':'Цой Влас',
+    'СВАО':'Подосиновиков Максим',
+    'САО':'Морозов Максим',
+    'ВАО':'Морозов Максим',
+    'ЮВАО':'Гаргалык Андрей',
+    'ЮАО':'Дмитриев Алексей',
+    'ЮЗАО':'Никулин Максим',
+    'ЗАО':'Прокофьева Инга'
+  }
+};
 let tariffs={t1:500,t3:1000,t5:1500};
 
 function loadTariffs(){
@@ -508,6 +539,17 @@ function openEdit(id){
   document.getElementById('fSmeny').value=r.smeny||'0';
   document.getElementById('fBonus').value=r.bonus||'none';
   document.getElementById('modalBg').classList.add('open');
+}
+function autoFillNastavnik(){
+  const okrug=document.getElementById('fOkrug').value;
+  const map=NASTAVNIK_MAP[currentTab]||{};
+  const auto=map[okrug];
+  if(auto){
+    const field=document.getElementById('fNastavnik');
+    // подставляем только если поле пустое или было автозаполнено ранее
+    const wasAuto=Object.values(NASTAVNIK_MAP[currentTab]||{}).includes(field.value)||field.value==='';
+    if(wasAuto)field.value=auto;
+  }
 }
 function closeModal(){document.getElementById('modalBg').classList.remove('open');}
 document.getElementById('modalBg').onclick=function(e){if(e.target===this)closeModal();};
