@@ -257,6 +257,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div id="dashWrap" style="display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column"></div>
   <div class="info-wrap hidden" id="infoWrap"></div>
   <div class="deactiv-wrap hidden" id="deactivWrap"></div>
+  <div class="info-wrap hidden" id="vacationWrap"></div>
 </div>
 
 <!-- Row Modal -->
@@ -417,6 +418,7 @@ let calSelectedDate=td(),calNotes=[];
 let dashTab='main',dashPeriod='week',dashFrom='',dashTo='';
 let infoMode=false;
 let deactivMode=false;
+let vacationMode=false;
 let deactivEditId=null;
 let deactivRows=[];
 let deactivFilter={fio:'',city:'',reason:''};
@@ -1100,12 +1102,14 @@ function renderTabs(){
   let tabs=recs.map((r,i)=>`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&i===tab?' active':''}" data-i="${i}">${r}<span class="pdot" data-rec="${r}"></span></div>`).join('');
   if(isAdmin)tabs+=`<div class="tab${dashMode?' active':''}" data-dash="1">📊 Дашборд</div>`;
   tabs+=`<div class="tab tab-deactiv${deactivMode?' active':''}" data-deactiv="1">⛔ Деактив!</div>`;
+  tabs+=`<div class="tab${vacationMode?' active':''}" data-vacation="1">🌴 Отпуска</div>`;
   tabs+=`<div class="tab${infoMode?' active':''}" data-info="1">📚 Инфо</div>`;
   document.getElementById('tabsWrap').innerHTML=tabs;
-  document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;infoMode=false;deactivMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()}});
-  const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=()=>{dashMode=true;infoMode=false;deactivMode=false;clearSelection();render();};
-  const dact=document.querySelector('.tab[data-deactiv]');if(dact)dact.onclick=()=>{deactivMode=true;infoMode=false;dashMode=false;clearSelection();render();};
-  const it=document.querySelector('.tab[data-info]');if(it)it.onclick=()=>{infoMode=true;dashMode=false;deactivMode=false;clearSelection();render();};
+  document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;infoMode=false;deactivMode=false;vacationMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()}});
+  const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=()=>{dashMode=true;infoMode=false;deactivMode=false;vacationMode=false;clearSelection();render();};
+  const dact=document.querySelector('.tab[data-deactiv]');if(dact)dact.onclick=()=>{deactivMode=true;infoMode=false;dashMode=false;vacationMode=false;clearSelection();render();};
+  const it=document.querySelector('.tab[data-info]');if(it)it.onclick=()=>{infoMode=true;dashMode=false;deactivMode=false;vacationMode=false;clearSelection();render();};
+  const vt=document.querySelector('.tab[data-vacation]');if(vt)vt.onclick=()=>{vacationMode=true;infoMode=false;dashMode=false;deactivMode=false;clearSelection();render();};
   renderPresence();
 }
 
@@ -1114,14 +1118,19 @@ function render(){
   const dw=document.getElementById('dashWrap');const tw=document.querySelector('.table-wrap');const cw=document.getElementById('cardsWrap');
   const fb=document.getElementById('filtersBar');const sb2=document.getElementById('statsBar');const bb=document.getElementById('bulkBar');
   const iw=document.getElementById('infoWrap');const dacw=document.getElementById('deactivWrap');
-  if(deactivMode){
+  if(vacationMode){
     fb.style.display='none';sb2.style.display='none';bb.classList.remove('show');
     if(tw)tw.style.display='none';if(cw)cw.style.display='none';if(dw)dw.style.display='none';
-    iw.classList.add('hidden');dacw.classList.remove('hidden');renderDeactiv();
+    iw.classList.add('hidden');dacw.classList.add('hidden');
+    document.getElementById('vacationWrap').classList.remove('hidden');renderVacation();
+  } else if(deactivMode){
+    fb.style.display='none';sb2.style.display='none';bb.classList.remove('show');
+    if(tw)tw.style.display='none';if(cw)cw.style.display='none';if(dw)dw.style.display='none';
+    iw.classList.add('hidden');dacw.classList.remove('hidden');document.getElementById('vacationWrap').classList.add('hidden');renderDeactiv();
   } else if(infoMode){
     fb.style.display='none';sb2.style.display='none';bb.classList.remove('show');
     if(tw)tw.style.display='none';if(cw)cw.style.display='none';if(dw)dw.style.display='none';
-    iw.classList.remove('hidden');dacw.classList.add('hidden');renderInfo();
+    iw.classList.remove('hidden');dacw.classList.add('hidden');document.getElementById('vacationWrap').classList.add('hidden');renderInfo();
   } else if(dashMode){
     fb.style.display='none';sb2.style.display='none';bb.classList.remove('show');
     if(tw)tw.style.display='none';if(cw)cw.style.display='none';if(dw)dw.style.display='flex';
@@ -1445,6 +1454,209 @@ function initPaste(){
 }
 document.addEventListener('DOMContentLoaded', initPaste);
 // ===== END COPY-PASTE =====
+
+// ===== VACATIONS =====
+const VACATION_DEFAULT = [
+  {
+    group: 'HR логистики',
+    color: '#e8f5e9',
+    accent: '#248a3d',
+    members: [
+      {name:'Федорова Яна Вячеславовна',       periods:[{start:'15.06',days:14},{start:'02.11',days:7}]},
+      {name:'Дюпина Екатерина Алексеевна',      periods:[{start:'01.06',days:14},{start:'17.08',days:14}]},
+      {name:'Кислякова Екатерина Александровна',periods:[{start:'15.06',days:14}]},
+      {name:'Осипова Анна Владимировна',        periods:[{start:'15.07',days:14},{start:'02.11',days:14}]},
+      {name:'Рачеева Дарья Сергеевна',          periods:[{start:'06.07',days:14},{start:'09.11',days:14}]},
+      {name:'Смоленцева Кристина Викторовна',   periods:[{start:'29.06',days:7},{start:'21.09',days:7}]},
+      {name:'Степакова Мария Александровна',    periods:[{start:'20.07',days:14}]},
+      {name:'Яковлева Алена Александровна',     periods:[{start:'03.08',days:14}]},
+    ]
+  }
+];
+
+let vacationData = null;
+
+function loadVacationData(){
+  try{
+    const saved = localStorage.getItem('hrcrm_vacations');
+    if(saved) vacationData = JSON.parse(saved);
+    else vacationData = JSON.parse(JSON.stringify(VACATION_DEFAULT));
+  }catch(e){ vacationData = JSON.parse(JSON.stringify(VACATION_DEFAULT)); }
+}
+
+function saveVacationData(){
+  localStorage.setItem('hrcrm_vacations', JSON.stringify(vacationData));
+}
+
+function parseDate(str, year){
+  // str = "15.06"
+  const p = str.split('.');
+  return new Date(year, parseInt(p[1])-1, parseInt(p[0]));
+}
+
+function fmtPeriod(p){
+  const d = parseDate(p.start, 2025);
+  const end = new Date(d); end.setDate(end.getDate()+p.days-1);
+  const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  return `${p.start} — ${String(end.getDate()).padStart(2,'0')}.${String(end.getMonth()+1).padStart(2,'0')} (${p.days} дн.)`;
+}
+
+function renderVacation(){
+  loadVacationData();
+  const wrap = document.getElementById('vacationWrap');
+  const canEdit = isAdmin;
+  const now = new Date();
+  const currentYear = now.getFullYear();
+
+  // Текущий месяц для подсветки
+  const currentMonth = now.getMonth(); // 0-based
+
+  const months = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+  const monthColors = ['#f8fafc','#f8fafc','#f8fafc','#f8fafc','#f8fafc','#f0fdf4','#f0fdf4','#f0fdf4','#f8fafc','#f8fafc','#f8fafc','#f8fafc'];
+
+  let html = `<div style="max-width:1100px;margin:0 auto;padding-bottom:32px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--text)">🌴 График отпусков 2025</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Нажмите на период для редактирования</div>
+      </div>
+      ${canEdit ? `<button onclick="vacationAddGroup()" style="font-size:13px;font-weight:600;padding:8px 18px;border:none;border-radius:20px;background:var(--accent);color:#fff;cursor:pointer">+ Добавить группу</button>` : '<span style="font-size:12px;color:var(--muted);background:#f2f2f7;padding:4px 12px;border-radius:20px">👁 Только просмотр</span>'}
+    </div>`;
+
+  vacationData.forEach((group, gi) => {
+    html += `<div style="background:var(--surface);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:16px">
+      <div style="background:${group.accent};padding:12px 18px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">👥</span>
+          ${canEdit ? `<span contenteditable="true" onblur="vacationSaveGroupName(${gi},this.textContent)" style="outline:none;cursor:text;border-bottom:1px dashed rgba(255,255,255,.5)">${group.group}</span>` : group.group}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:12px;color:rgba(255,255,255,.8)">${group.members.length} чел.</span>
+          ${canEdit ? `<button onclick="vacationAddMember(${gi})" style="font-size:12px;padding:4px 12px;border:none;border-radius:20px;background:rgba(255,255,255,.25);color:#fff;cursor:pointer">+ Сотрудник</button>` : ''}
+        </div>
+      </div>
+
+      <!-- Таблица по месяцам -->
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px">
+          <thead>
+            <tr>
+              <th style="padding:10px 16px;text-align:left;background:#f8fafc;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;min-width:200px;position:sticky;left:0;z-index:1">Сотрудник</th>
+              ${months.map((m,mi) => `<th style="padding:8px 4px;text-align:center;background:${mi===currentMonth?'#e8f5e9':monthColors[mi]};border-bottom:1px solid var(--border);font-size:11px;font-weight:${mi===currentMonth?'700':'500'};color:${mi===currentMonth?'var(--accent-dark)':'var(--muted)'};width:72px;border-left:1px solid var(--border)">${m}${mi===currentMonth?'<div style="font-size:9px;color:var(--accent)">◆</div>':''}</th>`).join('')}
+              ${canEdit ? '<th style="width:40px;background:#f8fafc;border-bottom:1px solid var(--border)"></th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+            ${group.members.map((m, mi) => {
+              // Строим карту отпусков по месяцам
+              const vacMap = {};
+              m.periods.forEach(p => {
+                const d = parseDate(p.start, currentYear);
+                const month = d.getMonth();
+                vacMap[month] = vacMap[month] || [];
+                vacMap[month].push(p);
+              });
+
+              return `<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
+                <td style="padding:10px 16px;font-weight:500;font-size:13px;color:var(--text);white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1;border-right:1px solid var(--border)">
+                  ${m.name}
+                </td>
+                ${months.map((mn, mni) => {
+                  const vacs = vacMap[mni] || [];
+                  if(vacs.length > 0){
+                    const labels = vacs.map(v => `<div style="background:${group.accent};color:#fff;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:600;white-space:nowrap;cursor:${canEdit?'pointer':'default'}" ${canEdit?`onclick="vacationEditPeriod(${gi},${mi},${m.periods.indexOf(v)})"`:''} title="${fmtPeriod(v)}">${v.start}<br>${v.days}дн</div>`).join('');
+                    return `<td style="padding:4px;text-align:center;background:${mni===currentMonth?'#f0fdf4':'#fff'};border-left:1px solid var(--border)">${labels}</td>`;
+                  }
+                  return `<td style="padding:4px;text-align:center;background:${mni===currentMonth?'#f0fdf4':'#fff'};border-left:1px solid var(--border)">${canEdit?`<button onclick="vacationAddPeriod(${gi},${mi},${mni})" style="background:none;border:none;cursor:pointer;color:#d1d1d6;font-size:16px;opacity:.4" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">+</button>`:'<span style="color:#e5e5ea;font-size:10px">·</span>'}</td>`;
+                }).join('')}
+                ${canEdit ? `<td style="padding:4px;text-align:center"><button onclick="vacationDelMember(${gi},${mi})" style="background:none;border:none;cursor:pointer;color:#fca5a5;font-size:13px" title="Удалить">✕</button></td>` : ''}
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Список периодов под таблицей -->
+      <div style="padding:12px 18px;background:#fafafa;border-top:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Периоды отпусков</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${group.members.map((m,mi) => m.periods.map((p,pi) => `
+            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:12px">
+              <span style="font-weight:600;color:${group.accent}">${m.name.split(' ')[0]} ${m.name.split(' ')[1]||''}</span>
+              <span style="color:var(--muted);margin:0 4px">·</span>
+              <span style="color:var(--text)">${fmtPeriod(p)}</span>
+              ${canEdit ? `<button onclick="vacationEditPeriod(${gi},${mi},${pi})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;margin-left:4px">✏️</button>` : ''}
+            </div>
+          `).join('')).join('')}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  html += `</div>`;
+  wrap.innerHTML = html;
+}
+window.renderVacation = renderVacation;
+
+// --- Редактирование ---
+function vacationSaveGroupName(gi, name){
+  vacationData[gi].group = name.trim();
+  saveVacationData();
+}
+window.vacationSaveGroupName = vacationSaveGroupName;
+
+function vacationAddGroup(){
+  vacationData.push({group:'Новая группа',color:'#e3f2fd',accent:'#1976d2',members:[]});
+  saveVacationData(); renderVacation();
+}
+window.vacationAddGroup = vacationAddGroup;
+
+function vacationAddMember(gi){
+  const name = prompt('ФИО сотрудника:');
+  if(!name||!name.trim()) return;
+  vacationData[gi].members.push({name:name.trim(), periods:[]});
+  saveVacationData(); renderVacation();
+}
+window.vacationAddMember = vacationAddMember;
+
+function vacationDelMember(gi, mi){
+  if(!confirm('Удалить сотрудника из графика?')) return;
+  vacationData[gi].members.splice(mi, 1);
+  saveVacationData(); renderVacation();
+}
+window.vacationDelMember = vacationDelMember;
+
+function vacationAddPeriod(gi, mi, monthIdx){
+  const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const day = prompt(`Дата начала в ${months[monthIdx]} (ДД.ММ, например 15.0${monthIdx+1}):`, `01.${String(monthIdx+1).padStart(2,'0')}`);
+  if(!day) return;
+  const days = prompt('Количество дней:', '14');
+  if(!days) return;
+  vacationData[gi].members[mi].periods.push({start:day.trim(), days:parseInt(days)});
+  vacationData[gi].members[mi].periods.sort((a,b)=>{
+    const [ad,am]=a.start.split('.').map(Number);
+    const [bd,bm]=b.start.split('.').map(Number);
+    return am!==bm ? am-bm : ad-bd;
+  });
+  saveVacationData(); renderVacation();
+}
+window.vacationAddPeriod = vacationAddPeriod;
+
+function vacationEditPeriod(gi, mi, pi){
+  const p = vacationData[gi].members[mi].periods[pi];
+  const action = prompt(`Период: ${fmtPeriod(p)}\n\nВведите "удалить" для удаления или новую дату начала (ДД.ММ):`, p.start);
+  if(!action) return;
+  if(action.trim().toLowerCase() === 'удалить'){
+    vacationData[gi].members[mi].periods.splice(pi, 1);
+  } else {
+    p.start = action.trim();
+    const newDays = prompt('Количество дней:', p.days);
+    if(newDays) p.days = parseInt(newDays);
+  }
+  saveVacationData(); renderVacation();
+}
+window.vacationEditPeriod = vacationEditPeriod;
+// ===== END VACATIONS =====
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
