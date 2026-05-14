@@ -10,6 +10,31 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--bg:#f2f2f7;--surface:#fff;--border:#e5e5ea;--border2:#d1d1d6;--text:#1c1c1e;--muted:#8e8e93;--accent:#34c759;--accent-dark:#248a3d;--blue:#007aff;--red:#ff3b30;--r:12px;--rs:8px;--rl:16px;--sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);--shm:0 4px 16px rgba(0,0,0,.12);}
+[data-theme="white"]{--bg:#e8e8ed;--surface:#d1d1d6;--border:#c7c7cc;--border2:#aeaeb2;--text:#1c1c1e;--muted:#636366;--sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);--shm:0 4px 16px rgba(0,0,0,.12);}
+[data-theme="dark"]{--bg:#1c1c1e;--surface:#2c2c2e;--border:#3a3a3c;--border2:#48484a;--text:#f2f2f7;--muted:#8e8e93;--accent:#34c759;--accent-dark:#30d158;--sh:0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);--shm:0 4px 16px rgba(0,0,0,.5);}
+[data-theme="dark"] .login-wrap{background:linear-gradient(160deg,#1c2e1c,#1c1c1e)}
+[data-theme="dark"] th{background:#2c2c2e}
+[data-theme="dark"] tr:hover td{background:#3a3a3c}
+[data-theme="dark"] tr.selected td{background:#1a3a1a!important}
+[data-theme="dark"] .r-dumaet td{background:#2a2a3e!important}
+[data-theme="dark"] .r-nedozvon td{background:#2c2c2e!important}
+[data-theme="dark"] .r-otkaz td{background:#3a1f1f!important}
+[data-theme="dark"] .r-prinyat td{background:#1a3a1a!important}
+[data-theme="dark"] .r-oformlenie td{background:#1a2e30!important}
+[data-theme="dark"] .r-stazhirovka td{background:#2a1f3a!important}
+[data-theme="dark"] .r-rezerv td{background:#1a2040!important}
+[data-theme="dark"] .r-zhdu td{background:#3a1a2a!important}
+[data-theme="dark"] .r-sb td{background:#3a3010!important}
+[data-theme="dark"] .r-logistic td{background:#1a3a20!important}
+[data-theme="dark"] .modal{background:var(--surface)}
+[data-theme="dark"] .fg input,[data-theme="dark"] .fg select,[data-theme="dark"] .fg textarea{background:#3a3a3c;color:var(--text);border-color:var(--border)}
+[data-theme="dark"] .finput{background:#3a3a3c;color:var(--text)}
+[data-theme="dark"] .login-box{background:var(--surface)}
+[data-theme="dark"] .login-group input{background:#3a3a3c;color:var(--text)}
+[data-theme="dark"] .card{background:var(--surface)}
+[data-theme="dark"] .stat{background:var(--surface)}
+[data-theme="dark"] .info-section{background:var(--surface)}
+[data-theme="dark"] .deactiv-card{background:var(--surface)}
 body,html{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;height:100%;-webkit-font-smoothing:antialiased;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='32' viewBox='0 0 28 32'%3E%3Cpolygon points='2,30 2,4 22,20' fill='%2334c759' stroke='%23248a3d' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ctext x='7' y='24' font-family='Arial' font-weight='900' font-size='7' fill='white'%3EGF%3C/text%3E%3C/svg%3E") 2 2, auto;}
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#e8f5e9,#f2f2f7)}
 .login-box{background:var(--surface);border-radius:20px;padding:36px 32px;width:360px;max-width:92vw;box-shadow:var(--shm)}
@@ -231,6 +256,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
     <div class="topbar-right">
       <span id="queueBadge" style="display:none;font-size:11px;background:#fff3cd;color:#856404;padding:3px 8px;border-radius:20px;font-weight:500"></span>
       <button class="cal-btn" id="calBtn" title="Мой календарь">📅<span class="cal-badge" id="calBadge"></span></button>
+      <button id="themeBtn" onclick="cycleTheme()" title="Сменить тему" style="width:34px;height:34px;border-radius:50%;cursor:pointer;flex-shrink:0;border:1.5px solid var(--border);background:var(--surface);font-size:16px;display:flex;align-items:center;justify-content:center">🌤️</button>
       <button class="avatar-btn" id="avatarBtn"></button>
       <span class="user-name" id="userName"></span>
       <button class="btn-out" id="logoutBtn">Выйти</button>
@@ -1669,6 +1695,39 @@ function vacationEditPeriod(gi, mi, pi){
 }
 window.vacationEditPeriod = vacationEditPeriod;
 // ===== END VACATIONS =====
+
+// ===== THEMES =====
+const THEMES = ['default','white','dark'];
+const THEME_ICONS = {default:'🌤️', white:'🩶', dark:'🌙'};
+const THEME_LABELS = {default:'Светло-серая', white:'Серая', dark:'Тёмная'};
+let currentTheme = localStorage.getItem('hrcrm_theme') || 'default';
+
+function applyTheme(theme){
+  currentTheme = theme;
+  if(theme === 'default'){
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = THEME_ICONS[theme];
+  localStorage.setItem('hrcrm_theme', theme);
+}
+
+function cycleTheme(){
+  const idx = THEMES.indexOf(currentTheme);
+  const next = THEMES[(idx+1) % THEMES.length];
+  applyTheme(next);
+  // Всплывашка
+  const t=document.createElement('div');
+  t.textContent='🎨 Тема: '+THEME_LABELS[next];
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999';
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2000);
+}
+
+// Применяем сохранённую тему при загрузке
+applyTheme(currentTheme);
+// ===== END THEMES =====
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
