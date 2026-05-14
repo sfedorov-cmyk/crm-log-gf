@@ -436,67 +436,121 @@ function deactivFiltered(){
   });
 }
 
+const DEACTIV_OKRUGS=['СЗАО','САО','СВАО','ВАО','ЮВАО','ЮАО','ЮЗАО','ЗАО','ЦЕНТР','ВОСТОК','СЗ','СВ','ЮВ','ЮЗ'];
+
+async function saveDeactivCell(id,field,value){
+  const idx=deactivRows.findIndex(r=>r.id===id);
+  if(idx>=0)deactivRows[idx][field]=value;
+  try{await sb.from('deactivated').update({[field]:value}).eq('id',id);}catch(e){saveDeactivLocal();}
+}
+window.saveDeactivCell=saveDeactivCell;
+
+async function addDeactivRow(){
+  const d={fio:'',okrug:'—',comment:'',tel:'—',city:'—',reason:'—',deactiv_date:td(),added_by:myRec||''};
+  try{
+    const{data,error}=await sb.from('deactivated').insert(d).select();
+    if(error)throw error;
+    deactivRows.unshift(data[0]);
+  }catch(e){
+    deactivRows.unshift({...d,id:'local_'+Date.now()});
+    saveDeactivLocal();
+  }
+  deactivFilter.fio='';
+  renderDeactiv();
+  setTimeout(()=>{const first=document.querySelector('.dtbl-fio');if(first){first.focus();const r=document.createRange();r.selectNodeContents(first);r.collapse(false);const s=window.getSelection();s.removeAllRanges();s.addRange(r);}},100);
+}
+window.addDeactivRow=addDeactivRow;
+
+async function deleteDeactivRow(id){
+  if(!confirm('Удалить строку?'))return;
+  try{await sb.from('deactivated').delete().eq('id',id);}catch(e){}
+  deactivRows=deactivRows.filter(r=>r.id!==id);
+  saveDeactivLocal();
+  renderDeactiv();
+}
+window.deleteDeactivRow=deleteDeactivRow;
+
 async function renderDeactiv(){
   const wrap=document.getElementById('deactivWrap');
   wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">Загрузка...</div>';
   await loadDeactivData();
   const fr=deactivFiltered();
-  const cities=[...new Set(deactivRows.map(r=>r.city).filter(Boolean))];
-  const reasons=['Прогул','Нарушение правил','Конфликт','Мошенничество','Долг','Другое'];
+  const okrugOpts=DEACTIV_OKRUGS.map(o=>`<option value="${o}">\${o}</option>`).join('');
 
   wrap.innerHTML=`<div style="max-width:1000px;margin:0 auto;padding-bottom:24px">
     <div class="deactiv-header">
       <div class="deactiv-title">⛔ Деактив! <span class="deactiv-badge">${deactivRows.length} чел.</span></div>
-      <button class="btn-deactiv-add" onclick="openDeactivModal()">+ Добавить</button>
+      <button class="btn-deactiv-add" onclick="addDeactivRow()">+ Добавить строку</button>
     </div>
 
-    <div class="deactiv-stats">
-      <div class="deactiv-stat"><div class="deactiv-stat-val">${deactivRows.length}</div><div class="deactiv-stat-lbl">Всего</div></div>
-      <div class="deactiv-stat"><div class="deactiv-stat-val">${deactivRows.filter(r=>r.reason==='Прогул').length}</div><div class="deactiv-stat-lbl">Прогул</div></div>
-      <div class="deactiv-stat"><div class="deactiv-stat-val">${deactivRows.filter(r=>r.reason==='Мошенничество').length}</div><div class="deactiv-stat-lbl">Мошенничество</div></div>
-      <div class="deactiv-stat"><div class="deactiv-stat-val">${deactivRows.filter(r=>r.reason==='Долг').length}</div><div class="deactiv-stat-lbl">Долг</div></div>
-    </div>
-
-    <div class="deactiv-section">
-      <div class="deactiv-filters">
-        <input class="finput finput-wide" type="text" placeholder="Поиск по ФИО..." id="dFio2" value="${deactivFilter.fio}" oninput="deactivFilter.fio=this.value;renderDeactiv()">
-        <select class="finput" id="dCity2" onchange="deactivFilter.city=this.value;renderDeactiv()">
-          <option value="">Все города</option>
-          ${cities.map(c=>`<option${deactivFilter.city===c?' selected':''}>${c}</option>`).join('')}
-        </select>
-        <select class="finput" id="dReason2" onchange="deactivFilter.reason=this.value;renderDeactiv()">
-          <option value="">Все причины</option>
-          ${reasons.map(r=>`<option${deactivFilter.reason===r?' selected':''}>${r}</option>`).join('')}
-        </select>
-        <button class="btn-reset" onclick="deactivFilter={fio:'',city:'',reason:''};renderDeactiv()">Сбросить</button>
-        <span style="font-size:12px;color:var(--muted);margin-left:4px">Найдено: ${fr.length}</span>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="position:relative;display:flex;align-items:center">
+        <span style="position:absolute;left:10px;font-size:14px;color:var(--muted);pointer-events:none">🔍</span>
+        <input style="border:1.5px solid var(--border);border-radius:var(--rs);padding:8px 12px 8px 32px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);outline:none;width:220px" type="text" placeholder="Поиск по ФИО..." id="dFio2" value="${deactivFilter.fio}" oninput="deactivFilter.fio=this.value;renderDeactiv()">
       </div>
+      ${deactivFilter.fio?`<button class="btn-reset" onclick="deactivFilter.fio='';renderDeactiv()">✕ Сбросить</button>`:''}
+      <span style="font-size:12px;color:var(--muted)">Найдено: <b>${fr.length}</b> из ${deactivRows.length}</span>
+    </div>
 
-      ${fr.length===0?`<div class="deactiv-empty"><div class="deactiv-empty-icon">✅</div><div style="font-size:15px;font-weight:500;margin-bottom:6px">Список пуст</div><div style="font-size:13px">Деактивированных нет</div></div>`:`
+    <div style="background:var(--surface);border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden">
       <div style="overflow-x:auto">
-        <table class="deactiv-table">
-          <thead><tr>
-            <th>ФИО</th><th>Округ</th><th>Комментарий</th><th></th>
-          </tr></thead>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:500px">
+          <thead>
+            <tr style="background:#fff5f5">
+              <th style="width:44px;padding:10px 8px;border-bottom:2px solid #fecaca;border-right:1px solid #fecaca;text-align:center;font-size:11px;color:#b91c1c;font-weight:700;text-transform:uppercase;letter-spacing:.3px">#</th>
+              <th style="padding:10px 14px;border-bottom:2px solid #fecaca;border-right:1px solid #fecaca;text-align:left;font-size:11px;color:#b91c1c;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:38%">ФИО</th>
+              <th style="padding:10px 14px;border-bottom:2px solid #fecaca;border-right:1px solid #fecaca;text-align:left;font-size:11px;color:#b91c1c;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:18%">Округ</th>
+              <th style="padding:10px 14px;border-bottom:2px solid #fecaca;text-align:left;font-size:11px;color:#b91c1c;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Комментарий</th>
+            </tr>
+          </thead>
           <tbody>
-            ${fr.map(r=>`<tr>
-              <td style="font-weight:600;min-width:140px">${r.fio||'—'}</td>
-              <td style="font-size:13px">${r.okrug||'—'}</td>
-              <td style="color:var(--muted);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${esc(r.comment)}">${r.comment||'—'}</td>
-              <td><button onclick="openDeactivEdit('${r.id}')" style="background:none;border:none;cursor:pointer;font-size:15px">✏️</button></td>
+            ${fr.length===0?`<tr><td colspan="4" style="padding:50px;text-align:center;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">✅</div><div style="font-size:14px;font-weight:500">${deactivRows.length===0?'Список пуст — нажмите «+ Добавить строку»':'Ничего не найдено'}</div></td></tr>`:''}
+            ${fr.map((r,i)=>`<tr style="border-bottom:1px solid var(--border);transition:background .1s" onmouseover="this.style.background='#fff8f8'" onmouseout="this.style.background=''">
+              <td style="padding:0;border-right:1px solid var(--border);text-align:center;vertical-align:middle;width:44px">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px">
+                  <span style="font-size:11px;color:var(--muted);line-height:1">${i+1}</span>
+                  <button onclick="deleteDeactivRow('${r.id}')" title="Удалить строку" style="background:none;border:none;cursor:pointer;font-size:11px;color:#fca5a5;padding:0;line-height:1;opacity:.7" onmouseover="this.style.opacity=1;this.style.color='#ef4444'" onmouseout="this.style.opacity=.7;this.style.color='#fca5a5'">✕</button>
+                </div>
+              </td>
+              <td style="padding:0;border-right:1px solid var(--border);vertical-align:middle">
+                <div class="dtbl-fio dtbl-cell" contenteditable="true"
+                  data-id="${r.id}" data-field="fio"
+                  onblur="saveDeactivCell('${r.id}','fio',this.textContent.trim())"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+                  style="padding:10px 14px;min-height:40px;outline:none;font-weight:600;cursor:text;white-space:pre-wrap;word-break:break-word"
+                >${r.fio||''}</div>
+              </td>
+              <td style="padding:0;border-right:1px solid var(--border);vertical-align:middle">
+                <select onchange="saveDeactivCell('${r.id}','okrug',this.value)"
+                  style="width:100%;border:none;background:transparent;font-family:inherit;font-size:13px;color:var(--text);padding:10px 8px 10px 14px;cursor:pointer;outline:none;min-height:40px;-webkit-appearance:none;appearance:none">
+                  <option value="—"${(!r.okrug||r.okrug==='—')?' selected':''}>—</option>
+                  ${DEACTIV_OKRUGS.map(o=>`<option value="${o}"${r.okrug===o?' selected':''}>${o}</option>`).join('')}
+                </select>
+              </td>
+              <td style="padding:0;vertical-align:middle">
+                <div class="dtbl-cell" contenteditable="true"
+                  data-id="${r.id}" data-field="comment"
+                  onblur="saveDeactivCell('${r.id}','comment',this.textContent.trim())"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+                  style="padding:10px 14px;min-height:40px;outline:none;color:var(--text);cursor:text;white-space:pre-wrap;word-break:break-word"
+                >${r.comment||''}</div>
+              </td>
             </tr>`).join('')}
           </tbody>
         </table>
       </div>
-      <div class="deactiv-cards">
-        ${fr.map(r=>`<div class="deactiv-card" onclick="openDeactivEdit('${r.id}')">
-          <div class="deactiv-card-name">${r.fio||'—'}</div>
-          <div class="deactiv-card-meta">${r.okrug||'—'}</div>
-          ${r.comment?`<div style="font-size:12px;color:var(--muted);margin-top:4px">${r.comment}</div>`:''}
-        </div>`).join('')}
-      </div>`}
+      <div style="padding:8px 14px;border-top:1px solid var(--border)">
+        <button onclick="addDeactivRow()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:4px 0;display:flex;align-items:center;gap:6px" onmouseover="this.style.color='#b91c1c'" onmouseout="this.style.color='var(--muted)'">
+          <span style="font-size:16px">+</span> Добавить строку
+        </button>
+      </div>
     </div>
   </div>`;
+
+  document.querySelectorAll('.dtbl-cell').forEach(el=>{
+    el.addEventListener('focus',()=>{el.style.background='#fff9f9';el.style.boxShadow='inset 0 0 0 2px #fca5a5';});
+    el.addEventListener('blur',()=>{el.style.background='';el.style.boxShadow='';});
+  });
 }
 window.renderDeactiv=renderDeactiv;
 
