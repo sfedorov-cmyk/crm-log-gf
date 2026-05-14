@@ -179,6 +179,18 @@ tr:hover td{background:var(--bg3)!important}
 .edit-btn{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;padding:4px 8px;color:var(--text2);transition:all .15s}
 .edit-btn:hover{border-color:var(--gold-dim);color:var(--gold)}
 
+/* STATUS DROPDOWN */
+.status-dropdown-wrap{position:relative;display:inline-block}
+.status-menu{position:absolute;top:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:4px;z-index:100;min-width:160px;box-shadow:var(--shm);animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.status-menu-item{padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:6px;transition:filter .1s}
+.status-menu-item::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.status-menu-item:hover{filter:brightness(1.2)}
+/* BLOCK REASON MODAL */
+.block-modal{background:var(--bg2);border:1px solid var(--gold-dim);border-radius:14px;padding:20px;width:360px;max-width:96vw;box-shadow:var(--sh-gold)}
+.block-modal h4{font-size:14px;font-weight:600;color:var(--red-text);margin-bottom:12px}
+.block-modal textarea{width:100%;border:1px solid var(--border2);border-radius:var(--rs);padding:10px;font-family:inherit;font-size:13px;color:var(--text);background:var(--bg3);outline:none;resize:vertical;min-height:80px}
+.block-modal textarea:focus{border-color:var(--gold)}
 /* INLINE EDIT */
 .inline-cell:hover{background:var(--gold-bg)}
 .inline-date{border-radius:4px}
@@ -511,7 +523,14 @@ function renderTable(){
       <td style="font-weight:600">${inlineEdit(r.id,'name',r.name)}</td>
       <td>${r.okrug?`<span class="okrug-tag">${r.okrug}</span>`:'—'}</td>
       <td style="color:var(--gold)">${inlineEdit(r.id,'nastavnik',r.nastavnik)}</td>
-      <td><button class="sbadge ${statusBadgeClass(r.status)}" onclick="cycleStatus('${r.id}','${r.status}')">${statusLabel(r.status)}</button></td>
+      <td style="position:relative">
+        <div class="status-dropdown-wrap" id="sdw-${r.id}">
+          <button class="sbadge ${statusBadgeClass(r.status)}" onclick="toggleStatusMenu('${r.id}')" style="cursor:pointer">${statusLabel(r.status)}</button>
+          <div class="status-menu hidden" id="sm-${r.id}">
+            ${['works','coming','nodial','block','other'].map(s=>`<div class="status-menu-item ${statusBadgeClass(s)}" onclick="selectStatus('${r.id}','${s}')">${statusLabel(s)}</div>`).join('')}
+          </div>
+        </div>
+      </td>
       <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.comment||''}">${inlineEdit(r.id,'comment',r.comment)}</td>
       <td style="text-align:center">${inlineSmeny(r.id,r.smeny)}</td>
       <td style="text-align:center" class="sum-cell">${bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>'}</td>
@@ -520,13 +539,59 @@ function renderTable(){
     </tr>`;
   }).join('');
 }
-async function cycleStatus(id,cur){
-  const order=['works','coming','nodial','block','other'];
-  const next=order[(order.indexOf(cur)+1)%order.length];
-  await sb.from('nastavniki').update({status:next}).eq('id',id);
-  const r=rows.find(x=>x.id===id);if(r)r.status=next;
+function toggleStatusMenu(id){
+  // закрываем все открытые меню
+  document.querySelectorAll('.status-menu').forEach(m=>{if(m.id!=='sm-'+id)m.classList.add('hidden');});
+  document.getElementById('sm-'+id).classList.toggle('hidden');
+}
+// клик вне меню — закрываем
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.status-dropdown-wrap'))
+    document.querySelectorAll('.status-menu').forEach(m=>m.classList.add('hidden'));
+});
+
+async function selectStatus(id,status){
+  document.querySelectorAll('.status-menu').forEach(m=>m.classList.add('hidden'));
+  if(status==='block'){
+    // показываем модалку для ввода причины блокировки
+    showBlockModal(id);
+    return;
+  }
+  await sb.from('nastavniki').update({status}).eq('id',id);
+  const r=rows.find(x=>x.id===id);if(r)r.status=status;
   renderTable();
 }
+window.selectStatus=selectStatus;
+window.toggleStatusMenu=toggleStatusMenu;
+
+function showBlockModal(id){
+  const r=rows.find(x=>x.id===id);
+  const existing=r?.comment||'';
+  // создаём модалку
+  const bg=document.createElement('div');
+  bg.className='modal-bg open';
+  bg.style.zIndex='300';
+  bg.innerHTML=`<div class="block-modal">
+    <h4>🔴 Блок — укажите причину</h4>
+    <textarea id="blockReason" placeholder="Причина блокировки...">${existing}</textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-cancel" style="flex:1" onclick="this.closest('.modal-bg').remove()">Отмена</button>
+      <button class="btn-save" style="flex:1" onclick="saveBlock('${id}',document.getElementById('blockReason').value,this.closest('.modal-bg'))">Сохранить</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bg);
+  setTimeout(()=>document.getElementById('blockReason').focus(),100);
+}
+window.showBlockModal=showBlockModal;
+
+async function saveBlock(id,reason,modal){
+  await sb.from('nastavniki').update({status:'block',comment:reason}).eq('id',id);
+  const r=rows.find(x=>x.id===id);
+  if(r){r.status='block';r.comment=reason;}
+  modal.remove();
+  renderTable();
+}
+window.saveBlock=saveBlock;
 function switchTab(tab){
   currentTab=tab;
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
@@ -737,4 +802,3 @@ function toggleTheme(){
 </script>
 </body>
 </html>
-
