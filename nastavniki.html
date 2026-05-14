@@ -578,35 +578,20 @@ sb.channel('nastavniki_rt').on('postgres_changes',{event:'*',schema:'public',tab
 function parseAccountText(text){
   const result={};
   // ФИО
-  const fio=text.match(/ФИО[:\s]+([^
-
-]+)/i);
-  if(fio)result.name=fio[1].trim();
-  // Район/Округ
-  const okrug=text.match(/Район[:\s]+([^
-
-]+)/i);
-  if(okrug)result.okrug=okrug[1].trim();
-  // Регион (для определения города)
-  const region=text.match(/Регион[:\s]+([^
-
-]+)/i);
-  if(region)result.region=region[1].trim();
+  const fioM=text.match(/ФИО[^\n]*?([А-ЯЁ][а-яёА-ЯЁ\s]{3,})/);
+  if(fioM)result.name=fioM[1].split('\n')[0].trim();
+  // Район
+  const okrugM=text.match(/Район[^:\n]*:[\s]*([^\n\r]+)/i);
+  if(okrugM)result.okrug=okrugM[1].trim();
   // Телефон
-  const phone=text.match(/(?:Номер телефона|Телефон)[:\s]+([^
-
-]+)/i);
-  if(phone)result.phone=phone[1].trim();
+  const phoneM=text.match(/(?:Номер телефона|Телефон)[^:\n]*:[\s]*([0-9+][^\n\r]+)/i);
+  if(phoneM)result.phone=phoneM[1].trim();
   // Телеграм
-  const tg=text.match(/Телеграм[:\s]+(@[^\s
-
-]+)/i);
-  if(tg)result.tg=tg[1].trim();
+  const tgM=text.match(/Телеграм[^@\n]*(@[A-Za-z0-9_]+)/i);
+  if(tgM)result.tg=tgM[1].trim();
   // Логин
-  const login=text.match(/Логин[:\s`]+([^\s
-
-`]+)/i);
-  if(login)result.login=login[1].trim();
+  const loginM=text.match(/Логин[^:\n]*:[^\n`]*`?([\w.@+\-]+@[\w.]+)/i);
+  if(loginM)result.login=loginM[1].trim();
   return result;
 }
 
