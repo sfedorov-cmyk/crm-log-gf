@@ -1607,11 +1607,15 @@ function vacationSaveGroupName(gi, name){
 window.vacationSaveGroupName = vacationSaveGroupName;
 
 function vacationDelGroup(gi){
-  if(!confirm('Удалить группу «' + vacationData[gi].group + '» со всеми сотрудниками?')) return;
-  vacationData.splice(gi, 1);
-  saveVacationData(); renderVacation();
+  if(!vacationData){loadVacationData();}
+  gi=parseInt(gi);
+  if(!vacationData||!vacationData[gi])return;
+  if(!confirm('Удалить группу «'+vacationData[gi].group+'» со всеми сотрудниками?'))return;
+  vacationData.splice(gi,1);
+  saveVacationData();
+  renderVacation();
 }
-window.vacationDelGroup = vacationDelGroup;
+window.vacationDelGroup=vacationDelGroup;
 
 function vacationAddGroup(){
   vacationData.push({group:'Новая группа',color:'#e3f2fd',accent:'#1976d2',members:[]});
