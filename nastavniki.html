@@ -204,6 +204,49 @@ tr:hover td{background:var(--bg3)!important}
 .inline-select:hover{background:var(--gold-bg)!important}
 /* OKRUG */
 .okrug-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-dim);opacity:.8}
+
+/* MOBILE */
+@media(max-width:700px){
+  .topbar{padding:0 12px;min-height:50px;gap:8px}
+  .logo{font-size:14px;padding-right:10px}
+  .logo span{display:none}
+  .btn{padding:5px 10px;font-size:11px}
+  .tariff-wrap{padding:8px 12px;gap:10px}
+  .tariff-label{display:none}
+  .tariff-val{width:64px;font-size:12px}
+  .toolbar{padding:6px 12px;gap:6px}
+  .finput{font-size:12px;padding:5px 8px}
+  /* Скрываем таблицу на мобиле */
+  .table-wrap{display:none!important}
+  /* Показываем карточки */
+  .mobile-cards{display:flex!important}
+  /* Топбар кнопки */
+  #viewTableBtn,#viewReportBtn{display:none}
+}
+@media(min-width:701px){
+  .mobile-cards{display:none!important}
+}
+/* КАРТОЧКИ */
+.mobile-cards{display:none;flex-direction:column;gap:10px;padding:12px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.m-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;position:relative;transition:border-color .15s}
+.m-card.s-works{border-left:3px solid var(--green-text)}
+.m-card.s-coming{border-left:3px solid var(--yellow-text)}
+.m-card.s-nodial{border-left:3px solid var(--orange-text)}
+.m-card.s-block{border-left:3px solid var(--red-text)}
+.m-card.s-handed{border-left:3px solid var(--handed-text)}
+.m-card.s-other{border-left:3px solid var(--gray-text)}
+.m-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.m-card-name{font-size:15px;font-weight:700;color:var(--text)}
+.m-card-date{font-size:11px;color:var(--text2)}
+.m-card-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.m-card-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;min-width:70px}
+.m-card-val{font-size:13px;color:var(--text)}
+.m-card-actions{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.m-action-btn{flex:1;padding:8px;border:1px solid var(--border2);border-radius:10px;background:transparent;color:var(--text2);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;text-align:center;transition:all .15s}
+.m-action-btn:active{background:var(--gold-bg);border-color:var(--gold-dim);color:var(--gold)}
+.m-smeny-wrap{display:flex;align-items:center;gap:8px}
+.m-smeny-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+.m-smeny-val{font-size:16px;font-weight:700;min-width:20px;text-align:center}
 </style>
 </head>
 <body>
@@ -288,6 +331,9 @@ tr:hover td{background:var(--bg3)!important}
       <tbody id="tbody"></tbody>
     </table>
   </div>
+
+  <!-- MOBILE CARDS -->
+  <div class="mobile-cards" id="mobileCards"></div>
 
   <div id="reportWrap" style="display:none;flex:1;overflow-y:auto;padding:20px">
     <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center;flex-wrap:wrap">
@@ -470,6 +516,76 @@ function inlineBonus(id,value){
   const opts=['none','unpaid','paid'].map(v=>`<option value="${v}" ${value===v?'selected':''}>${bonusLabel(v)}</option>`).join('');
   return`<select class="inline-select" data-id="${id}" data-field="bonus">${opts}</select>`;
 }
+
+// МОБИЛЬНЫЕ КАРТОЧКИ
+function renderCards(fr){
+  const wrap=document.getElementById('mobileCards');
+  if(!wrap)return;
+  if(!fr.length){wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)"><div style="font-size:36px;margin-bottom:8px">📋</div>Нет записей</div>';return;}
+  wrap.innerHTML=fr.map(r=>{
+    const bonus=calcBonus(r.smeny);
+    return`<div class="m-card ${statusClass(r.status)}" data-id="${r.id}">
+      <div class="m-card-top">
+        <div>
+          <div class="m-card-name">${r.name||'—'}</div>
+          <div class="m-card-date">📅 ${r.date_account||'—'} ${r.date_first_shift?'→ '+r.date_first_shift:''}</div>
+        </div>
+        <button class="edit-btn" onclick="openEdit('${r.id}')">✏️</button>
+      </div>
+      <div class="m-card-row">
+        <span class="m-card-label">Округ</span>
+        ${r.okrug?`<span class="okrug-tag">${r.okrug}</span>`:'<span class="m-card-val">—</span>'}
+      </div>
+      <div class="m-card-row">
+        <span class="m-card-label">Наставник</span>
+        <span class="m-card-val" style="color:var(--gold);font-weight:500">${r.nastavnik||'—'}</span>
+      </div>
+      <div class="m-card-row">
+        <span class="m-card-label">Статус</span>
+        <button class="sbadge ${statusBadgeClass(r.status)}" onclick="toggleStatusMenu('${r.id}')" style="position:relative">
+          ${statusLabel(r.status)}
+          <div class="status-menu hidden" id="sm-${r.id}" style="position:fixed;top:auto;left:16px;right:16px;width:auto">
+            ${['handed','works','coming','nodial','block','other'].map(s=>`<div class="status-menu-item ${statusBadgeClass(s)}" onclick="selectStatus('${r.id}','${s}')">${statusLabel(s)}</div>`).join('')}
+          </div>
+        </button>
+      </div>
+      ${r.comment?`<div class="m-card-row"><span class="m-card-label">Комментарий</span><span class="m-card-val" style="font-size:12px;color:var(--text2)">${r.comment}</span></div>`:''}
+      <div class="m-card-row">
+        <span class="m-card-label">Смен</span>
+        <div class="m-smeny-wrap">
+          <button class="m-smeny-btn" onclick="mobileChangeSmeny('${r.id}',-1,this)">−</button>
+          <span class="m-smeny-val" id="ms-${r.id}">${r.smeny||0}</span>
+          <button class="m-smeny-btn" onclick="mobileChangeSmeny('${r.id}',1,this)">+</button>
+          ${bonus>0?`<span class="amount" id="mb-${r.id}">${bonus} ₽</span>`:`<span style="color:var(--text2)" id="mb-${r.id}">—</span>`}
+        </div>
+      </div>
+      <div class="m-card-actions">
+        <button class="m-action-btn" onclick="mobileCycleBonus('${r.id}','${r.bonus||'none'}')" id="mbon-${r.id}">${bonusLabel(r.bonus)}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function mobileChangeSmeny(id,delta,btn){
+  const r=rows.find(x=>x.id===id);if(!r)return;
+  r.smeny=Math.max(0,Math.min(5,(+r.smeny||0)+delta));
+  document.getElementById('ms-'+id).textContent=r.smeny;
+  const bonus=calcBonus(r.smeny);
+  const bonEl=document.getElementById('mb-'+id);
+  if(bonEl)bonEl.innerHTML=bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>';
+  await sb.from('nastavniki').update({smeny:r.smeny}).eq('id',id);
+}
+window.mobileChangeSmeny=mobileChangeSmeny;
+
+const BONUS_ORDER=['none','unpaid','paid'];
+async function mobileCycleBonus(id,cur){
+  const r=rows.find(x=>x.id===id);if(!r)return;
+  r.bonus=BONUS_ORDER[(BONUS_ORDER.indexOf(cur)+1)%BONUS_ORDER.length];
+  const btn=document.getElementById('mbon-'+id);
+  if(btn)btn.textContent=bonusLabel(r.bonus);
+  await sb.from('nastavniki').update({bonus:r.bonus}).eq('id',id);
+}
+window.mobileCycleBonus=mobileCycleBonus;
 
 // EVENT DELEGATION — один обработчик на всю таблицу
 let saveTimer=null;
