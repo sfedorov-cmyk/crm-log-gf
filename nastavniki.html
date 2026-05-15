@@ -311,10 +311,18 @@ tr:hover td{background:var(--bg3)!important}
     <button class="btn" onclick="clearFilters()">Сбросить</button>
   </div>
 
+  <!-- BULK BAR -->
+  <div id="bulkBar" style="display:none;background:#1a1a1a;padding:10px 20px;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap">
+    <span id="bulkInfo" style="font-size:13px;font-weight:600;color:#fff">0 выбрано</span>
+    <button onclick="deleteSelected()" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-text);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🗑 Удалить выбранные</button>
+    <button onclick="clearSelection()" style="background:transparent;color:#888;border:1px solid #333;border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit">Отменить</button>
+  </div>
+
   <div class="table-wrap" id="tableWrap">
     <table>
       <thead>
         <tr>
+          <th style="width:36px"><input type="checkbox" id="checkAll" onclick="toggleAll(this)" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"></th>
           <th>Дата аккаунта</th>
           <th>Дата выхода</th>
           <th>ФИО курьера</th>
@@ -635,6 +643,7 @@ function renderTable(){
   tbody.innerHTML=fr.map(r=>{
     const bonus=calcBonus(r.smeny);
     return`<tr class="${statusClass(r.status)}">
+      <td><input type="checkbox" class="row-check" data-id="${r.id}" onclick="updateBulkBar()" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"></td>
       <td style="font-size:12px">${inlineDate(r.id,'date_account',r.date_account)}</td>
       <td style="font-size:12px">${inlineDate(r.id,'date_first_shift',r.date_first_shift)}</td>
       <td style="font-weight:600">${inlineEdit(r.id,'name',r.name)}</td>
@@ -901,6 +910,54 @@ async function pasteRecord(){
   if(parts.length)document.getElementById('fComment').value=parts.join(' | ');
 }
 window.pasteRecord=pasteRecord;
+
+// BULK ACTIONS
+let selected=new Set();
+
+function toggleAll(cb){
+  document.querySelectorAll('.row-check').forEach(c=>{
+    c.checked=cb.checked;
+    if(cb.checked)selected.add(c.dataset.id);
+    else selected.delete(c.dataset.id);
+  });
+  updateBulkBar();
+}
+window.toggleAll=toggleAll;
+
+function updateBulkBar(){
+  selected.clear();
+  document.querySelectorAll('.row-check:checked').forEach(c=>selected.add(c.dataset.id));
+  const bar=document.getElementById('bulkBar');
+  const info=document.getElementById('bulkInfo');
+  if(selected.size>0){
+    bar.style.display='flex';
+    info.textContent=`${selected.size} выбрано`;
+  } else {
+    bar.style.display='none';
+  }
+}
+window.updateBulkBar=updateBulkBar;
+
+function clearSelection(){
+  selected.clear();
+  document.querySelectorAll('.row-check').forEach(c=>c.checked=false);
+  const cb=document.getElementById('checkAll');
+  if(cb)cb.checked=false;
+  document.getElementById('bulkBar').style.display='none';
+}
+window.clearSelection=clearSelection;
+
+async function deleteSelected(){
+  if(!selected.size)return;
+  if(!confirm(`Удалить ${selected.size} записей? Это действие нельзя отменить.`))return;
+  const ids=[...selected];
+  for(const id of ids){
+    await sb.from('nastavniki').delete().eq('id',id);
+  }
+  clearSelection();
+  await loadData();
+}
+window.deleteSelected=deleteSelected;
 
 loadTariffs();
 loadData();
