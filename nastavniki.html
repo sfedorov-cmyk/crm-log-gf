@@ -27,6 +27,8 @@
   --green:#2d6a4f;
   --green-bg:rgba(45,106,79,.15);
   --green-text:#52b788;
+  --handed-bg:rgba(90,60,180,.15);
+  --handed-text:#a78bfa;
   --yellow-bg:rgba(186,160,47,.12);
   --yellow-text:#d4b82a;
   --orange-bg:rgba(180,100,30,.15);
@@ -133,6 +135,9 @@ tr:hover td{background:var(--bg3)!important}
 .sb-nodial{background:var(--orange-bg);color:var(--orange-text)}
 .sb-block{background:var(--red-bg);color:var(--red-text)}
 .sb-other{background:var(--gray-bg);color:var(--gray-text)}
+.sb-handed{background:var(--handed-bg);color:var(--handed-text)}
+.s-handed td{background:rgba(90,60,180,.04)!important}
+.s-handed{background:rgba(90,60,180,.04)}
 .sbadge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
 
 /* BONUS */
@@ -247,6 +252,7 @@ tr:hover td{background:var(--bg3)!important}
     <input type="text" class="finput" id="searchInput" placeholder="Поиск по ФИО или наставнику..." style="width:230px" oninput="renderTable()">
     <select class="finput" id="filterStatus" onchange="renderTable()">
       <option value="">Все статусы</option>
+      <option value="handed">Передан наставнику</option>
       <option value="works">Работает</option>
       <option value="coming">Выйдет. Дата</option>
       <option value="nodial">Недозвон. Дата</option>
@@ -316,6 +322,7 @@ tr:hover td{background:var(--bg3)!important}
     <div class="fg"><label>Наставник</label><input type="text" id="fNastavnik" placeholder="Фамилия наставника"></div>
     <div class="fg"><label>Статус</label>
       <select id="fStatus">
+        <option value="handed">Передан наставнику</option>
         <option value="works">Работает</option>
         <option value="coming">Выйдет. Дата</option>
         <option value="nodial">Недозвон. Дата</option>
@@ -408,9 +415,9 @@ function calcBonus(s){
   if(n>=1)return tariffs.t1;
   return 0;
 }
-function statusClass(s){return{works:'s-works',coming:'s-coming',nodial:'s-nodial',block:'s-block',other:'s-other'}[s]||'s-other';}
-function statusLabel(s){return{works:'Работает',coming:'Выйдет. Дата',nodial:'Недозвон. Дата',block:'Блок. Причина',other:'Иное'}[s]||s;}
-function statusBadgeClass(s){return{works:'sb-works',coming:'sb-coming',nodial:'sb-nodial',block:'sb-block',other:'sb-other'}[s]||'sb-other';}
+function statusClass(s){return{works:'s-works',coming:'s-coming',nodial:'s-nodial',block:'s-block',other:'s-other',handed:'s-handed'}[s]||'s-other';}
+function statusLabel(s){return{works:'Работает',coming:'Выйдет. Дата',nodial:'Недозвон. Дата',block:'Блок. Причина',other:'Иное',handed:'Передан наставнику'}[s]||s;}
+function statusBadgeClass(s){return{works:'sb-works',coming:'sb-coming',nodial:'sb-nodial',block:'sb-block',other:'sb-other',handed:'sb-handed'}[s]||'sb-other';}
 function bonusLabel(b){return{paid:'✅ Выплачен',unpaid:'⏳ Не выплачен',none:'—'}[b]||'—';}
 function bonusClass(b){return{paid:'bc-paid',unpaid:'bc-unpaid',none:'bc-none'}[b]||'bc-none';}
 function fd(d){if(!d)return'—';try{const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0];}catch(e){return d;}}
@@ -521,7 +528,7 @@ function renderTable(){
         <div class="status-dropdown-wrap" id="sdw-${r.id}">
           <button class="sbadge ${statusBadgeClass(r.status)}" onclick="toggleStatusMenu('${r.id}')" style="cursor:pointer">${statusLabel(r.status)}</button>
           <div class="status-menu hidden" id="sm-${r.id}">
-            ${['works','coming','nodial','block','other'].map(s=>`<div class="status-menu-item ${statusBadgeClass(s)}" onclick="selectStatus('${r.id}','${s}')">${statusLabel(s)}</div>`).join('')}
+            ${['handed','works','coming','nodial','block','other'].map(s=>`<div class="status-menu-item ${statusBadgeClass(s)}" onclick="selectStatus('${r.id}','${s}')">${statusLabel(s)}</div>`).join('')}
           </div>
         </div>
       </td>
@@ -756,6 +763,7 @@ async function pasteRecord(){
   const parsed=parseAccountText(text);
   // Открываем модалку
   openModal();
+  document.getElementById('fStatus').value='handed';
   // Заполняем поля
   if(parsed.name)document.getElementById('fName').value=parsed.name;
   // Определяем дату — сегодня
@@ -797,4 +805,3 @@ function toggleTheme(){
 </script>
 </body>
 </html>
-
