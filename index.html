@@ -1489,6 +1489,9 @@ function initPaste(){
     if(!copiedRow)return;
     const newDate=document.getElementById('pasteDate').value;
     if(!newDate){alert('Выберите дату');return}
+    const _pn=new Date();
+    const _pt=_pn.getFullYear()+'-'+String(_pn.getMonth()+1).padStart(2,'0')+'-'+String(_pn.getDate()).padStart(2,'0');
+    if(newDate===_pt){alert('⛔ Нельзя вставлять на сегодняшний день! Выберите другую дату.');return}
     this.textContent='Вставляю...';this.disabled=true;
     const rec=getRecs()[tab]||getRecs()[0];
     const d={recruiter:rec,date:newDate,time:copiedRow.time||'',fio:copiedRow.fio||'—',tel:copiedRow.tel||'—',okrug:copiedRow.okrug||'—',da:copiedRow.da||'—',status:copiedRow.status||'—',jur:copiedRow.jur||'—',city:copiedRow.city||'—',comment:copiedRow.comment||''};
