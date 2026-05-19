@@ -1152,7 +1152,7 @@ function renderTabs(){
   tabs+=`<div class="tab${infoMode?' active':''}" data-info="1">📚 Инфо</div>`;
   document.getElementById('tabsWrap').innerHTML=tabs;
   document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()}});
-  const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=()=>{dashMode=true;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;clearSelection();render();};
+  const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=async()=>{dashMode=true;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;clearSelection();await loadData();render();};
   const it=document.querySelector('.tab[data-info]');if(it)it.onclick=()=>{infoMode=true;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;clearSelection();render();};
   const mt=document.querySelector('.tab[data-mentor]');if(mt)mt.onclick=()=>{mentorMode=true;vacationMode=false;infoMode=false;dashMode=false;deactivMode=false;clearSelection();render();};
   const vt=document.querySelector('.tab[data-vacation]');if(vt)vt.onclick=()=>{vacationMode=true;infoMode=false;dashMode=false;deactivMode=false;mentorMode=false;clearSelection();render();};
