@@ -1065,15 +1065,22 @@ document.getElementById('bulkMoveBtn').onclick=()=>{
   const ty=tomorrow.getFullYear()+'-'+String(tomorrow.getMonth()+1).padStart(2,'0')+'-'+String(tomorrow.getDate()).padStart(2,'0');
   const moveInput=document.getElementById('moveDate');
   moveInput.value=ty;
-  moveInput.min='';
+  moveInput.min=ty;
   document.getElementById('moveBg').classList.add('open');
 };
 document.getElementById('moveCancelBtn').onclick=()=>document.getElementById('moveBg').classList.remove('open');
 document.getElementById('moveBg').onclick=function(e){if(e.target===this)this.classList.remove('open')};
 document.getElementById('moveConfirmBtn').onclick=async function(){
   const newDate=document.getElementById('moveDate').value;if(!newDate){alert('Выберите дату');return}
-  const todayStr=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')+'-'+String(new Date().getDate()).padStart(2,'0');
-  if(newDate===todayStr){alert('Нельзя переносить на сегодняшний день. Выберите другую дату.');return}
+  const n=new Date();
+  const todayStr=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+  if(newDate===todayStr||newDate<=todayStr&&newDate===todayStr){
+    document.getElementById('moveDate').classList.add('err');
+    alert('⛔ Нельзя переносить на сегодняшний день!
+Выберите любой другой день.');
+    return;
+  }
+  document.getElementById('moveDate').classList.remove('err');
   this.textContent='Переношу...';this.disabled=true;
   const ids=[...selected];for(const id of ids){await sb.from('candidates').update({date:newDate}).eq('id',id);}
   this.textContent='Перенести';this.disabled=false;
