@@ -1076,8 +1076,7 @@ document.getElementById('moveConfirmBtn').onclick=async function(){
   const todayStr=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
   if(newDate===todayStr||newDate<=todayStr&&newDate===todayStr){
     document.getElementById('moveDate').classList.add('err');
-    alert('⛔ Нельзя переносить на сегодняшний день!
-Выберите любой другой день.');
+    alert('⛔ Нельзя переносить на сегодняшний день! Выберите любой другой день.');
     return;
   }
   document.getElementById('moveDate').classList.remove('err');
