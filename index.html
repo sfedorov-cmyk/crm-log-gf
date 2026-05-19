@@ -1161,6 +1161,7 @@ function renderTabs(){
 
 function render(){
   renderTabs();
+  setTimeout(renderPresence,500);
   const dw=document.getElementById('dashWrap');const tw=document.querySelector('.table-wrap');const cw=document.getElementById('cardsWrap');
   const fb=document.getElementById('filtersBar');const sb2=document.getElementById('statsBar');const bb=document.getElementById('bulkBar');
   const iw=document.getElementById('infoWrap');const dacw=document.getElementById('deactivWrap');
