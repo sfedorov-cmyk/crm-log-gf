@@ -1105,7 +1105,7 @@ function initUser(user){
   sb.from('screen_time').select('seconds').eq('email',user.email).eq('date',td()).single().then(({data})=>{if(data)screenSeconds=data.seconds||0;});
   loadData();updatePresence();setInterval(updatePresence,10000);setTimeout(renderPresence,1000);
   sb.channel('c1').on('postgres_changes',{event:'*',schema:'public',table:'candidates'},()=>loadData()).subscribe();
-  sb.channel('c2').on('postgres_changes',{event:'*',schema:'public',table:'user_presence'},()=>renderPresence()).subscribe();
+  // presence polling instead of realtime channel
   sb.channel('c3').on('postgres_changes',{event:'*',schema:'public',table:'info_data'},()=>{if(infoMode)renderInfo();}).subscribe();
   sb.channel('c4').on('postgres_changes',{event:'*',schema:'public',table:'deactivated'},()=>{if(deactivMode)renderDeactiv();}).subscribe();
   setInterval(syncQueue,30000);
@@ -1123,7 +1123,10 @@ document.getElementById('avModalBg').onclick=function(e){if(e.target===this)this
 
 async function updatePresence(){
   if(!CU)return;
-  try{await sb.from('user_presence').upsert({email:CU.email,name:myRec,last_seen:new Date().toISOString()},{onConflict:'email'});}catch(e){}
+  try{
+    await sb.from('user_presence').upsert({email:CU.email,name:myRec,last_seen:new Date().toISOString()},{onConflict:'email'});
+    renderPresence();
+  }catch(e){console.warn('presence error',e);}
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)updatePresence();});
 window.addEventListener('focus',()=>updatePresence());
