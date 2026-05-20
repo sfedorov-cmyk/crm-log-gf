@@ -312,7 +312,12 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
       <div class="fg"><label>Статус</label><select id="fStatus"><option value="—">—</option><option>думает</option><option>недозвон</option><option>отказ</option><option>принят</option><option>оформление</option><option>стажировка</option><option>резерв</option><option>жду доки</option><option>проверка СБ</option><option>передан в логистику</option><option>вышел в смену</option></select></div>
       <div class="fg"><label>Юр. Статус</label><select id="fJur"><option value="—">—</option><option>СМЗ</option><option>ИП</option><option>ТД</option><option>ГПХ</option></select></div>
       <div class="fg"><label>Город</label><select id="fCity"><option value="—">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Нижний Новгород</option><option>Воронеж</option><option>Другой</option></select></div>
-      <div class="fg full"><label>Комментарий</label><textarea id="fComment" placeholder="Заметки..."></textarea></div>
+      <div class="fg full"><label>Комментарий</label>
+        <div style="position:relative">
+          <textarea id="fComment" placeholder="Заметки..." style="padding-right:44px"></textarea>
+          <button type="button" id="voiceBtn" onclick="toggleVoice()" title="Голосовой ввод" style="position:absolute;right:8px;bottom:8px;width:32px;height:32px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.85">🎤</button>
+        </div>
+      </div>
     </div>
     <div class="modal-btns">
       <button class="btn-cancel" id="cancelBtn">Отмена</button>
@@ -2107,6 +2112,67 @@ async function renderKPI(){
 }
 window.renderKPI = renderKPI;
 // ===== END KPI =====
+
+// ===== VOICE INPUT =====
+let voiceRecognition = null;
+let voiceActive = false;
+
+function toggleVoice(){
+  const btn = document.getElementById('voiceBtn');
+  const ta = document.getElementById('fComment');
+  if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+    alert('Голосовой ввод не поддерживается в этом браузере. Используйте Chrome.');
+    return;
+  }
+  if(voiceActive){
+    if(voiceRecognition) voiceRecognition.stop();
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  voiceRecognition = new SR();
+  voiceRecognition.lang = 'ru-RU';
+  voiceRecognition.continuous = true;
+  voiceRecognition.interimResults = true;
+
+  let finalTranscript = ta.value;
+
+  voiceRecognition.onstart = () => {
+    voiceActive = true;
+    btn.style.background = '#ff3b30';
+    btn.textContent = '⏹';
+    btn.title = 'Остановить запись';
+  };
+
+  voiceRecognition.onresult = (e) => {
+    let interim = '';
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      if(e.results[i].isFinal){
+        finalTranscript += e.results[i][0].transcript + ' ';
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    ta.value = finalTranscript + interim;
+  };
+
+  voiceRecognition.onend = () => {
+    voiceActive = false;
+    ta.value = finalTranscript;
+    btn.style.background = 'var(--accent)';
+    btn.textContent = '🎤';
+    btn.title = 'Голосовой ввод';
+  };
+
+  voiceRecognition.onerror = (e) => {
+    voiceActive = false;
+    btn.style.background = 'var(--accent)';
+    btn.textContent = '🎤';
+    if(e.error !== 'no-speech') alert('Ошибка микрофона: ' + e.error);
+  };
+
+  voiceRecognition.start();
+}
+// ===== END VOICE INPUT =====
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
