@@ -1257,7 +1257,7 @@ async function renderDashMain(from,to){
   const SC={'думает':'#eef2ff','недозвон':'#f2f2f7','отказ':'#fef2f2','принят':'#f0fdf4','оформление':'#ecfeff','стажировка':'#faf5ff','резерв':'#dbeafe','жду доки':'#fce7f3','проверка СБ':'#fef9c3','передан в логистику':'#dcfce7'};
   const ST={'думает':'#3730a3','недозвон':'#8e8e93','отказ':'#b91c1c','принят':'#15803d','оформление':'#0e7490','стажировка':'#7e22ce','резерв':'#1d4ed8','жду доки':'#9d174d','проверка СБ':'#854d0e','передан в логистику':'#15803d'};
   const stats={};ALL_R.forEach(r=>{stats[r]={total:0,logistic:0,combined:0,statuses:{}}});
-  data.forEach(row=>{if(!stats[row.recruiter])return;stats[row.recruiter].total++;if(row.status==='передан в логистику')stats[row.recruiter].logistic++;if(['передан в логистику','проверка СБ','вышел в смену'].includes(row.status))stats[row.recruiter].combined++;if(row.status&&row.status!=='—')stats[row.recruiter].statuses[row.status]=(stats[row.recruiter].statuses[row.status]||0)+1;});
+  data.forEach(row=>{if(!stats[row.recruiter])return;stats[row.recruiter].total++;if(['передан в логистику','проверка СБ','вышел в смену'].includes(row.status))stats[row.recruiter].logistic++;if(['передан в логистику','проверка СБ','вышел в смену'].includes(row.status))stats[row.recruiter].combined++;if(row.status&&row.status!=='—')stats[row.recruiter].statuses[row.status]=(stats[row.recruiter].statuses[row.status]||0)+1;});
   const rating=[...ALL_R].sort((a,b)=>stats[b].logistic-stats[a].logistic);const maxL=Math.max(...ALL_R.map(r=>stats[r].logistic),1);
   document.getElementById('dashContent').innerHTML=`
     <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Всего анкет: <strong>${data.length}</strong></div>
