@@ -980,7 +980,9 @@ function toggleTheme(){
 // Определяем лист (city) и наставника по городу и округу из CRM
 function getCityAndNastavnik(crmCity, crmOkrug) {
   const city = (crmCity||'').toUpperCase();
-  const okrug = (crmOkrug||'').trim();
+  // Убираем префикс типа "СПб: ", "МСК: " из поля округа
+  let okrug = (crmOkrug||'').trim();
+  okrug = okrug.replace(/^[А-Яа-яЁё]+:\s*/,'').trim();
 
   if (city === 'SPB' || city === 'СПБ' || city === 'САНКТ-ПЕТЕРБУРГ') {
     const nastavnik = NASTAVNIK_MAP.spb[okrug] || '';
