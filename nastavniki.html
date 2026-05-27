@@ -980,16 +980,37 @@ function toggleTheme(){
 // Определяем лист (city) и наставника по городу и округу из CRM
 function getCityAndNastavnik(crmCity, crmOkrug) {
   const city = (crmCity||'').toUpperCase();
-  // Убираем префикс типа "СПб: ", "МСК: " из поля округа
+  // Парсим округ из формата "СПб : ВОСТОК", "МСК : ЮЗАО", "СЕВЕР : САО"
   let okrug = (crmOkrug||'').trim();
-  okrug = okrug.replace(/^[А-Яа-яЁё]+:\s*/,'').trim();
+  // Убираем префикс до " : " если есть
+  if (okrug.includes(' : ')) {
+    okrug = okrug.split(' : ').pop().trim();
+  } else if (okrug.includes(':')) {
+    okrug = okrug.split(':').pop().trim();
+  }
+  // Маппинг сокращений к значениям в NASTAVNIK_MAP
+  const okrugAlias = {
+    'ВОСТОК': 'Восток', 'восток': 'Восток',
+    'СЗ': 'СЗ', 'СВ': 'СВ', 'ЮЗ': 'ЮЗ', 'ЮВ': 'ЮВ',
+    'ЮБ': 'ЮЗ', 'ЮВ': 'ЮВ',
+    'СЗАО': 'СЗАО', 'САО': 'САО', 'СВАО': 'СВАО', 'ВАО': 'ВАО',
+    'ЮАО': 'ЮАО', 'ЮВАО': 'ЮВАО', 'ЮЗАО': 'ЮЗАО', 'ЗАО': 'ЗАО',
+    'ЦАО': 'ЦАО',
+  };
+  okrug = okrugAlias[okrug] || okrug;
 
-  if (city === 'SPB' || city === 'СПБ' || city === 'САНКТ-ПЕТЕРБУРГ') {
+  // Определяем город по полю city и по префиксу в okrug ("СПб : ВОСТОК", "МСК : ЮЗАО")
+  const crmCityUpper = (crmCity||'').toUpperCase();
+  const crmOkrugRaw = (crmOkrug||'').toUpperCase();
+  const isSpb = crmCityUpper.includes('СПБ') || crmCityUpper.includes('SPB') || crmCityUpper.includes('САНКТ') || crmOkrugRaw.startsWith('СПБ') || crmOkrugRaw.startsWith('СПБ');
+  const isMsk = crmCityUpper.includes('МСК') || crmCityUpper.includes('MSK') || crmCityUpper.includes('МОСКВА') || crmOkrugRaw.startsWith('МСК') || crmOkrugRaw.startsWith('СЕВЕР') || crmOkrugRaw.startsWith('ЮГ');
+
+  if (isSpb) {
     const nastavnik = NASTAVNIK_MAP.spb[okrug] || '';
     return { city: 'spb', nastavnik };
   }
 
-  if (city === 'MSK' || city === 'МСК' || city === 'МОСКВА') {
+  if (isMsk) {
     const severRayons = ['СЗАО','САО','СВАО','ВАО'];
     const yugRayons   = ['ЮАО','ЮВАО','ЮЗАО','ЗАО'];
 
@@ -1017,7 +1038,7 @@ async function syncFromCRM() {
       .from('candidates')  // ← таблица CRM (тот же Supabase-проект)
       .select('id,fio,city,okrug,date,tel')
       .eq('status', 'проверка СБ')
-      .in('city', ['MSK', 'SPB', 'msk', 'spb', 'Москва', 'СПб', 'Санкт-Петербург', 'МСК', 'СПБ']);
+      // city filter removed - filtering by okrug in JS
 
     if (crmErr) { console.warn('CRM sync error:', crmErr.message); return; }
     if (!crmRows || !crmRows.length) return;
@@ -1060,7 +1081,7 @@ async function syncFromCRM() {
       .from('candidates')
       .select('id')
       .eq('status', 'вышел в смену')
-      .in('city', ['MSK', 'SPB', 'msk', 'spb', 'Москва', 'СПб', 'Санкт-Петербург', 'МСК', 'СПБ']);
+      // city filter removed - filtering by okrug in JS
 
     if (smenaRows && smenaRows.length) {
       const smenaIds = smenaRows.map(r => String(r.id));
@@ -1087,4 +1108,3 @@ setInterval(() => { if (!document.hidden) syncFromCRM(); }, 30000);
 </script>
 </body>
 </html>
-
