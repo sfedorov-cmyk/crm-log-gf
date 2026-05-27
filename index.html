@@ -289,6 +289,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="info-wrap hidden" id="vacationWrap"></div>
   <div class="info-wrap hidden" id="mentorWrap"></div>
   <div class="info-wrap hidden" id="kpiWrap"></div>
+  <div class="info-wrap hidden" id="okrugWrap"></div>
 </div>
 
 <!-- Row Modal -->
@@ -457,6 +458,7 @@ let deactivMode=false;
 let vacationMode=false;
 let mentorMode=false;
 let kpiMode=false;
+let okrugMode=false;
 let deactivEditId=null;
 let deactivRows=[];
 let deactivFilter={fio:'',city:'',reason:''};
@@ -1191,18 +1193,20 @@ function renderTabs(){
   let tabs=recs.map((r,i)=>`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&i===tab?' active':''}" data-i="${i}">${r} <span class="pdot" data-rec="${r}" style="font-size:11px">🤍</span></div>`).join('');
   if(isAdmin)tabs+=`<div class="tab${dashMode?' active':''}" data-dash="1">📊 Дашборд</div>`;
   tabs+=`<div class="tab tab-deactiv${deactivMode?' active':''}" data-deactiv="1">⛔ Деактив!</div>`;
+  if(isAdmin)tabs+=`<div class="tab${okrugMode?' active':''}" data-okrug="1">🗺️ Округа</div>`;
   tabs+=`<div class="tab${kpiMode?' active':''}" data-kpi="1">🏆 KPI</div>`;
   tabs+=`<div class="tab${mentorMode?' active':''}" data-mentor="1">🤝 Наставники</div>`;
   tabs+=`<div class="tab${vacationMode?' active':''}" data-vacation="1">🌴 Отпуска</div>`;
   tabs+=`<div class="tab${infoMode?' active':''}" data-info="1">📚 Инфо</div>`;
   document.getElementById('tabsWrap').innerHTML=tabs;
-  document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()}});
+  document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()}});
   const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=async()=>{dashMode=true;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;clearSelection();await loadData();render();};
-  const it=document.querySelector('.tab[data-info]');if(it)it.onclick=()=>{infoMode=true;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;clearSelection();render();};
-  const dact=document.querySelector('.tab[data-deactiv]');if(dact)dact.onclick=()=>{deactivMode=true;infoMode=false;dashMode=false;vacationMode=false;mentorMode=false;kpiMode=false;clearSelection();render();};
-  const kt=document.querySelector('.tab[data-kpi]');if(kt)kt.onclick=()=>{kpiMode=true;mentorMode=false;vacationMode=false;infoMode=false;dashMode=false;deactivMode=false;clearSelection();render();};
-  const mt=document.querySelector('.tab[data-mentor]');if(mt)mt.onclick=()=>{mentorMode=true;vacationMode=false;infoMode=false;dashMode=false;deactivMode=false;kpiMode=false;clearSelection();render();};
-  const vt=document.querySelector('.tab[data-vacation]');if(vt)vt.onclick=()=>{vacationMode=true;infoMode=false;dashMode=false;deactivMode=false;mentorMode=false;kpiMode=false;clearSelection();render();};
+  const it=document.querySelector('.tab[data-info]');if(it)it.onclick=()=>{infoMode=true;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;clearSelection();render();};
+  const dact=document.querySelector('.tab[data-deactiv]');if(dact)dact.onclick=()=>{deactivMode=true;infoMode=false;dashMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;clearSelection();render();};
+  const ot=document.querySelector('.tab[data-okrug]');if(ot)ot.onclick=()=>{okrugMode=true;kpiMode=false;mentorMode=false;vacationMode=false;infoMode=false;dashMode=false;deactivMode=false;clearSelection();render();};
+  const kt=document.querySelector('.tab[data-kpi]');if(kt)kt.onclick=()=>{kpiMode=true;mentorMode=false;vacationMode=false;infoMode=false;dashMode=false;deactivMode=false;okrugMode=false;clearSelection();render();};
+  const mt=document.querySelector('.tab[data-mentor]');if(mt)mt.onclick=()=>{mentorMode=true;vacationMode=false;infoMode=false;dashMode=false;deactivMode=false;kpiMode=false;okrugMode=false;clearSelection();render();};
+  const vt=document.querySelector('.tab[data-vacation]');if(vt)vt.onclick=()=>{vacationMode=true;infoMode=false;dashMode=false;deactivMode=false;mentorMode=false;kpiMode=false;okrugMode=false;clearSelection();render();};
   renderPresence();
 }
 
@@ -1212,13 +1216,22 @@ function render(){
   const dw=document.getElementById('dashWrap');const tw=document.querySelector('.table-wrap');const cw=document.getElementById('cardsWrap');
   const fb=document.getElementById('filtersBar');const sb2=document.getElementById('statsBar');const bb=document.getElementById('bulkBar');
   const iw=document.getElementById('infoWrap');const dacw=document.getElementById('deactivWrap');
-  if(kpiMode){
+  if(okrugMode){
     fb.style.display='none';sb2.style.display='none';bb.classList.remove('show');
     if(tw)tw.style.display='none';if(cw)cw.style.display='none';if(dw)dw.style.display='none';
     iw.classList.add('hidden');dacw.classList.add('hidden');
     document.getElementById('vacationWrap').classList.add('hidden');
     document.getElementById('mentorWrap').classList.add('hidden');
-    document.getElementById('kpiWrap').classList.remove('hidden');
+    document.getElementById('kpiWrap').classList.add('hidden');
+    document.getElementById('okrugWrap').classList.remove('hidden');
+    renderOkrug();
+  } else if(kpiMode){
+    fb.style.display='none';sb2.style.display='none';bb.classList.remove('show');
+    if(tw)tw.style.display='none';if(cw)cw.style.display='none';if(dw)dw.style.display='none';
+    iw.classList.add('hidden');dacw.classList.add('hidden');
+    document.getElementById('vacationWrap').classList.add('hidden');
+    document.getElementById('mentorWrap').classList.add('hidden');
+    document.getElementById('kpiWrap').classList.remove('hidden');document.getElementById('okrugWrap').classList.add('hidden');
     renderKPI();
   } else if(mentorMode){
     fb.style.display='none';sb2.style.display='none';bb.classList.remove('show');
@@ -2211,6 +2224,140 @@ function toggleVoice(){
   voiceRecognition.start();
 }
 // ===== END VOICE INPUT =====
+
+// ===== OKRUG TABLE =====
+let okrugFrom = '', okrugTo = '';
+
+const OKRUG_MSK = ['МСК : ЮАО','МСК : ЮЗАО','МСК : ЗАО','МСК : ЮВАО','МСК : СЗАО','МСК : САО','МСК : СВАО','МСК : ВАО'];
+const OKRUG_SPB = ['СПБ : ЮЗ','СПБ : ЮВ','СПБ : СЗ','СПБ : СВ','СПБ : ВОСТОК','СПБ : ЦЕНТР'];
+const OKRUG_REG = ['Воронеж','Самара','Казань','Нижний Новгород','Тольятти','Екатеринбург'];
+
+const OKRUG_SHORT = {
+  'МСК : ЮАО':'ЮАО','МСК : ЮЗАО':'ЮЗАО','МСК : ЗАО':'ЗАО','МСК : ЮВАО':'ЮВАО',
+  'МСК : СЗАО':'СЗАО','МСК : САО':'САО','МСК : СВАО':'СВАО','МСК : ВАО':'ВАО',
+  'СПБ : ЮЗ':'ЮЗ','СПБ : ЮВ':'ЮВ','СПБ : СЗ':'СЗ','СПБ : СВ':'СВ',
+  'СПБ : ВОСТОК':'Восток','СПБ : ЦЕНТР':'Центр',
+  'Воронеж':'Воронеж','Самара':'Самара','Казань':'Казань',
+  'Нижний Новгород':'Н.Новгород','Тольятти':'Тольятти','Екатеринбург':'Екб'
+};
+
+const COUNTED_STATUSES = ['проверка СБ','передан в логистику','вышел в смену'];
+
+async function renderOkrug(){
+  const wrap = document.getElementById('okrugWrap');
+  wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Загрузка...</div>';
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  if(!okrugFrom) okrugFrom = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  if(!okrugTo)   okrugTo   = `${year}-${String(month+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
+
+  // Загружаем все данные с пагинацией
+  let allData=[];let offset=0;
+  while(true){
+    const{data:chunk,error}=await sb.from('candidates')
+      .select('recruiter,okrug,status,city')
+      .gte('date',okrugFrom).lte('date',okrugTo)
+      .in('status',COUNTED_STATUSES)
+      .range(offset,offset+999);
+    if(error||!chunk||chunk.length===0)break;
+    allData=[...allData,...chunk];
+    if(chunk.length<1000)break;
+    offset+=1000;
+  }
+
+  // Строим матрицу: recruiter -> okrug -> count
+  const matrix = {};
+  ALL_R.forEach(r => { matrix[r] = {}; });
+
+  allData.forEach(row => {
+    if(!matrix[row.recruiter]) return;
+    // Определяем округ
+    let okrug = row.okrug||'';
+    // Проверяем регионы по городу
+    if(OKRUG_REG.includes(row.city)) okrug = row.city;
+    if(!okrug||okrug==='—') return;
+    matrix[row.recruiter][okrug] = (matrix[row.recruiter][okrug]||0)+1;
+  });
+
+  // Итоги по округам
+  const okrugTotals = {};
+  [...OKRUG_MSK,...OKRUG_SPB,...OKRUG_REG].forEach(o => {
+    okrugTotals[o] = ALL_R.reduce((s,r)=>s+(matrix[r][o]||0),0);
+  });
+
+  function renderTable(title, okrugs, color){
+    const cols = okrugs.filter(o => okrugTotals[o]>0 || true); // показываем все
+    let html = `<div style="background:var(--surface);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:16px">
+      <div style="background:${color};padding:10px 16px;font-size:13px;font-weight:700;color:#fff">${title}</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:400px">
+          <thead>
+            <tr style="background:var(--bg)">
+              <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap;position:sticky;left:0;background:var(--bg);min-width:120px">Менеджер</th>
+              ${cols.map(o=>`<th style="padding:8px 6px;text-align:center;border-bottom:1px solid var(--border);border-left:1px solid var(--border);font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap;min-width:50px">${OKRUG_SHORT[o]||o}</th>`).join('')}
+              <th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border);border-left:2px solid ${color};font-size:11px;font-weight:700;color:${color};white-space:nowrap">ИТОГО</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ALL_R.map(r => {
+              const rowTotal = cols.reduce((s,o)=>s+(matrix[r][o]||0),0);
+              return `<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+                <td style="padding:8px 12px;font-weight:500;font-size:12px;white-space:nowrap;position:sticky;left:0;background:var(--surface);border-right:1px solid var(--border)">${r}</td>
+                ${cols.map(o => {
+                  const v = matrix[r][o]||0;
+                  return `<td style="padding:8px 6px;text-align:center;border-left:1px solid var(--border);color:${v>0?color:'var(--muted)'};font-weight:${v>0?'700':'400'}">${v>0?v:'—'}</td>`;
+                }).join('')}
+                <td style="padding:8px 10px;text-align:center;border-left:2px solid ${color};font-weight:700;font-size:13px;color:${rowTotal>0?color:'var(--muted)'}">${rowTotal||'—'}</td>
+              </tr>`;
+            }).join('')}
+            <tr style="background:var(--bg);border-top:2px solid ${color}">
+              <td style="padding:8px 12px;font-weight:700;font-size:12px;position:sticky;left:0;background:var(--bg);border-right:1px solid var(--border)">ИТОГО</td>
+              ${cols.map(o=>{
+                const v=okrugTotals[o]||0;
+                return `<td style="padding:8px 6px;text-align:center;border-left:1px solid var(--border);font-weight:700;color:${v>0?color:'var(--muted)'}">${v>0?v:'—'}</td>`;
+              }).join('')}
+              <td style="padding:8px 10px;text-align:center;border-left:2px solid ${color};font-weight:700;font-size:14px;color:${color}">${ALL_R.reduce((s,r)=>s+cols.reduce((ss,o)=>ss+(matrix[r][o]||0),0),0)||'—'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+    return html;
+  }
+
+  const grandTotal = allData.length;
+
+  wrap.innerHTML = `<div style="max-width:1200px;margin:0 auto;padding-bottom:32px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--text)">🗺️ Статистика по округам</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Проверка СБ + Передан в логистику + Вышел в смену</div>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:8px 16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--accent-dark)">${grandTotal}</div>
+        <div style="font-size:11px;color:var(--muted)">Всего принято</div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border-radius:12px;padding:12px 16px;margin-bottom:16px;box-shadow:var(--sh);display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:12px;font-weight:500;color:var(--muted)">Период:</span>
+      <input type="date" value="${okrugFrom}" onchange="okrugFrom=this.value;renderOkrug()" style="border:1.5px solid var(--border);border-radius:var(--rs);padding:6px 10px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);outline:none">
+      <span style="color:var(--muted)">—</span>
+      <input type="date" value="${okrugTo}" onchange="okrugTo=this.value;renderOkrug()" style="border:1.5px solid var(--border);border-radius:var(--rs);padding:6px 10px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);outline:none">
+      <button onclick="okrugFrom='';okrugTo='';renderOkrug()" style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit">Текущий месяц</button>
+      <span style="font-size:12px;color:var(--muted)">${fd(okrugFrom)} — ${fd(okrugTo)}</span>
+    </div>
+
+    ${renderTable('🏙️ Москва', OKRUG_MSK, '#1976d2')}
+    ${renderTable('🌊 Санкт-Петербург', OKRUG_SPB, '#0288d1')}
+    ${renderTable('🌍 Регионы', OKRUG_REG, '#248a3d')}
+  </div>`;
+}
+window.renderOkrug = renderOkrug;
+// ===== END OKRUG TABLE =====
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
