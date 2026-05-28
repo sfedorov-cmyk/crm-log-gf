@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>GF Log Statistics — Динамика доставок 2026</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body,html{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;background:#F4F9F4;color:#1d1d1f;-webkit-font-smoothing:antialiased}
+.page{padding:20px 24px;min-height:100vh}
+
+/* Header */
+.header{display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #39D353;flex-wrap:wrap}
+.brand{font-size:20px;font-weight:700;letter-spacing:-.5px;color:#1d1d1f;font-style:normal}
+.brand span{color:#32D14E;font-weight:800;font-size:22px}
+.city-select{appearance:none;-webkit-appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2386868b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid rgba(0,0,0,.15);border-radius:10px;padding:8px 36px 8px 14px;font-size:14px;font-weight:500;color:#1d1d1f;cursor:pointer;font-family:inherit;min-width:220px;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:box-shadow .2s}
+.city-select:focus{outline:none;box-shadow:0 0 0 3px rgba(52,199,89,.25),0 1px 3px rgba(0,0,0,.08)}
+
+/* Zoom + Brightness */
+.zoom-controls,.bright-controls{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.bright-controls{padding:4px 10px;gap:8px}
+.ctrl-label{font-size:10px;font-weight:500;color:#86868b;white-space:nowrap}
+.zoom-btn{width:28px;height:28px;border-radius:7px;border:none;background:transparent;color:#1d1d1f;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;font-family:inherit}
+.zoom-btn:hover{background:#F5F5F7}
+.zoom-btn:active{background:#E8E8ED}
+.zoom-label{font-size:12px;font-weight:500;color:#86868b;min-width:36px;text-align:center}
+.bright-slider{-webkit-appearance:none;appearance:none;width:90px;height:4px;border-radius:2px;background:#39D353;outline:none;cursor:pointer}
+.bright-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #39D353;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer}
+.bright-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #39D353;cursor:pointer}
+.bright-val{font-size:11px;font-weight:500;color:#86868b;min-width:34px;text-align:center}
+.subtitle{font-size:12px;font-weight:400;color:#86868b;margin-left:auto;letter-spacing:-.1px}
+/* Info bar */
+.info-bar{display:flex;align-items:center;gap:16px;padding:8px 18px;background:#F0FFF4;border-top:2px solid #39D353;border-radius:0 0 16px 16px;font-size:11px;color:#2a7a2a}
+.info-bar .info-name{font-weight:600;color:#1d1d1f}
+.info-bar .info-sep{color:#d1d1d6}
+/* Period filter */
+.period-filter{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.pf-btn{height:28px;padding:0 12px;border-radius:7px;border:none;background:transparent;color:#86868b;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.pf-btn:hover{background:#F5F5F7;color:#1d1d1f}
+.pf-btn.active{background:#32D14E;color:#fff}
+
+/* Summary cards */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.metric{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 0.5px rgba(0,0,0,.08);border-top:3px solid #39D353}
+.metric-label{font-size:10px;font-weight:500;color:#86868b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.metric-val{font-size:22px;font-weight:600;color:#1d1d1f;letter-spacing:-.5px;line-height:1}
+.metric-sub{font-size:11px;color:#aeaeb2;margin-top:4px}
+
+/* Table */
+.tbl-wrap{background:#fff;border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 0.5px rgba(0,0,0,.08);overflow-x:auto;transform-origin:top left}
+.year-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#32D14E;padding:14px 18px 8px}
+table{border-collapse:collapse;width:100%;min-width:960px;table-layout:fixed}
+col.col-n{width:28px}col.col-period{width:112px}col.col-day{width:78px}col.col-total{width:76px}col.col-price{width:70px}col.col-delta{width:66px}col.col-pct{width:56px}col.col-avg{width:70px}
+thead tr{border-bottom:1px solid rgba(0,0,0,.08)}
+th{padding:9px 4px;font-size:10px;font-weight:600;text-align:center;border:1px solid rgba(255,255,255,.15);letter-spacing:.3px;text-transform:uppercase;background:#1d1d1f;color:rgba(255,255,255,.85);white-space:nowrap}
+.th-n,.th-period{text-align:left;padding-left:18px}
+th:first-child{border-radius:0}
+td{border:1px solid rgba(0,0,0,.12);text-align:center;vertical-align:middle;padding:0}
+
+tr:hover td.open-cell,tr:hover td.td-n,tr:hover td.td-period,tr:hover td.total-empty,tr:hover td.price-cell,tr:hover td.delta-pos,tr:hover td.delta-neg,tr:hover td.delta-neu{background:rgba(0,0,0,.02)!important}
+td.td-n{padding:0 4px;font-size:10px;font-weight:500;color:#aeaeb2;background:#FAFAFA;text-align:center;border-right:1px solid rgba(0,0,0,.05)}
+td.td-period{padding:0 10px;font-size:11px;font-weight:400;color:#3a3a3c;background:#FAFAFA;text-align:left;white-space:nowrap;border-right:1px solid rgba(0,0,0,.05)}
+
+/* Apple-style muted day colors */
+.lk-mon{background:#C8DFF5;color:#1a3a6a}
+.lk-tue{background:#B5C8E8;color:#1a2a50}
+.lk-wed{background:#F5B5B2;color:#6a1a18}
+.lk-thu{background:#EAE4D8;color:#4a3a20}
+.lk-fri{background:#F5DAAA;color:#6a3800}
+.lk-sat{background:#D8EDA8;color:#2a4800}
+.lk-sun{background:#A8DDBB;color:#0a3a1a}
+
+td.open-cell{background:#fff}
+td.total-cell{background:#32D14E;color:#fff;font-weight:700;font-size:13px;white-space:nowrap;letter-spacing:-.3px}
+td.total-empty{background:#F5F5F7;color:#c7c7cc;font-size:12px}
+td.price-cell{background:#FAFAFA;padding:2px 4px;border-left:1px solid rgba(0,0,0,.05)}td.avg-cell{background:#F0FFF4;color:#1a5c28;font-size:12px;font-weight:600;padding:5px 4px;text-align:center;border:1px solid rgba(0,0,0,.12);font-variant-numeric:tabular-nums}
+td.delta-pos{color:#39D353;font-weight:600;font-size:11px;padding:5px 4px;white-space:nowrap}
+td.delta-neg{color:#FF3B30;font-weight:600;font-size:11px;padding:5px 4px;white-space:nowrap}
+td.delta-neu{color:#c7c7cc;font-size:11px;padding:5px 4px}
+
+.cell-wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;min-height:34px}
+.cell-val{font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;padding:0 20px 0 4px;width:100%;text-align:center}
+.cell-input{width:100%;height:34px;border:none;outline:none;font-size:12px;font-family:inherit;text-align:center;background:transparent;color:#1d1d1f;font-variant-numeric:tabular-nums;font-weight:500;padding:0 20px 0 2px;min-width:0}
+.cell-input:focus{box-shadow:inset 0 0 0 2px #39D353;border-radius:4px}
+.cell-input::-webkit-outer-spin-button,.cell-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.cell-input[type=number]{-moz-appearance:textfield}
+.lock-btn{position:absolute;right:2px;top:50%;transform:translateY(-50%);width:16px;height:16px;border-radius:4px;border:none;cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;padding:0;font-weight:600}
+.cell-wrap:hover .lock-btn{opacity:1}
+.lock-btn.is-locked{background:rgba(0,0,0,.15);color:#fff}
+.lock-btn.is-open{background:#39D353;color:#fff}
+.price-input{width:62px;height:26px;border:1px solid rgba(0,0,0,.12);border-radius:6px;padding:3px 4px;font-size:11px;font-family:inherit;text-align:center;background:#fff;color:#1d1d1f;font-weight:500}
+.price-input:focus{outline:none;border-color:#39D353;box-shadow:0 0 0 3px rgba(52,199,89,.15)}
+.price-input::-webkit-outer-spin-button,.price-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.price-input[type=number]{-moz-appearance:textfield}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="brand">GF <span>Log Statistics</span></div>
+    <select class="city-select" id="citySelect"></select>
+    <div class="period-filter" id="periodFilter">
+      <button class="pf-btn active" data-period="all">Весь год</button>
+      <button class="pf-btn" data-period="q1">Q1</button>
+      <button class="pf-btn" data-period="q2">Q2</button>
+      <button class="pf-btn" data-period="q3">Q3</button>
+      <button class="pf-btn" data-period="month">Месяц</button>
+      <button class="pf-btn" data-period="week">Неделя</button>
+    </div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoomOut">−</button>
+      <span class="zoom-label" id="zoomLabel">100%</span>
+      <button class="zoom-btn" id="zoomIn">+</button>
+      <button class="zoom-btn" id="zoomReset">↺</button>
+    </div>
+    <div class="bright-controls">
+      <span class="ctrl-label">☀ Яркость</span>
+      <input class="bright-slider" type="range" id="brightSlider" min="50" max="150" value="100">
+      <span class="bright-val" id="brightVal">100%</span>
+    </div>
+    <div class="subtitle">Динамика доставок · 2026</div>
+  </div>
+  <div class="summary" id="summary"></div>
+  <div class="tbl-wrap" id="tblWrap">
+    <div class="year-label" id="yearLabel">2026</div>
+    <table>
+      <colgroup><col class="col-n"><col class="col-period"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-total"><col class="col-price"><col class="col-avg"><col class="col-delta"><col class="col-pct"></colgroup>
+      <thead><tr>
+        <th class="th-n">#</th><th class="th-period">Период</th>
+        <th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th>
+        <th>Итого</th><th>ЗП ₽</th><th>Ср. цена</th><th>±</th><th>%</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="info-bar" id="infoBar">
+      <span>Ответственный:</span>
+      <span class="info-name" id="infoName">—</span>
+      <span class="info-sep">·</span>
+      <span id="infoTime">—</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS=['mon','tue','wed','thu','fri','sat','sun'];
+const CURRENT_WEEK=22;
+const PERIODS=["29.12–04.01.26","05.01–11.01.26","12.01–18.01.26","19.01–25.01.26","26.01–01.02.26","02.02–08.02.26","09.02–15.02.26","16.02–22.02.26","23.02–01.03.26","02.03–08.03.26","09.03–15.03.26","16.03–22.03.26","23.03–29.03.26","30.03–05.04.26","06.04–12.04.26","13.04–19.04.26","20.04–26.04.26","27.04–03.05.26","04.05–10.05.26","11.05–17.05.26","18.05–24.05.26","25.05–31.05.26","01.06–07.06.26","08.06–14.06.26","15.06–21.06.26","22.06–28.06.26","29.06–05.07.26","06.07–12.07.26","13.07–19.07.26","20.07–26.07.26","27.07–02.08.26"];
+
+const RAW_DATA={'Санкт-Петербург':[{mon:0,tue:0,wed:0,thu:0,fri:562,sat:311,sun:1216,avgPrice:158.59},{mon:762,tue:894,wed:569,thu:891,fri:882,sat:931,sun:1822,avgPrice:165.39},{mon:1300,tue:1485,wed:1436,thu:1408,fri:1258,sat:965,sun:2484,avgPrice:166.41},{mon:1525,tue:1820,wed:1336,thu:1617,fri:1219,sat:1180,sun:2494,avgPrice:167.84},{mon:1531,tue:1691,wed:1430,thu:1614,fri:1332,sat:1047,sun:2670,avgPrice:166.69},{mon:1448,tue:1877,wed:1286,thu:1668,fri:1206,sat:1098,sun:2681,avgPrice:164.79},{mon:1566,tue:1622,wed:1381,thu:1524,fri:1353,sat:961,sun:2758,avgPrice:164.73},{mon:1441,tue:1792,wed:1362,thu:1622,fri:1264,sat:1039,sun:2292,avgPrice:164.82},{mon:1529,tue:1660,wed:1364,thu:1387,fri:1271,sat:1052,sun:2643,avgPrice:165.48},{mon:1416,tue:1723,wed:1225,thu:1567,fri:1164,sat:1036,sun:2070,avgPrice:167.04},{mon:1545,tue:1677,wed:1350,thu:1452,fri:1259,sat:1066,sun:2686,avgPrice:165.15},{mon:1464,tue:1732,wed:1282,thu:1585,fri:1276,sat:1040,sun:2624,avgPrice:165.10},{mon:1500,tue:1634,wed:1323,thu:1509,fri:1196,sat:995,sun:2533,avgPrice:165.93},{mon:1394,tue:1646,wed:1168,thu:1463,fri:1137,sat:1055,sun:2603,avgPrice:165.94},{mon:1600,tue:1636,wed:1334,thu:1425,fri:1181,sat:1015,sun:2642,avgPrice:165.20},{mon:1509,tue:1729,wed:1320,thu:1609,fri:1215,sat:1012,sun:2583,avgPrice:165.35},{mon:1454,tue:1562,wed:1258,thu:1409,fri:1224,sat:934,sun:2435,avgPrice:165.00},{mon:1334,tue:1474,wed:1174,thu:1185,fri:940,sat:819,sun:2220,avgPrice:164.09},{mon:1314,tue:1328,wed:1033,thu:1221,fri:986,sat:808,sun:1826,avgPrice:164.33},{mon:1259,tue:1583,wed:1127,thu:1362,fri:1113,sat:963,sun:2356,avgPrice:165.00},{mon:1423,tue:1615,wed:1187,thu:1425,fri:1180,sat:957,sun:2344,avgPrice:164.60},{mon:1408,tue:1555,wed:1160,thu:0,fri:0,sat:0,sun:0,avgPrice:165.00}],'Москва':[{mon:2848,tue:4842,wed:1887,thu:0,fri:0,sat:992,sun:2003,avgPrice:252.80},{mon:2736,tue:1484,wed:1496,thu:1573,fri:1733,sat:1914,sun:5059,avgPrice:196.75},{mon:3659,tue:3575,wed:2799,thu:4021,fri:2798,sat:2905,sun:5538,avgPrice:198.68},{mon:4992,tue:3903,wed:3669,thu:3703,fri:3345,sat:2606,sun:6525,avgPrice:181.91},{mon:4789,tue:4141,wed:3201,thu:4165,fri:3200,sat:2902,sun:6262,avgPrice:216.53},{mon:5009,tue:3887,wed:3692,thu:3935,fri:3415,sat:2717,sun:6565,avgPrice:183.97},{mon:4867,tue:4208,wed:3620,thu:4216,fri:3221,sat:3091,sun:6469,avgPrice:207.99},{mon:5086,tue:4111,wed:3820,thu:4129,fri:3301,sat:2793,sun:5494,avgPrice:231.38},{mon:4535,tue:4290,wed:3419,thu:3847,fri:2998,sat:2923,sun:6278,avgPrice:206.44},{mon:4802,tue:3866,wed:3285,thu:3855,fri:3170,sat:2637,sun:5046,avgPrice:197.27},{mon:4607,tue:4125,wed:3456,thu:3731,fri:3138,sat:2833,sun:6458,avgPrice:197.94},{mon:4827,tue:4078,wed:3413,thu:3875,fri:3268,sat:2793,sun:6431,avgPrice:196.78},{mon:4616,tue:3830,wed:3469,thu:3803,fri:3051,sat:2755,sun:6096,avgPrice:195.26},{mon:4616,tue:3680,wed:3306,thu:3626,fri:3019,sat:2487,sun:6084,avgPrice:197.87},{mon:4899,tue:4111,wed:3285,thu:4098,fri:3132,sat:2931,sun:5750,avgPrice:198.59},{mon:4903,tue:3868,wed:3419,thu:3750,fri:3302,sat:2593,sun:6180,avgPrice:191.52},{mon:4516,tue:3915,wed:3167,thu:4045,fri:3035,sat:5658,sun:4268,avgPrice:199.19},{mon:3380,tue:2967,wed:3199,thu:3199,fri:2309,sat:1973,sun:5455,avgPrice:194.22},{mon:3882,tue:3307,wed:2597,thu:3089,fri:2463,sat:2034,sun:4123,avgPrice:204.03},{mon:4052,tue:3669,wed:3015,thu:3388,fri:3005,sat:2275,sun:5660,avgPrice:193.16},{mon:4478,tue:3809,wed:3217,thu:3772,fri:2867,sat:2441,sun:5638,avgPrice:195.00},{mon:4637,tue:3435,wed:2599,thu:0,fri:0,sat:0,sun:0,avgPrice:195.00}],'Нижний Новгород':[{mon:91,tue:165,wed:0,thu:0,fri:0,sat:19,sun:86,avgPrice:147.79},{mon:127,tue:47,wed:26,thu:45,fri:36,sat:38,sun:170,avgPrice:166.26},{mon:83,tue:70,wed:49,thu:73,fri:68,sat:45,sun:218,avgPrice:163.42},{mon:111,tue:84,wed:76,thu:73,fri:77,sat:50,sun:248,avgPrice:156.31},{mon:126,tue:85,wed:61,thu:55,fri:80,sat:73,sun:248,avgPrice:156.08},{mon:120,tue:72,wed:87,thu:71,fri:64,sat:43,sun:176,avgPrice:158.22},{mon:200,tue:86,wed:88,thu:36,fri:101,sat:70,sun:260,avgPrice:163.51},{mon:124,tue:62,wed:92,thu:92,fri:69,sat:49,sun:224,avgPrice:158.78},{mon:140,tue:104,wed:67,thu:85,fri:57,sat:75,sun:266,avgPrice:160.12},{mon:112,tue:80,wed:56,thu:83,fri:60,sat:54,sun:200,avgPrice:166.37},{mon:109,tue:115,wed:67,thu:76,fri:68,sat:53,sun:249,avgPrice:156.39},{mon:118,tue:72,wed:83,thu:74,fri:86,sat:53,sun:245,avgPrice:157.95},{mon:100,tue:75,wed:80,thu:70,fri:57,sat:56,sun:237,avgPrice:165.89},{mon:133,tue:75,wed:66,thu:65,fri:60,sat:53,sun:273,avgPrice:165.79},{mon:157,tue:103,wed:84,thu:93,fri:71,sat:51,sun:245,avgPrice:165.93},{mon:141,tue:100,wed:75,thu:84,fri:66,sat:63,sun:254,avgPrice:158.80},{mon:124,tue:83,wed:72,thu:81,fri:71,sat:60,sun:255,avgPrice:166.46},{mon:139,tue:80,wed:79,thu:80,fri:53,sat:59,sun:255,avgPrice:159.52},{mon:111,tue:67,wed:46,thu:67,fri:49,sat:51,sun:189,avgPrice:166.55},{mon:130,tue:84,wed:70,thu:71,fri:71,sat:63,sun:244,avgPrice:172.44},{mon:121,tue:80,wed:62,thu:80,fri:68,sat:58,sun:229,avgPrice:154.44},{mon:107,tue:72,wed:43,thu:33,fri:29,sat:21,sun:108,avgPrice:169.70}],'Казань':[{mon:32,tue:58,wed:0,thu:0,fri:0,sat:21,sun:27,avgPrice:191.97},{mon:71,tue:33,wed:26,thu:28,fri:37,sat:36,sun:89,avgPrice:192.06},{mon:32,tue:56,wed:39,thu:45,fri:53,sat:37,sun:107,avgPrice:206.37},{mon:67,tue:68,wed:70,thu:31,fri:54,sat:31,sun:134,avgPrice:187.74},{mon:71,tue:55,wed:47,thu:6,fri:92,sat:61,sun:127,avgPrice:200.69},{mon:47,tue:91,wed:57,thu:53,fri:56,sat:33,sun:68,avgPrice:186.45},{mon:134,tue:63,wed:56,thu:16,fri:81,sat:56,sun:93,avgPrice:187.00},{mon:93,tue:59,wed:56,thu:48,fri:58,sat:38,sun:127,avgPrice:203.46},{mon:63,tue:69,wed:57,thu:48,fri:48,sat:53,sun:125,avgPrice:189.48},{mon:70,tue:48,wed:63,thu:49,fri:53,sat:35,sun:111,avgPrice:194.38},{mon:63,tue:64,wed:53,thu:55,fri:61,sat:37,sun:117,avgPrice:192.89},{mon:69,tue:59,wed:52,thu:53,fri:61,sat:56,sun:130,avgPrice:189.84},{mon:78,tue:68,wed:57,thu:61,fri:59,sat:48,sun:132,avgPrice:186.74},{mon:78,tue:71,wed:72,thu:53,fri:53,sat:40,sun:131,avgPrice:201.21},{mon:119,tue:87,wed:78,thu:53,fri:61,sat:44,sun:145,avgPrice:193.76},{mon:86,tue:75,wed:64,thu:61,fri:73,sat:41,sun:151,avgPrice:180.15},{mon:64,tue:72,wed:54,thu:53,fri:45,sat:44,sun:143,avgPrice:205.73},{mon:35,tue:98,wed:56,thu:43,fri:59,sat:32,sun:144,avgPrice:202.95},{mon:65,tue:56,wed:48,thu:44,fri:46,sat:36,sun:107,avgPrice:191.93},{mon:67,tue:69,wed:55,thu:43,fri:58,sat:46,sun:117,avgPrice:208.18},{mon:73,tue:63,wed:62,thu:54,fri:53,sat:43,sun:121,avgPrice:192.86},{mon:67,tue:41,wed:59,thu:43,fri:38,sat:27,sun:65,avgPrice:205.43}],'Воронеж':[{mon:20,tue:24,wed:0,thu:0,fri:0,sat:17,sun:26,avgPrice:177.40},{mon:45,tue:13,wed:10,thu:21,fri:24,sat:27,sun:74,avgPrice:208.55},{mon:17,tue:23,wed:20,thu:27,fri:39,sat:29,sun:63,avgPrice:195.00},{mon:31,tue:38,wed:41,thu:31,fri:26,sat:19,sun:86,avgPrice:195.00},{mon:32,tue:23,wed:32,thu:27,fri:28,sat:0,sun:94,avgPrice:192.92},{mon:23,tue:35,wed:41,thu:18,fri:29,sat:30,sun:59,avgPrice:195.00},{mon:64,tue:27,wed:31,thu:20,fri:42,sat:21,sun:111,avgPrice:195.00},{mon:36,tue:24,wed:31,thu:32,fri:20,sat:29,sun:81,avgPrice:221.26},{mon:32,tue:30,wed:35,thu:27,fri:34,sat:33,sun:102,avgPrice:219.35},{mon:24,tue:27,wed:35,thu:28,fri:25,sat:13,sun:74,avgPrice:200.00},{mon:30,tue:30,wed:29,thu:25,fri:19,sat:31,sun:90,avgPrice:201.44},{mon:26,tue:27,wed:25,thu:29,fri:31,sat:21,sun:81,avgPrice:211.36},{mon:14,tue:36,wed:29,thu:25,fri:32,sat:23,sun:80,avgPrice:201.59},{mon:42,tue:27,wed:28,thu:26,fri:29,sat:18,sun:80,avgPrice:211.70},{mon:45,tue:38,wed:34,thu:32,fri:16,sat:22,sun:88,avgPrice:195.24},{mon:37,tue:30,wed:20,thu:19,fri:27,sat:14,sun:95,avgPrice:190.14},{mon:25,tue:21,wed:26,thu:22,fri:22,sat:23,sun:90,avgPrice:192.65},{mon:29,tue:29,wed:23,thu:24,fri:16,sat:10,sun:89,avgPrice:200.00},{mon:33,tue:17,wed:16,thu:19,fri:20,sat:27,sun:62,avgPrice:189.02},{mon:24,tue:20,wed:21,thu:32,fri:30,sat:25,sun:77,avgPrice:193.55},{mon:25,tue:35,wed:21,thu:19,fri:25,sat:21,sun:81,avgPrice:189.18},{mon:21,tue:26,wed:24,thu:0,fri:0,sat:0,sun:0,avgPrice:195.51}],'Екатеринбург':[{mon:55,tue:37,wed:0,thu:0,fri:0,sat:0,sun:0,avgPrice:157.04},{mon:119,tue:21,wed:5,thu:107,fri:30,sat:14,sun:125,avgPrice:149.65},{mon:44,tue:28,wed:117,thu:34,fri:33,sat:98,sun:75,avgPrice:210.82},{mon:57,tue:99,wed:66,thu:37,fri:97,sat:66,sun:56,avgPrice:158.18},{mon:101,tue:74,wed:63,thu:84,fri:72,sat:46,sun:108,avgPrice:144.68},{mon:74,tue:52,wed:99,thu:77,fri:64,sat:77,sun:87,avgPrice:179.63},{mon:77,tue:70,wed:80,thu:70,fri:77,sat:69,sun:82,avgPrice:177.45},{mon:87,tue:69,wed:68,thu:82,fri:64,sat:57,sun:85,avgPrice:146.87},{mon:92,tue:65,wed:82,thu:73,fri:60,sat:83,sun:109,avgPrice:166.35},{mon:60,tue:74,wed:85,thu:50,fri:62,sat:54,sun:55,avgPrice:161.97}],'Самара':[{mon:0,tue:0,wed:0,thu:0,fri:0,sat:0,sun:0,avgPrice:221.43},{mon:0,tue:0,wed:112,thu:18,fri:0,sat:0,sun:144,avgPrice:162.77},{mon:22,tue:0,wed:143,thu:16,fri:0,sat:0,sun:177,avgPrice:191.67},{mon:26,tue:0,wed:179,thu:25,fri:0,sat:0,sun:166,avgPrice:129.26},{mon:25,tue:0,wed:167,thu:21,fri:0,sat:0,sun:176,avgPrice:198.08},{mon:23,tue:0,wed:173,thu:16,fri:0,sat:0,sun:175,avgPrice:155.08},{mon:24,tue:0,wed:158,thu:22,fri:0,sat:0,sun:171,avgPrice:111.90},{mon:29,tue:0,wed:182,thu:21,fri:0,sat:0,sun:161,avgPrice:167.44},{mon:33,tue:0,wed:189,thu:20,fri:0,sat:0,sun:175,avgPrice:156.67},{mon:28,tue:0,wed:171,thu:20,fri:0,sat:0,sun:156,avgPrice:153.98},{mon:32,tue:0,wed:173,thu:23,fri:0,sat:0,sun:170,avgPrice:162.69},{mon:29,tue:0,wed:170,thu:21,fri:0,sat:0,sun:184,avgPrice:162.35},{mon:27,tue:0,wed:187,thu:24,fri:0,sat:0,sun:190,avgPrice:148.00},{mon:29,tue:0,wed:191,thu:27,fri:0,sat:0,sun:190,avgPrice:178.17},{mon:27,tue:0,wed:200,thu:24,fri:0,sat:0,sun:190,avgPrice:172.92},{mon:33,tue:0,wed:194,thu:23,fri:0,sat:0,sun:196,avgPrice:108.02},{mon:32,tue:0,wed:189,thu:22,fri:0,sat:0,sun:185,avgPrice:185.48},{mon:33,tue:0,wed:171,thu:33,fri:0,sat:0,sun:165,avgPrice:181.11},{mon:39,tue:0,wed:161,thu:28,fri:0,sat:0,sun:151,avgPrice:152.78},{mon:43,tue:0,wed:173,thu:27,fri:0,sat:0,sun:173,avgPrice:125.41},{mon:38,tue:0,wed:148,thu:32,fri:0,sat:0,sun:161,avgPrice:152.39},{mon:34,tue:0,wed:165,thu:32,fri:0,sat:0,sun:153,avgPrice:128.26}],'Тольятти':[{mon:0,tue:0,wed:0,thu:0,fri:0,sat:0,sun:0,avgPrice:165.00},{mon:0,tue:0,wed:56,thu:0,fri:0,sat:0,sun:71,avgPrice:165.00},{mon:0,tue:0,wed:78,thu:0,fri:0,sat:0,sun:79,avgPrice:165.00},{mon:0,tue:0,wed:86,thu:0,fri:0,sat:0,sun:83,avgPrice:165.00},{mon:0,tue:0,wed:78,thu:0,fri:0,sat:0,sun:77,avgPrice:165.00},{mon:0,tue:0,wed:80,thu:0,fri:0,sat:0,sun:80,avgPrice:165.00},{mon:0,tue:0,wed:76,thu:0,fri:0,sat:0,sun:84,avgPrice:165.00},{mon:0,tue:0,wed:76,thu:0,fri:0,sat:0,sun:77,avgPrice:165.00},{mon:0,tue:0,wed:73,thu:0,fri:0,sat:0,sun:79,avgPrice:165.00},{mon:0,tue:0,wed:75,thu:0,fri:0,sat:0,sun:68,avgPrice:165.00},{mon:0,tue:0,wed:70,thu:0,fri:0,sat:0,sun:72,avgPrice:165.00},{mon:0,tue:0,wed:70,thu:0,fri:0,sat:0,sun:81,avgPrice:165.00},{mon:0,tue:0,wed:67,thu:0,fri:0,sat:0,sun:76,avgPrice:165.00},{mon:0,tue:0,wed:70,thu:0,fri:0,sat:0,sun:72,avgPrice:165.00},{mon:0,tue:0,wed:74,thu:0,fri:0,sat:0,sun:74,avgPrice:165.00},{mon:0,tue:0,wed:67,thu:0,fri:0,sat:0,sun:68,avgPrice:165.00},{mon:0,tue:0,wed:61,thu:0,fri:0,sat:0,sun:72,avgPrice:165.00},{mon:0,tue:0,wed:65,thu:0,fri:0,sat:0,sun:67,avgPrice:165.00},{mon:0,tue:0,wed:63,thu:0,fri:0,sat:0,sun:65,avgPrice:165.00},{mon:0,tue:0,wed:67,thu:0,fri:0,sat:0,sun:74,avgPrice:165.00},{mon:0,tue:0,wed:77,thu:0,fri:0,sat:0,sun:82,avgPrice:165.00},{mon:0,tue:0,wed:82,thu:0,fri:0,sat:0,sun:74,avgPrice:165.00}]};
+
+const ZP_DATA={
+  'Санкт-Петербург':[1022536, 1179977, 1688347, 1823329, 1834343, 1831716, 1816894, 1800287, 1834968, 1847271, 1973090, 1939427, 1912510, 1869100, 1947529, 1954634, 1867719, 1702352, 1579833, 1794424, 1824275, 0],
+  'Москва':[3178199, 3147025, 5025537, 5228503, 6205614, 5375528, 6175731, 6648554, 5840048, 5259334, 5611293, 5644723, 5393035, 5306409, 5601350, 5365533, 5697723, 4366490, 4385589, 4841464, 5212478, 0],
+  'Нижний Новгород':[15370, 27100, 24350, 19070, 23100, 24050, 18150, 20800, 26900, 24290, 20800, 23850, 24220, 18900, 18750, 23820, 24470, 20100, 23150, 21900, 19150, 16970],
+  'Казань':[20925, 20550, 21875, 19900, 21675, 19950, 18700, 19125, 23875, 25075, 18325, 23350, 21475, 20725, 21895, 23600, 19750, 22325, 20920, 22275, 21600, 18900],
+  'Воронеж':[12950, 15850, 0, 0, 0, 0, 0, 19250, 13600, 12000, 20950, 18600, 12700, 19900, 16400, 13500, 19650, 20000, 15500, 18000, 18350, 15250],
+  'Екатеринбург':[22300, 21100, 20660, 27840, 22570, 19400, 26440, 23940, 17300, 18950, 26040, 25250, 24900, 26550, 25500, 23150, 21350, 25050, 31200, 29150, 30900, 25200],
+  'Самара':[9300, 15300, 25300, 12150, 5150, 18300, 9400, 14400, 14100, 13550, 10900, 13150, 11100, 12650, 16600, 8750, 11500, 14670, 11000, 7650, 14020, 11800],
+  'Тольятти':[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+};
+
+const PERSONS = {
+  'Санкт-Петербург': 'Васильев Роман',
+  'Москва': 'Гусейнов Орхан',
+  'Нижний Новгород': 'Денисов Вячеслав',
+  'Казань': 'Минникаев Эдуард',
+  'Воронеж': 'Щепин Лев',
+  'Екатеринбург': 'Лукиных Леонид',
+  'Самара': 'Красиков Андрей',
+  'Тольятти': 'Красиков Андрей',
+};
+
+const CITIES = Object.keys(RAW_DATA);
+const cityState = {};
+const cityPrices = {};
+let currentCity = CITIES[0];
+let activePeriod = 'all';
+
+function initCity(c) {
+  if (cityState[c]) return;
+  const raw = RAW_DATA[c] || [];
+  const zpArr = ZP_DATA[c] || [];
+  cityState[c] = {};
+  cityPrices[c] = {};
+  PERIODS.forEach((_, i) => {
+    const w = raw[i] || {mon:0,tue:0,wed:0,thu:0,fri:0,sat:0,sun:0};
+    cityPrices[c][i+1] = zpArr[i] || 0;
+    cityState[c][i+1] = {};
+    DAYS.forEach(d => {
+      cityState[c][i+1][d] = {value: w[d] > 0 ? w[d] : '', locked: (i+1) < CURRENT_WEEK};
+    });
+  });
+}
+
+function getTotal(c, n) {
+  return DAYS.reduce((s, d) => {
+    const v = parseFloat(cityState[c][n][d].value);
+    return s + (isNaN(v) ? 0 : v);
+  }, 0);
+}
+
+function fmt(n) { return Math.round(n).toLocaleString('ru-RU'); }
+
+function getVisibleRange() {
+  if (activePeriod === 'all') return [1, 31];
+  if (activePeriod === 'q1') return [1, 13];
+  if (activePeriod === 'q2') return [14, 26];
+  if (activePeriod === 'q3') return [27, 31];
+  if (activePeriod === 'month') return getCurrentMonthRange();
+  if (activePeriod === 'week') return [CURRENT_WEEK, CURRENT_WEEK];
+  return [1, 31];
+}
+
+function getCurrentMonthRange() {
+  const monthMap = {1:[1,4],2:[5,8],3:[9,13],4:[14,18],5:[19,22],6:[23,26],7:[27,30],8:[31,31]};
+  for (const [m, range] of Object.entries(monthMap)) {
+    if (CURRENT_WEEK >= range[0] && CURRENT_WEEK <= range[1]) return range;
+  }
+  return [CURRENT_WEEK, CURRENT_WEEK];
+}
+
+function updateInfoBar() {
+  document.getElementById('infoName').textContent = PERSONS[currentCity] || '—';
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('infoTime').textContent = 'Обновлено: ' + pad(now.getDate())+'.'+pad(now.getMonth()+1)+'.'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+}
+
+function renderTable() {
+  const city = currentCity;
+  initCity(city);
+  const tbody = document.getElementById('tbody');
+  const totals = PERIODS.map((_, i) => getTotal(city, i+1));
+  let html = '';
+
+  PERIODS.forEach((period, i) => {
+    const n = i+1;
+    const isCurrent = n === CURRENT_WEEK;
+    const total = totals[i];
+    const prev = i > 0 ? totals[i-1] : null;
+    const delta = prev !== null && prev > 0 ? total - prev : null;
+    const pct = prev !== null && prev > 0 ? (total - prev) / prev * 100 : null;
+    const zp = parseFloat(cityPrices[city][n]) || 0;
+    const avgP = total > 0 && zp > 0 ? (zp / total) : 0;
+
+    let dHtml = '—'; let dCls = 'delta-neu';
+    if (delta !== null) { dCls = delta > 0 ? 'delta-pos' : delta < 0 ? 'delta-neg' : 'delta-neu'; dHtml = (delta >= 0 ? '+' : '') + fmt(delta); }
+    let pHtml = '—'; let pCls = 'delta-neu';
+    if (pct !== null) { pCls = pct > 0 ? 'delta-pos' : pct < 0 ? 'delta-neg' : 'delta-neu'; pHtml = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%'; }
+
+    const totalCls = total > 0 ? 'total-cell total-td' : 'total-empty total-td';
+    const rowBg = isCurrent ? 'background:#F0FFF4' : '';
+
+    html += `<tr data-row="${n}" style="${rowBg}">`;
+    html += `<td class="td-n">${n}</td>`;
+    html += `<td class="td-period">${period}${isCurrent ? '<span style="margin-left:4px;font-size:9px;color:#39D353;font-weight:700">▶</span>' : ''}</td>`;
+
+    DAYS.forEach(day => {
+      const s = cityState[city][n][day];
+      const locked = s.locked;
+      const val = s.value;
+      const dispVal = val !== '' ? fmt(+val) : '—';
+      if (locked) {
+        html += `<td class="lk-${day}"><div class="cell-wrap"><span class="cell-val">${dispVal}</span><button class="lock-btn is-locked" data-n="${n}" data-day="${day}">✎</button></div></td>`;
+      } else {
+        html += `<td class="open-cell"><div class="cell-wrap"><input class="cell-input" type="number" min="0" step="1" value="${val}" placeholder="—" data-n="${n}" data-day="${day}"><button class="lock-btn is-open" data-n="${n}" data-day="${day}">✓</button></div></td>`;
+      }
+    });
+
+    html += `<td class="${totalCls}">${total > 0 ? fmt(total) : '—'}</td>`;
+    html += `<td class="price-cell"><input class="price-input" type="number" min="0" step="1" value="${zp > 0 ? Math.round(zp) : ''}" placeholder="сумма ЗП" data-n="${n}"></td>`;
+    html += avgP > 0 ? `<td class="avg-cell">${avgP.toFixed(1)} ₽</td>` : '<td class="avg-cell" style="color:#ccc">—</td>';
+    html += `<td class="${dCls} delta-td">${dHtml}</td>`;
+    html += `<td class="${pCls} pct-td">${pHtml}</td>`;
+    html += '</tr>';
+  });
+
+  tbody.innerHTML = html;
+
+  // Bind inputs — НЕ перерисовываем таблицу, только обновляем итоги
+  tbody.querySelectorAll('.cell-input').forEach(inp => {
+    inp.addEventListener('input', function() {
+      cityState[city][+this.dataset.n][this.dataset.day].value = this.value === '' ? '' : +this.value;
+      updateRowTotals();
+    });
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+    });
+  });
+
+  tbody.querySelectorAll('.lock-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      cityState[city][+this.dataset.n][this.dataset.day].locked = !cityState[city][+this.dataset.n][this.dataset.day].locked;
+      renderTable();
+    });
+  });
+
+  tbody.querySelectorAll('.price-input').forEach(inp => {
+    inp.addEventListener('input', function() {
+      cityPrices[city][+this.dataset.n] = +this.value;
+      updateRowTotals();
+      renderSummary();
+      updateInfoBar();
+    });
+  });
+
+  applyPeriodFilter(activePeriod);
+  renderSummary();
+}
+
+function updateRowTotals() {
+  const city = currentCity;
+  document.querySelectorAll('#tbody tr').forEach(tr => {
+    const n = +tr.dataset.row;
+    const total = getTotal(city, n);
+    const zp = parseFloat(cityPrices[city][n]) || 0;
+
+    // Update total cell
+    const totalTd = tr.querySelector('.total-td');
+    if (totalTd) {
+      if (total > 0) { totalTd.className = 'total-cell total-td'; totalTd.textContent = fmt(total); }
+      else { totalTd.className = 'total-empty total-td'; totalTd.textContent = '—'; }
+    }
+
+    // Update avg cell
+    const avgTd = tr.querySelector('.avg-cell');
+    if (avgTd) {
+      const avg = total > 0 && zp > 0 ? (zp / total) : 0;
+      avgTd.textContent = avg > 0 ? avg.toFixed(1) + ' ₽' : '—';
+      avgTd.style.color = avg > 0 ? '#1a5c28' : '#ccc';
+    }
+
+    // Update delta/pct
+    const totals = PERIODS.map((_, i) => getTotal(city, i+1));
+    const i = n - 1;
+    const prev = i > 0 ? totals[i-1] : null;
+    const delta = prev !== null && prev > 0 ? total - prev : null;
+    const pct = prev !== null && prev > 0 ? (total - prev) / prev * 100 : null;
+
+    const dTd = tr.querySelector('.delta-td');
+    if (dTd) {
+      if (delta !== null) { dTd.className = (delta > 0 ? 'delta-pos' : delta < 0 ? 'delta-neg' : 'delta-neu') + ' delta-td'; dTd.textContent = (delta >= 0 ? '+' : '') + fmt(delta); }
+      else { dTd.className = 'delta-neu delta-td'; dTd.textContent = '—'; }
+    }
+
+    const pTd = tr.querySelector('.pct-td');
+    if (pTd) {
+      if (pct !== null) { pTd.className = (pct > 0 ? 'delta-pos' : pct < 0 ? 'delta-neg' : 'delta-neu') + ' pct-td'; pTd.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%'; }
+      else { pTd.className = 'delta-neu pct-td'; pTd.textContent = '—'; }
+    }
+  });
+  renderSummary();
+}
+
+function renderSummary() {
+  const city = currentCity;
+  const totals = PERIODS.map((_, i) => getTotal(city, i+1));
+  const [r1, r2] = getVisibleRange();
+  const visIndices = PERIODS.map((_, i) => i).filter(i => { const n = i+1; return n >= r1 && n <= r2; });
+  const visTotals = visIndices.map(i => totals[i]);
+  const grandTotal = visTotals.reduce((a, b) => a + b, 0);
+  const totalZP = visIndices.reduce((s, i) => s + (parseFloat(cityPrices[city][i+1]) || 0), 0);
+  const avgPrice = grandTotal > 0 && totalZP > 0 ? (totalZP / grandTotal) : 0;
+  const filled = visTotals.filter(t => t > 0);
+  const maxT = Math.max(...visTotals.filter(t => t > 0).concat([0]));
+  const maxLocalIdx = visTotals.indexOf(maxT);
+  const maxGlobalN = maxLocalIdx >= 0 ? visIndices[maxLocalIdx] + 1 : 0;
+  const pastVis = visTotals.filter(t => t > 0);
+  const minT = pastVis.length ? Math.min(...pastVis) : 0;
+  const minLocalIdx = visTotals.indexOf(minT);
+  const minGlobalN = minLocalIdx >= 0 ? visIndices[minLocalIdx] + 1 : 0;
+  const periodLabel = activePeriod === 'all' ? 'весь год' : activePeriod === 'q1' ? 'Q1' : activePeriod === 'q2' ? 'Q2' : activePeriod === 'q3' ? 'Q3' : activePeriod === 'month' ? 'месяц' : 'неделя';
+
+  document.getElementById('summary').innerHTML = `
+    <div class="metric"><div class="metric-label">Доставок (${periodLabel})</div><div class="metric-val">${grandTotal > 0 ? fmt(grandTotal) : '—'}</div><div class="metric-sub">${filled.length} недель с данными</div></div>
+    <div class="metric"><div class="metric-label">Ср. стоимость точки</div><div class="metric-val">${avgPrice > 0 ? avgPrice.toFixed(1) + ' ₽' : '—'}</div></div>
+    <div class="metric"><div class="metric-label">Лучшая неделя</div><div class="metric-val">${maxT > 0 ? fmt(maxT) : '—'}</div><div class="metric-sub">${maxT > 0 ? 'нед. ' + maxGlobalN : ''}</div></div>
+    <div class="metric"><div class="metric-label">Слабая неделя</div><div class="metric-val">${minT > 0 ? fmt(minT) : '—'}</div><div class="metric-sub">${minT > 0 ? 'нед. ' + minGlobalN : ''}</div></div>
+    <div class="metric"><div class="metric-label">ФОТ (${periodLabel})</div><div class="metric-val">${totalZP > 0 ? (totalZP / 1000000).toFixed(2) + ' млн ₽' : '—'}</div></div>`;
+}
+
+function applyPeriodFilter(period) {
+  activePeriod = period;
+  const [r1, r2] = getVisibleRange();
+  document.querySelectorAll('#tbody tr').forEach(tr => {
+    const n = +tr.dataset.row;
+    tr.style.display = (n >= r1 && n <= r2) ? '' : 'none';
+  });
+  renderSummary();
+}
+
+// City selector
+const sel = document.getElementById('citySelect');
+CITIES.forEach(c => {
+  const o = document.createElement('option');
+  o.value = c; o.textContent = c;
+  sel.appendChild(o);
+});
+sel.addEventListener('change', function() {
+  currentCity = this.value;
+  initCity(currentCity);
+  document.getElementById('yearLabel').textContent = '2026 — ' + currentCity.toUpperCase();
+  renderTable();
+  updateInfoBar();
+});
+
+// Period filter
+document.getElementById('periodFilter').addEventListener('click', function(e) {
+  const btn = e.target.closest('.pf-btn');
+  if (!btn) return;
+  document.querySelectorAll('.pf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyPeriodFilter(btn.dataset.period);
+});
+
+// Init
+initCity(currentCity);
+document.getElementById('yearLabel').textContent = '2026 — ' + currentCity.toUpperCase();
+renderTable();
+updateInfoBar();
+
+// Zoom
+let zoom = 100;
+const tblWrap = document.getElementById('tblWrap');
+function applyZoom() {
+  tblWrap.style.transform = 'scale(' + (zoom/100) + ')';
+  tblWrap.style.transformOrigin = 'top left';
+  tblWrap.style.width = (10000/zoom) + '%';
+  tblWrap.style.marginBottom = (-(100-zoom)*3) + 'px';
+  document.getElementById('zoomLabel').textContent = zoom + '%';
+}
+document.getElementById('zoomIn').addEventListener('click', () => { zoom = Math.min(150, zoom+10); applyZoom(); });
+document.getElementById('zoomOut').addEventListener('click', () => { zoom = Math.max(50, zoom-10); applyZoom(); });
+document.getElementById('zoomReset').addEventListener('click', () => { zoom = 100; applyZoom(); });
+
+// Brightness
+const brightSlider = document.getElementById('brightSlider');
+const brightVal = document.getElementById('brightVal');
+brightSlider.addEventListener('input', function() {
+  const v = +this.value;
+  brightVal.textContent = v + '%';
+  document.getElementById('tblWrap').style.filter = 'brightness(' + v + '%)';
+});
+</script>
+</body>
+</html>
