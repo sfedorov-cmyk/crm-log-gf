@@ -94,6 +94,22 @@ td.delta-neu{color:#c7c7cc;font-size:11px;padding:5px 4px}
 .price-input:focus{outline:none;border-color:#39D353;box-shadow:0 0 0 3px rgba(52,199,89,.15)}
 .price-input::-webkit-outer-spin-button,.price-input::-webkit-inner-spin-button{-webkit-appearance:none}
 .price-input[type=number]{-moz-appearance:textfield}
+
+
+
+td.returns-cell{background:#FFF8F0;border:1px solid rgba(0,0,0,.12);padding:4px 8px;text-align:left;cursor:pointer;user-select:none}
+td.returns-cell .ret-summary{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#86868b}
+td.returns-cell .ret-total{font-weight:600;color:#1d1d1f}
+td.returns-cell .ret-arrow{font-size:10px;transition:transform .2s;color:#86868b}
+td.returns-cell.open .ret-arrow{transform:rotate(180deg)}
+.ret-days{display:none;margin-top:6px;border-top:1px solid rgba(0,0,0,.08);padding-top:6px}
+td.returns-cell.open .ret-days{display:block}
+.ret-day-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:6px}
+.ret-day-label{font-size:11px;color:#86868b;white-space:nowrap;min-width:40px}
+.ret-day-input{width:56px;height:24px;border:1px solid rgba(0,0,0,.12);border-radius:6px;padding:2px 4px;font-size:11px;font-family:inherit;text-align:center;background:#fff;color:#1d1d1f}
+.ret-day-input:focus{outline:none;border-color:#39D353;box-shadow:0 0 0 2px rgba(57,211,83,.15)}
+.ret-day-input::-webkit-outer-spin-button,.ret-day-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.ret-day-input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
@@ -126,11 +142,11 @@ td.delta-neu{color:#c7c7cc;font-size:11px;padding:5px 4px}
   <div class="tbl-wrap" id="tblWrap">
     <div class="year-label" id="yearLabel">2026</div>
     <table>
-      <colgroup><col class="col-n"><col class="col-period"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-total"><col class="col-price"><col class="col-avg"><col class="col-delta"><col class="col-pct"></colgroup>
+      <colgroup><col class="col-n"><col class="col-period"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-day"><col class="col-total"><col class="col-price"><col class="col-avg"><col class="col-delta"><col class="col-pct"><col style="width:70px"></colgroup>
       <thead><tr>
         <th class="th-n">#</th><th class="th-period">Период</th>
         <th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th>
-        <th>Итого</th><th>ЗП ₽</th><th>Ср. цена</th><th>±</th><th>%</th>
+        <th>Итого</th><th>ЗП ₽</th><th>Ср. цена</th><th>±</th><th>%</th><th>Возвраты ▾</th>
       </tr></thead>
       <tbody id="tbody"></tbody>
     </table>
@@ -175,6 +191,7 @@ const PERSONS = {
 const CITIES = Object.keys(RAW_DATA);
 const cityState = {};
 const cityPrices = {};
+const cityReturns = {}; // city -> weekN -> value
 let currentCity = CITIES[0];
 let activePeriod = 'all';
 
@@ -184,14 +201,33 @@ function initCity(c) {
   const zpArr = ZP_DATA[c] || [];
   cityState[c] = {};
   cityPrices[c] = {};
+  cityReturns[c] = {};
   PERIODS.forEach((_, i) => {
     const w = raw[i] || {mon:0,tue:0,wed:0,thu:0,fri:0,sat:0,sun:0};
     cityPrices[c][i+1] = zpArr[i] || 0;
     cityState[c][i+1] = {};
+    cityReturns[c][i+1] = cityReturns[c] && cityReturns[c][i+1] ? cityReturns[c][i+1] : '';
     DAYS.forEach(d => {
       cityState[c][i+1][d] = {value: w[d] > 0 ? w[d] : '', locked: (i+1) < CURRENT_WEEK};
     });
   });
+}
+
+
+const WEEK_STARTS = ['2025-12-29', '2026-01-05', '2026-01-12', '2026-01-19', '2026-01-26', '2026-02-02', '2026-02-09', '2026-02-16', '2026-02-23', '2026-03-02', '2026-03-09', '2026-03-16', '2026-03-23', '2026-03-30', '2026-04-06', '2026-04-13', '2026-04-20', '2026-04-27', '2026-05-04', '2026-05-11', '2026-05-18', '2026-05-25', '2026-06-01', '2026-06-08', '2026-06-15', '2026-06-22', '2026-06-29', '2026-07-06', '2026-07-13', '2026-07-20', '2026-07-27'];
+
+function getWeekDays(n) {
+  const ws = new Date(WEEK_STARTS[n-1]);
+  const days = [];
+  const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(ws);
+    d.setDate(d.getDate() + i);
+    const iso = d.toISOString().slice(0,10);
+    const label = String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + ' ' + dayNames[i];
+    days.push({iso, label});
+  }
+  return days;
 }
 
 function getTotal(c, n) {
@@ -274,6 +310,24 @@ function renderTable() {
     html += avgP > 0 ? `<td class="avg-cell">${avgP.toFixed(1)} ₽</td>` : '<td class="avg-cell" style="color:#ccc">—</td>';
     html += `<td class="${dCls} delta-td">${dHtml}</td>`;
     html += `<td class="${pCls} pct-td">${pHtml}</td>`;
+    // Build returns cell with expandable days
+    if (!cityReturns[city][n]) cityReturns[city][n] = {};
+    const weekDays = getWeekDays(n);
+    const weekRetTotal = weekDays.reduce((s, dd) => s + (parseFloat((cityReturns[city][n]||{})[dd.iso]) || 0), 0);
+    let daysHtml = weekDays.map(dd => {
+      const v = (cityReturns[city][n]||{})[dd.iso] || '';
+      return `<div class="ret-day-row">
+        <span class="ret-day-label">${dd.label}</span>
+        <input class="ret-day-input" type="number" min="0" step="1" value="${v}" placeholder="0" data-ret-n="${n}" data-ret-date="${dd.iso}">
+      </div>`;
+    }).join('');
+    html += `<td class="returns-cell" data-ret-week="${n}">
+      <div class="ret-summary">
+        <span class="ret-total">${weekRetTotal > 0 ? weekRetTotal.toLocaleString('ru-RU') : '—'}</span>
+        <span class="ret-arrow">▾</span>
+      </div>
+      <div class="ret-days">${daysHtml}</div>
+    </td>`;
     html += '</tr>';
   });
 
@@ -309,6 +363,34 @@ function renderTable() {
 
   applyPeriodFilter(activePeriod);
   renderSummary();
+
+  // Bind returns cell toggle
+  tbody.querySelectorAll('td.returns-cell').forEach(td => {
+    td.addEventListener('click', function(e) {
+      if (e.target.classList.contains('ret-day-input')) return;
+      this.classList.toggle('open');
+    });
+  });
+
+  // Bind returns day inputs
+  tbody.querySelectorAll('input[data-ret-date]').forEach(inp => {
+    inp.addEventListener('input', function() {
+      const n = +this.dataset.retN;
+      const dt = this.dataset.retDate;
+      if (!cityReturns[city][n]) cityReturns[city][n] = {};
+      cityReturns[city][n][dt] = this.value === '' ? 0 : +this.value;
+      // Update summary total in cell
+      const td = this.closest('td.returns-cell');
+      const weekDays = getWeekDays(n);
+      const total = weekDays.reduce((s, dd) => s + (parseFloat((cityReturns[city][n]||{})[dd.iso]) || 0), 0);
+      const totEl = td.querySelector('.ret-total');
+      if (totEl) totEl.textContent = total > 0 ? total.toLocaleString('ru-RU') : '—';
+    });
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+    });
+    inp.addEventListener('click', function(e) { e.stopPropagation(); });
+  });
 }
 
 function updateRowTotals() {
@@ -444,6 +526,87 @@ brightSlider.addEventListener('input', function() {
   brightVal.textContent = v + '%';
   document.getElementById('tblWrap').style.filter = 'brightness(' + v + '%)';
 });
+
+// Returns data
+const RETURN_DATES = ['2025-12-29', '2025-12-30', '2025-12-31', '2026-01-01', '2026-01-02', '2026-01-03', '2026-01-04', '2026-01-05', '2026-01-06', '2026-01-07', '2026-01-08', '2026-01-09', '2026-01-10', '2026-01-11', '2026-01-12', '2026-01-13', '2026-01-14', '2026-01-15', '2026-01-16', '2026-01-17', '2026-01-18', '2026-01-19', '2026-01-20', '2026-01-21', '2026-01-22', '2026-01-23', '2026-01-24', '2026-01-25', '2026-01-26', '2026-01-27', '2026-01-28', '2026-01-29', '2026-01-30', '2026-01-31', '2026-02-01', '2026-02-02', '2026-02-03', '2026-02-04', '2026-02-05', '2026-02-06', '2026-02-07', '2026-02-08', '2026-02-09', '2026-02-10', '2026-02-11', '2026-02-12', '2026-02-13', '2026-02-14', '2026-02-15', '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20', '2026-02-21', '2026-02-22', '2026-02-23', '2026-02-24', '2026-02-25', '2026-02-26', '2026-02-27', '2026-02-28', '2026-03-01', '2026-03-02', '2026-03-03', '2026-03-04', '2026-03-05', '2026-03-06', '2026-03-07', '2026-03-08', '2026-03-09', '2026-03-10', '2026-03-11', '2026-03-12', '2026-03-13', '2026-03-14', '2026-03-15', '2026-03-16', '2026-03-17', '2026-03-18', '2026-03-19', '2026-03-20', '2026-03-21', '2026-03-22', '2026-03-23', '2026-03-24', '2026-03-25', '2026-03-26', '2026-03-27', '2026-03-28', '2026-03-29', '2026-03-30', '2026-03-31', '2026-04-01', '2026-04-02', '2026-04-03', '2026-04-04', '2026-04-05', '2026-04-06', '2026-04-07', '2026-04-08', '2026-04-09', '2026-04-10', '2026-04-11', '2026-04-12', '2026-04-13', '2026-04-14', '2026-04-15', '2026-04-16', '2026-04-17', '2026-04-18', '2026-04-19', '2026-04-20', '2026-04-21', '2026-04-22', '2026-04-23', '2026-04-24', '2026-04-25', '2026-04-26', '2026-04-27', '2026-04-28', '2026-04-29', '2026-04-30', '2026-05-01', '2026-05-02', '2026-05-03', '2026-05-04', '2026-05-05', '2026-05-06', '2026-05-07', '2026-05-08', '2026-05-09', '2026-05-10', '2026-05-11', '2026-05-12', '2026-05-13', '2026-05-14', '2026-05-15', '2026-05-16', '2026-05-17', '2026-05-18', '2026-05-19', '2026-05-20', '2026-05-21', '2026-05-22', '2026-05-23', '2026-05-24', '2026-05-25', '2026-05-26', '2026-05-27', '2026-05-28', '2026-05-29', '2026-05-30', '2026-05-31'];
+
+const returnsState = {};  // city -> date -> value
+
+function initReturns(city) {
+  if (!returnsState[city]) returnsState[city] = {};
+}
+
+function renderReturnsTable() {
+  const city = currentCity;
+  initReturns(city);
+  const table = document.getElementById('returnsTable');
+  if (!table) return;
+
+  // Group dates by month
+  const months = {};
+  RETURN_DATES.forEach(dateStr => {
+    const d = new Date(dateStr);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    if (!months[key]) months[key] = [];
+    months[key].push(dateStr);
+  });
+
+  const monthNames = {'2025-12':'Декабрь 2025','2026-01':'Январь 2026','2026-02':'Февраль 2026','2026-03':'Март 2026','2026-04':'Апрель 2026','2026-05':'Май 2026'};
+  
+  let html = '';
+  let grandTotal = 0;
+
+  Object.entries(months).forEach(([monthKey, dates]) => {
+    const monthTotal = dates.reduce((s, ds) => s + (parseFloat(returnsState[city][ds]) || 0), 0);
+    grandTotal += monthTotal;
+    
+    html += `<tr style="background:#F5F5F7"><td colspan="2" style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:.5px;padding:6px 10px">${monthNames[monthKey] || monthKey}</td></tr>`;
+    
+    dates.forEach(dateStr => {
+      const d = new Date(dateStr);
+      const label = String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0');
+      const val = returnsState[city][dateStr] || '';
+      html += `<tr>
+        <td>${label}</td>
+        <td><input class="returns-input" type="number" min="0" step="1" 
+          value="${val}" placeholder="0" data-date="${dateStr}"></td>
+      </tr>`;
+    });
+
+    html += `<tr class="returns-month-row">
+      <td>Итого</td>
+      <td style="text-align:center">${monthTotal > 0 ? Math.round(monthTotal).toLocaleString('ru-RU') : '—'}</td>
+    </tr>`;
+  });
+
+  table.innerHTML = html;
+
+  // Update totals header
+  const now = new Date();
+  const curMonthKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  const curMonthDates = months[curMonthKey] || months['2026-05'] || [];
+  const curMonthTotal = curMonthDates.reduce((s, ds) => s + (parseFloat(returnsState[city][ds]) || 0), 0);
+  
+  const el = document.getElementById('returnsTotal');
+  if (el) el.textContent = Math.round(curMonthTotal).toLocaleString('ru-RU');
+  const lbl = document.getElementById('returnsMonthLabel');
+  if (lbl) lbl.textContent = 'за ' + (monthNames[curMonthKey] || monthNames['2026-05'] || 'текущий месяц').toLowerCase();
+
+  // Bind inputs
+  table.querySelectorAll('.returns-input').forEach(inp => {
+    inp.addEventListener('input', function() {
+      returnsState[city][this.dataset.date] = this.value === '' ? 0 : +this.value;
+      renderReturnsTable();
+    });
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+    });
+  });
+}
+
+
+// Init returns
+renderReturnsTable();
 </script>
 </body>
 </html>
