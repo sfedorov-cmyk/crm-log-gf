@@ -1341,14 +1341,6 @@ async function renderDashMain(from,to){
         <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">📈 Сводка</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg);border-radius:10px">
-            <span style="font-size:13px;color:var(--text);font-weight:500">Всего анкет</span>
-            <span style="font-size:22px;font-weight:700;color:var(--text)">${data.length}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg);border-radius:10px">
-            <span style="font-size:13px;color:var(--text);font-weight:500">Конверсия</span>
-            <span style="font-size:22px;font-weight:700;color:var(--accent-dark)">${data.length?Math.round((totalCombined+totalSmena)/data.length*100):0}%</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg);border-radius:10px">
             <span style="font-size:13px;color:var(--text);font-weight:500">Итого принято</span>
             <span style="font-size:22px;font-weight:700;color:var(--accent-dark)">${totalCombined+totalSmena}</span>
           </div>
