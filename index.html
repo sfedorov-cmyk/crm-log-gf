@@ -1915,29 +1915,35 @@ const MENTORS_DATA = {
 
 let mentorsData = null;
 
-function loadMentorsData(){
+async function loadMentorsData(){
   try{
-    const saved = localStorage.getItem('hrcrm_mentors');
-    if(saved) mentorsData = JSON.parse(saved);
-    else mentorsData = JSON.parse(JSON.stringify(MENTORS_DATA));
-  }catch(e){ mentorsData = JSON.parse(JSON.stringify(MENTORS_DATA)); }
+    const{data,error}=await sb.from('info_data').select('value').eq('key','hrcrm_mentors').single();
+    if(!error&&data) mentorsData=JSON.parse(data.value);
+    else mentorsData=JSON.parse(JSON.stringify(MENTORS_DATA));
+  }catch(e){
+    const saved=localStorage.getItem('hrcrm_mentors');
+    mentorsData=saved?JSON.parse(saved):JSON.parse(JSON.stringify(MENTORS_DATA));
+  }
 }
 
-function saveMentorsData(){
-  localStorage.setItem('hrcrm_mentors', JSON.stringify(mentorsData));
+async function saveMentorsData(){
+  localStorage.setItem('hrcrm_mentors',JSON.stringify(mentorsData));
+  try{
+    await sb.from('info_data').upsert({key:'hrcrm_mentors',value:JSON.stringify(mentorsData),updated_at:new Date().toISOString(),updated_by:myRec||''},{onConflict:'key'});
+  }catch(e){console.warn('mentors save error',e);}
 }
 
-function mentorSaveCell(groupKey, rowIdx, field, value){
+async function mentorSaveCell(groupKey, rowIdx, field, value){
   if(!mentorsData) loadMentorsData();
   mentorsData[groupKey].rows[rowIdx][field] = value.trim();
-  saveMentorsData();
+  await saveMentorsData();
 }
 window.mentorSaveCell = mentorSaveCell;
 
-function mentorAddRow(groupKey){
+async function mentorAddRow(groupKey){
   if(!mentorsData) loadMentorsData();
   mentorsData[groupKey].rows.push({okrug:'', name:'', tg:'', phone:''});
-  saveMentorsData(); renderMentors();
+  await saveMentorsData(); renderMentors();
   setTimeout(()=>{
     const cells = document.querySelectorAll('.mentor-cell-name');
     const last = cells[cells.length-1];
@@ -1946,11 +1952,11 @@ function mentorAddRow(groupKey){
 }
 window.mentorAddRow = mentorAddRow;
 
-function mentorDelRow(groupKey, rowIdx){
+async function mentorDelRow(groupKey, rowIdx){
   if(!mentorsData) loadMentorsData();
   if(!confirm('Удалить строку?')) return;
   mentorsData[groupKey].rows.splice(rowIdx, 1);
-  saveMentorsData(); renderMentors();
+  await saveMentorsData(); renderMentors();
 }
 window.mentorDelRow = mentorDelRow;
 
@@ -1965,8 +1971,8 @@ function copyContact(text){
 }
 window.copyContact = copyContact;
 
-function renderMentors(){
-  loadMentorsData();
+async function renderMentors(){
+  await loadMentorsData();
   const wrap = document.getElementById('mentorWrap');
 
   let html = `<div style="max-width:900px;margin:0 auto;padding-bottom:32px">
