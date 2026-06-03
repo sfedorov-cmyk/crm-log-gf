@@ -1962,6 +1962,7 @@ window.mentorDelRow = mentorDelRow;
 
 function copyContact(text){
   if(!text) return;
+  text = text.replace(/\s+/g,' ').trim();
   navigator.clipboard.writeText(text).then(()=>{
     const t=document.createElement('div');
     t.textContent='📋 Скопировано: '+text;
@@ -2035,7 +2036,8 @@ async function renderMentors(){
                   ${r.phone ? `<button onclick="copyContact('${r.phone}')" style="background:none;border:none;cursor:pointer;font-size:13px;opacity:.5" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5" title="Скопировать">📋</button>` : ''}
                 </div>
               </td>
-              <td style="padding:4px;text-align:center;vertical-align:middle">
+              <td style="padding:4px;text-align:center;vertical-align:middle;white-space:nowrap">
+                <button onclick="copyContact('${r.okrug||''}  ${r.name||''}  ${r.tg||''}  ${r.phone||''}'.trim())" title="Копировать всю строку" style="background:none;border:none;cursor:pointer;font-size:13px;opacity:.5" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">📋</button>
                 ${canEditMentors?`<button onclick="mentorDelRow('${groupKey}',${i})" style="background:none;border:none;cursor:pointer;font-size:12px;color:#fca5a5;opacity:.6" onmouseover="this.style.opacity=1;this.style.color='#ef4444'" onmouseout="this.style.opacity=.6;this.style.color='#fca5a5'" title="Удалить">✕</button>`:''}
               </td>
             </tr>`).join('')}
