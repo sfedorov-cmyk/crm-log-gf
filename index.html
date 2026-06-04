@@ -439,8 +439,8 @@ window.addEventListener('online',()=>{isOnline=true;showOfflineBanner();syncQueu
 window.addEventListener('offline',()=>{isOnline=false;showOfflineBanner()});
 setInterval(()=>{if(isOnline&&getQueue().length)syncQueue()},15000);
 
-const EMAP={'osipova@growfood.pro':'Осипова А.','nasedko@growfood.pro':'Наседко Е.','dupina@growfood.pro':'Дюпина Е.','smolentseva@growfood.pro':'Смоленцева К.','kislyakova@growfood.pro':'Кислякова Е.','racheeva@growfood.pro':'Рачеева Д.','stepakova@growfood.pro':'Степакова М.','yakovleva@growfood.pro':'Яковлева А.','a.yakovleva@growfood.pro':'Яковлева А.','d.elsafadi@growfood.pro':'Эль-Сафади Д.','ya.fedorova@growfood.pro':'Федорова Я.','s.fedorov@growfood.pro':'Федоров С.'};
-const ALL_R=['Осипова А.','Наседко Е.','Дюпина Е.','Смоленцева К.','Кислякова Е.','Рачеева Д.','Степакова М.','Яковлева А.'];
+const EMAP={'osipova@growfood.pro':'Осипова А.','dupina@growfood.pro':'Дюпина Е.','smolentseva@growfood.pro':'Смоленцева К.','kislyakova@growfood.pro':'Кислякова Е.','racheeva@growfood.pro':'Рачеева Д.','stepakova@growfood.pro':'Степакова М.','yakovleva@growfood.pro':'Яковлева А.','a.yakovleva@growfood.pro':'Яковлева А.','d.elsafadi@growfood.pro':'Эль-Сафади Д.','ya.fedorova@growfood.pro':'Федорова Я.','s.fedorov@growfood.pro':'Федоров С.'};
+const ALL_R=['Осипова А.','Дюпина Е.','Смоленцева К.','Кислякова Е.','Рачеева Д.','Степакова М.','Яковлева А.'];
 const ADMINS=['d.elsafadi@growfood.pro','ya.fedorova@growfood.pro','stepakova@growfood.pro','yakovleva@growfood.pro','a.yakovleva@growfood.pro','s.fedorov@growfood.pro'];
 const SPB=['СПБ : СЗ','СПБ : СВ','СПБ : ВОСТОК','СПБ : ЮВ','СПБ : ЮЗ'];
 const MSK=['МСК : САО','МСК : СВАО','МСК : СЗАО','МСК : ВАО','МСК : ЮАО','МСК : ЮВАО','МСК : ЮЗАО','МСК : ЗАО'];
