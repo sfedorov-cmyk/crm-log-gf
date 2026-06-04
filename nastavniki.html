@@ -306,8 +306,8 @@ tr:hover td{background:var(--bg3)!important}
       <option value="">Все наставники</option>
     </select>
     <span style="font-size:11px;color:var(--text2)">Период:</span>
-    <input type="date" class="finput" id="dateFrom">
-    <input type="date" class="finput" id="dateTo">
+    <input type="date" class="finput" id="dateFrom" onchange="renderTable()">
+    <input type="date" class="finput" id="dateTo" onchange="renderTable()">
     <button class="btn" onclick="clearFilters()">Сбросить</button>
   </div>
 
@@ -980,6 +980,18 @@ loadTariffs();
   }
 })();
 loadData();
+// Устанавливаем текущий месяц по умолчанию
+(function(){
+  const today=new Date();
+  const year=today.getFullYear();
+  const month=String(today.getMonth()+1).padStart(2,'0');
+  const firstDay=`${year}-${month}-01`;
+  const lastDay=new Date(year,today.getMonth()+1,0);
+  const lastDayStr=`${year}-${month}-${String(lastDay.getDate()).padStart(2,'0')}`;
+  document.getElementById('dateFrom').value=firstDay;
+  document.getElementById('dateTo').value=lastDayStr;
+  renderTable();
+})();
 
 // THEME
 let isDark=true;
