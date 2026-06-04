@@ -793,8 +793,8 @@ async function renderInfo(){
   const canEditInfo = isAdmin || (CU && ['ya.fedorova@growfood.pro','stepakova@growfood.pro','a.yakovleva@growfood.pro'].includes(CU.email));
 
   function secHeader(icon,title,key){return`<div class="info-section-header"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">${icon}</span><span class="info-section-title">${title}</span></div>${d[key].updated?`<span class="info-updated">обновлено: ${d[key].updated}</span>`:''}</div>`;}
-  function statusToggle(key,idx,cur){if(canEditInfo)return`<button onclick="toggleStatus('${key}',${idx})" style="background:${cur==='берём'?'#dcfce7':'#fee2e2'};color:${cur==='берём'?'#15803d':'#b91c1c'};border:none;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">${cur}</button>`;return`<span style="background:${cur==='берём'?'#dcfce7':'#fee2e2'};color:${cur==='берём'?'#15803d':'#b91c1c'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${cur}</span>`;}
-  function countSpinner(key,idx,val){if(canEditInfo)return`<div style="display:flex;align-items:center;gap:4px"><button onclick="changeCount('${key}',${idx},-1)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">−</button><span style="min-width:20px;text-align:center;font-weight:700;font-size:14px">${val}</span><button onclick="changeCount('${key}',${idx},1)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">+</button></div>`;return`<span style="font-weight:700;font-size:14px">${val}</span>`;}
+  function statusToggle(key,idx,cur){if(canEditInfo)return`<button data-status-key="${key}-${idx}" onclick="toggleStatus('${key}',${idx})" style="background:${cur==='берём'?'#dcfce7':'#fee2e2'};color:${cur==='берём'?'#15803d':'#b91c1c'};border:none;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;touch-action:manipulation">${cur}</button>`;return`<span style="background:${cur==='берём'?'#dcfce7':'#fee2e2'};color:${cur==='берём'?'#15803d':'#b91c1c'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${cur}</span>`;}
+  function countSpinner(key,idx,val){if(canEditInfo)return`<div style="display:flex;align-items:center;gap:4px"><button onclick="changeCount('${key}',${idx},-1)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;touch-action:manipulation">−</button><span data-count-key="${key}-${idx}" style="min-width:24px;text-align:center;font-weight:700;font-size:14px">${val}</span><button onclick="changeCount('${key}',${idx},1)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;touch-action:manipulation">+</button></div>`;return`<span style="font-weight:700;font-size:14px">${val}</span>`;}
   function editableCell(key,idx,field,val,style=''){if(canEditInfo)return`<td style="padding:7px 10px;border-bottom:1px solid var(--border);${style}" contenteditable="true" onblur="saveCell('${key}',${idx},'${field}',this.textContent)">${val||''}</td>`;return`<td style="padding:7px 10px;border-bottom:1px solid var(--border);${style}">${val||''}</td>`;}
 
   iw.innerHTML=`<div style="max-width:1000px;margin:0 auto;padding-bottom:24px">
@@ -952,10 +952,32 @@ function toggleInfoEdit(key,btn){
 }
 window.toggleInfoEdit=toggleInfoEdit;
 
-function toggleStatus(key,idx){const d=getInfoData();d[key].rows[idx].status=d[key].rows[idx].status==='стоп'?'берём':'стоп';d[key].updated=fmtInfoDate();saveInfoData(d);renderInfo();}
+function toggleStatus(key,idx){
+  const d=getInfoData();
+  const newStatus=d[key].rows[idx].status==='стоп'?'берём':'стоп';
+  d[key].rows[idx].status=newStatus;
+  d[key].updated=fmtInfoDate();
+  saveInfoData(d);
+  // Обновляем только кнопку без перерендера
+  const btns=document.querySelectorAll('[data-status-key="'+key+'-'+idx+'"]');
+  btns.forEach(function(btn){
+    btn.textContent=newStatus;
+    btn.style.background=newStatus==='берём'?'#dcfce7':'#fee2e2';
+    btn.style.color=newStatus==='берём'?'#15803d':'#b91c1c';
+  });
+}
 window.toggleStatus=toggleStatus;
 
-function changeCount(key,idx,delta){const d=getInfoData();d[key].rows[idx].count=Math.max(0,d[key].rows[idx].count+delta);d[key].updated=fmtInfoDate();saveInfoData(d);renderInfo();}
+function changeCount(key,idx,delta){
+  const d=getInfoData();
+  d[key].rows[idx].count=Math.max(0,d[key].rows[idx].count+delta);
+  d[key].updated=fmtInfoDate();
+  saveInfoData(d);
+  // Обновляем только число в DOM без полного перерендера
+  const val=d[key].rows[idx].count;
+  const spans=document.querySelectorAll('[data-count-key="'+key+'-'+idx+'"]');
+  spans.forEach(function(el){el.textContent=val;});
+}
 window.changeCount=changeCount;
 
 function saveCell(key,idx,field,val){const d=getInfoData();d[key].rows[idx][field]=val.trim();d[key].updated=fmtInfoDate();saveInfoData(d);}
