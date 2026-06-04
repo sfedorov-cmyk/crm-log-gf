@@ -427,24 +427,16 @@ const NASTAVNIK_MAP={
     'СЗ':'Шорохов Максим'
   },
   msk_yug:{
-    'СЗАО':'Цой Влас',
-    'СВАО':'Подосиновиков Максим',
-    'САО':'Морозов Максим',
-    'ВАО':'Морозов Максим',
-    'ЮВАО':'Гаргалык Андрей',
     'ЮАО':'Дмитриев Алексей',
-    'ЮЗАО':'Никулин Максим',
+    'ЮВАО':'Гаргалык Андрей',
+    'ЮЗАО':'Дмитрий Гилёв',
     'ЗАО':'Прокофьева Инга'
   },
   msk_sever:{
-    'СЗАО':'Цой Влас',
-    'СВАО':'Подосиновиков Максим',
     'САО':'Морозов Максим',
-    'ВАО':'Морозов Максим',
-    'ЮВАО':'Гаргалык Андрей',
-    'ЮАО':'Дмитриев Алексей',
-    'ЮЗАО':'Никулин Максим',
-    'ЗАО':'Прокофьева Инга'
+    'СВАО':'Подосиновиков Максим',
+    'СЗАО':'Корнев Матвей',
+    'ВАО':'Морозов Максим'
   }
 };
 let tariffs={t1:500,t3:1000,t5:1500};
@@ -482,11 +474,16 @@ async function loadData(){
   document.getElementById('syncDot').style.background='#666';
   document.getElementById('syncStatus').textContent='загрузка...';
   const{data,error}=await sb.from('nastavniki').select('*').eq('city',currentTab).order('created_at',{ascending:false});
-  if(error){rows=[];}else rows=data||[];
+  if(error){
+    console.error('Load error:',error);
+    rows=[];
+  }else rows=data||[];
   document.getElementById('syncDot').style.background='var(--green-text)';
   document.getElementById('syncStatus').textContent='онлайн';
   renderTable();
+  renderCards(getFiltered());
   updateNastavnikFilter();
+  initTableEvents();
 }
 function updateNastavnikFilter(){
   const sel=document.getElementById('filterNastavnik');const val=sel.value;
@@ -822,7 +819,6 @@ function autoFillNastavnik(){
   const auto=map[okrug];
   if(auto){
     const field=document.getElementById('fNastavnik');
-    // подставляем только если поле пустое или было автозаполнено ранее
     const wasAuto=Object.values(NASTAVNIK_MAP[currentTab]||{}).includes(field.value)||field.value==='';
     if(wasAuto)field.value=auto;
   }
@@ -838,8 +834,20 @@ async function saveRecord(){
 }
 async function deleteRecord(){
   if(!editId||!confirm('Удалить запись?'))return;
-  await sb.from('nastavniki').delete().eq('id',editId);
-  closeModal();await loadData();
+  try{
+    const{error}=await sb.from('nastavniki').delete().eq('id',editId);
+    if(error){
+      console.error('❌ Ошибка удаления:',error);
+      alert('❌ Ошибка удаления: '+error.message);
+      return;
+    }
+    console.log('✅ Запись удалена');
+    closeModal();
+    await loadData();
+  }catch(e){
+    console.error('❌ Exception:',e);
+    alert('❌ Ошибка: '+e.message);
+  }
 }
 function clearFilters(){
   ['searchInput','dateFrom','dateTo'].forEach(id=>document.getElementById(id).value='');
@@ -853,25 +861,19 @@ setInterval(()=>{if(!document.hidden)loadData();},30000);
 // ПАРСИНГ ТЕКСТА АККАУНТА
 function parseAccountText(text){
   const result={};
-  // ФИО
   const fioM=text.match(/ФИО[^\n]*?([А-ЯЁ][а-яёА-ЯЁ\s]{3,})/);
   if(fioM)result.name=fioM[1].split('\n')[0].trim();
-  // Район
   const okrugM=text.match(/Район[^:\n]*:[\s]*([^\n\r]+)/i);
   if(okrugM)result.okrug=okrugM[1].trim();
-  // Телефон
   const phoneM=text.match(/(?:Номер телефона|Телефон)[^:\n]*:[\s]*([0-9+][^\n\r]+)/i);
   if(phoneM)result.phone=phoneM[1].trim();
-  // Телеграм
   const tgM=text.match(/Телеграм[^@\n]*(@[A-Za-z0-9_]+)/i);
   if(tgM)result.tg=tgM[1].trim();
-  // Логин
   const loginM=text.match(/Логин[^:\n]*:[^\n`]*`?([\w.@+\-]+@[\w.]+)/i);
   if(loginM)result.login=loginM[1].trim();
   return result;
 }
 
-// Маппинг районов из текста аккаунта к значениям в селекте
 const OKRUG_ALIAS={
   'вао':'ВАО','сао':'САО','свао':'СВАО','сзао':'СЗАО','юао':'ЮАО',
   'ювао':'ЮВАО','юзао':'ЮЗАО','зао':'ЗАО','цао':'ЦАО',
@@ -887,23 +889,17 @@ async function pasteRecord(){
   }
   if(!text.trim())return;
   const parsed=parseAccountText(text);
-  // Открываем модалку
   openModal();
   document.getElementById('fStatus').value='handed';
-  // Заполняем поля
   if(parsed.name)document.getElementById('fName').value=parsed.name;
-  // Определяем дату — сегодня
   document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
-  // Округ
   if(parsed.okrug){
     const key=parsed.okrug.toLowerCase().trim();
     const mapped=OKRUG_ALIAS[key]||parsed.okrug;
     const sel=document.getElementById('fOkrug');
-    // ищем опцию
     for(let o of sel.options){if(o.value===mapped||o.text===mapped){sel.value=o.value;break;}}
     autoFillNastavnik();
   }
-  // Комментарий — добавляем телеграм и телефон
   const parts=[];
   if(parsed.tg)parts.push('TG: '+parsed.tg);
   if(parsed.phone)parts.push('📞 '+parsed.phone);
@@ -952,9 +948,23 @@ async function deleteSelected(){
   if(!selected.size)return;
   if(!confirm(`Удалить ${selected.size} записей? Это действие нельзя отменить.`))return;
   const ids=[...selected];
+  let deleted=0,failed=0;
   for(const id of ids){
-    await sb.from('nastavniki').delete().eq('id',id);
+    try{
+      const{error}=await sb.from('nastavniki').delete().eq('id',id);
+      if(error){
+        console.error('Delete error for '+id+':', error);
+        failed++;
+      }else{
+        deleted++;
+      }
+    }catch(e){
+      console.error('Exception for '+id+':', e);
+      failed++;
+    }
   }
+  console.log(`✅ Удалено: ${deleted}, ❌ Ошибок: ${failed}`);
+  if(failed>0)alert(`⚠️ Удалено ${deleted} из ${ids.length}. Ошибок: ${failed}`);
   clearSelection();
   await loadData();
 }
@@ -979,20 +989,16 @@ function toggleTheme(){
   document.getElementById('themeBtn').textContent=isDark?'🌙':'☀️';
   localStorage.setItem('nastavniki_theme',isDark?'dark':'light');
 }
-// restore theme
 (function(){
   const saved=localStorage.getItem('nastavniki_theme');
   if(saved==='light'){isDark=false;document.body.classList.add('light');document.getElementById('themeBtn').textContent='☀️';}
 })();
 
 // ===== СИНХРОНИЗАЦИЯ С CRM =====
-// Определяем лист (city) и наставника по городу и округу из CRM
 function getCityAndNastavnik(crmCity, crmOkrug) {
   const crmOkrugRaw = (crmOkrug||'').trim().toUpperCase();
   const crmCityUpper = (crmCity||'').toUpperCase();
 
-  // Определяем префикс города из поля okrug
-  // Форматы: "СПБ : ВОСТОК", "СЕВЕР : САО", "ЮГ : ЮВАО", "МСК : ЮЗАО"
   let prefix = '';
   let okrugPart = crmOkrugRaw;
   if (crmOkrugRaw.includes(' : ')) {
@@ -1005,7 +1011,6 @@ function getCityAndNastavnik(crmCity, crmOkrug) {
     okrugPart = parts[1].trim();
   }
 
-  // Маппинг к значениям в NASTAVNIK_MAP
   const okrugAlias = {
     'ВОСТОК': 'Восток',
     'СЗ': 'СЗ', 'СВ': 'СВ', 'ЮЗ': 'ЮЗ', 'ЮВ': 'ЮВ',
@@ -1014,7 +1019,6 @@ function getCityAndNastavnik(crmCity, crmOkrug) {
   };
   const okrug = okrugAlias[okrugPart] || okrugPart;
 
-  // Определяем город по префиксу округа и полю city
   const isSpb = prefix === 'СПБ' || crmCityUpper.includes('СПБ') || crmCityUpper.includes('SPB') || crmCityUpper.includes('САНКТ') || crmCityUpper.includes('СПБ');
   const isMskSever = prefix === 'СЕВЕР';
   const isMskYug = prefix === 'ЮГ';
@@ -1025,13 +1029,11 @@ function getCityAndNastavnik(crmCity, crmOkrug) {
     return { city: 'spb', nastavnik };
   }
 
-  // МСК Север — явный префикс СЕВЕР
   if (isMskSever) {
     const nastavnik = NASTAVNIK_MAP.msk_sever[okrug] || '';
     return { city: 'msk_sever', nastavnik };
   }
 
-  // МСК Юг — явный префикс ЮГ
   if (isMskYug) {
     const nastavnik = NASTAVNIK_MAP.msk_yug[okrug] || '';
     return { city: 'msk_yug', nastavnik };
@@ -1049,28 +1051,22 @@ function getCityAndNastavnik(crmCity, crmOkrug) {
       const nastavnik = NASTAVNIK_MAP.msk_yug[okrug] || '';
       return { city: 'msk_yug', nastavnik };
     }
-    // МСК но район не определён — кладём в msk_sever
     return { city: 'msk_sever', nastavnik: '' };
   }
 
-  return null; // не МСК и не СПб — пропускаем
+  return null;
 }
 
-// Хранилище уже обработанных ID кандидатов (чтобы не дублировать)
-// Используем Supabase: храним crm_candidate_id в таблице nastavniki
 async function syncFromCRM() {
   try {
-    // 1. Берём все записи из CRM со статусом 'sb' (Проверка СБ), только МСК и СПб
     const { data: crmRows, error: crmErr } = await sb
-      .from('candidates')  // ← таблица CRM (тот же Supabase-проект)
+      .from('candidates')
       .select('id,fio,city,okrug,date,tel')
       .eq('status', 'проверка СБ')
-      // city filter removed - filtering by okrug in JS
 
     if (crmErr) { console.warn('CRM sync error:', crmErr.message); return; }
     if (!crmRows || !crmRows.length) return;
 
-    // 2. Берём уже перенесённые crm_id из nastavniki
     const { data: existing } = await sb
       .from('nastavniki')
       .select('crm_id')
@@ -1078,12 +1074,11 @@ async function syncFromCRM() {
 
     const existingIds = new Set((existing||[]).map(r => r.crm_id));
 
-    // 3. Переносим новых
     for (const c of crmRows) {
-      if (existingIds.has(String(c.id))) continue; // уже перенесён
+      if (existingIds.has(String(c.id))) continue;
 
       const mapped = getCityAndNastavnik(c.city, c.okrug);
-      if (!mapped) continue; // не МСК и не СПб
+      if (!mapped) continue;
 
       const newRecord = {
         crm_id:          String(c.id),
@@ -1093,7 +1088,7 @@ async function syncFromCRM() {
         nastavnik:       mapped.nastavnik,
         date_account:    c.date || new Date().toISOString().split('T')[0],
         date_first_shift:'',
-        status:          'handed',   // статус по умолчанию при переносе
+        status:          'handed',
         comment:         c.tel && c.tel !== '—' ? '📞 ' + c.tel : '',
         smeny:           0,
         bonus:           'none',
@@ -1103,12 +1098,10 @@ async function syncFromCRM() {
       if (insErr) console.warn('Insert error:', insErr.message);
     }
 
-    // 4. Синхронизируем статус "Вышел в смену" → "works"
     const { data: smenaRows } = await sb
       .from('candidates')
       .select('id')
       .eq('status', 'вышел в смену')
-      // city filter removed - filtering by okrug in JS
 
     if (smenaRows && smenaRows.length) {
       const smenaIds = smenaRows.map(r => String(r.id));
@@ -1116,11 +1109,10 @@ async function syncFromCRM() {
         .from('nastavniki')
         .update({ status: 'works' })
         .in('crm_id', smenaIds)
-        .neq('status', 'works'); // обновляем только если ещё не "работает"
+        .neq('status', 'works');
       if (updErr) console.warn('Status sync error:', updErr.message);
     }
 
-    // Обновляем таблицу если были изменения
     await loadData();
 
   } catch(e) {
@@ -1128,7 +1120,6 @@ async function syncFromCRM() {
   }
 }
 
-// Запускаем синхронизацию сразу и каждые 30 секунд
 syncFromCRM();
 setInterval(() => { if (!document.hidden) syncFromCRM(); }, 30000);
 // ===== END СИНХРОНИЗАЦИЯ С CRM =====
