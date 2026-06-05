@@ -1002,19 +1002,19 @@ window.deleteSelected=deleteSelected;
 // Функция для удаления дубликатов
 async function removeDuplicates(){
   console.log('🔍 Ищу дубликаты...');
-  const {data:allRows}=await sb.from('nastavniki').select('id,name,date_account,city');
+  const {data:allRows}=await sb.from('nastavniki').select('id,name,city,created_at').order('created_at',{ascending:true});
   if(!allRows || !allRows.length)return;
   
   const seen={};
   const toDelete=[];
   
   for(const r of allRows){
-    const key=`${r.name}|${r.date_account}|${r.city}`;
+    const key=`${r.name}|${r.city}`;
     if(seen[key]){
       toDelete.push(r.id);
-      console.log(`❌ Дубль: ${r.name} (${r.date_account})`);
+      console.log(`❌ Дубль найден: ${r.name} (город: ${r.city})`);
     }else{
-      seen[key]=true;
+      seen[key]=r.id;
     }
   }
   
