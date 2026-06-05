@@ -767,10 +767,7 @@ function renderDashboard(){
   const from=document.getElementById('dashFrom').value;
   const to=document.getElementById('dashTo').value;
   
-  // Логируем для отладки
-  console.log('Dashboard filters:', {city, from, to});
-  console.log('Total rows:', rows.length);
-  console.log('Sample cities:', rows.slice(0,3).map(r=>r.city));
+  console.log('🔍 Дашборд: город='+city+', от='+from+', до='+to+', всего rows='+rows.length);
   
   // Фильтруем данные
   const filtered=rows.filter(r=>{
@@ -780,7 +777,7 @@ function renderDashboard(){
     return true;
   });
   
-  console.log('Filtered rows:', filtered.length);
+  console.log('✅ Отфильтровано: '+filtered.length);
   
   // Подсчитываем статусы
   const stats={};
@@ -802,6 +799,8 @@ function renderDashboard(){
     'other':'#718096'
   };
   
+  const statusOrder=['works','handed','coming','nodial','block','other'];
+  
   for(const r of filtered){
     const s=r.status||'other';
     stats[s]=(stats[s]||0)+1;
@@ -812,36 +811,20 @@ function renderDashboard(){
     return;
   }
   
-  // Создаём диаграмму
-  const chartId='dashChart_'+Date.now();
-  const html=`<canvas id="${chartId}" style="max-width:400px;margin:0 auto"></canvas>`;
-  document.getElementById('dashContent').innerHTML=html;
+  // Выводим карточки
+  const html=statusOrder
+    .filter(s=>stats[s])
+    .map(s=>{
+      const count=stats[s];
+      const pct=Math.round(count*100/filtered.length);
+      return `<div style="background:${statusColors[s]};color:white;padding:24px;border-radius:12px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.15)">
+        <div style="font-size:40px;font-weight:bold;margin-bottom:8px">${count}</div>
+        <div style="font-size:16px;margin-bottom:12px">${statusLabels[s]}</div>
+        <div style="font-size:13px;opacity:0.9">${pct}%</div>
+      </div>`;
+    }).join('');
   
-  setTimeout(()=>{
-    const ctx=document.getElementById(chartId);
-    if(!ctx)return;
-    
-    new Chart(ctx,{
-      type:'doughnut',
-      data:{
-        labels:Object.keys(stats).map(s=>statusLabels[s]),
-        datasets:[{
-          data:Object.values(stats),
-          backgroundColor:Object.keys(stats).map(s=>statusColors[s]),
-          borderColor:'var(--bg)',
-          borderWidth:3
-        }]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:true,
-        plugins:{
-          legend:{position:'bottom',labels:{color:'var(--text)',font:{size:14}}},
-          tooltip:{titleColor:'var(--text)',bodyColor:'var(--text)',backgroundColor:'rgba(0,0,0,0.8)'}
-        }
-      }
-    });
-  },100);
+  document.getElementById('dashContent').innerHTML=html;
 }
 
 function clearDashFilters(){
