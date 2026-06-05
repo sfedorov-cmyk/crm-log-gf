@@ -999,6 +999,39 @@ async function deleteSelected(){
 }
 window.deleteSelected=deleteSelected;
 
+// Функция для удаления дубликатов
+async function removeDuplicates(){
+  console.log('🔍 Ищу дубликаты...');
+  const {data:allRows}=await sb.from('nastavniki').select('id,name,date_account,city');
+  if(!allRows || !allRows.length)return;
+  
+  const seen={};
+  const toDelete=[];
+  
+  for(const r of allRows){
+    const key=`${r.name}|${r.date_account}|${r.city}`;
+    if(seen[key]){
+      toDelete.push(r.id);
+      console.log(`❌ Дубль: ${r.name} (${r.date_account})`);
+    }else{
+      seen[key]=true;
+    }
+  }
+  
+  if(toDelete.length===0){
+    console.log('✅ Дубликатов не найдено');
+    return;
+  }
+  
+  console.log(`🗑️ Удаляю ${toDelete.length} дубликатов...`);
+  for(const id of toDelete){
+    await sb.from('nastavniki').delete().eq('id',id);
+  }
+  
+  console.log(`✨ Удалено ${toDelete.length} дубликатов!`);
+  await loadData();
+}
+
 loadTariffs();
 // Восстанавливаем последний активный таб
 (function(){
@@ -1009,6 +1042,8 @@ loadTariffs();
   }
 })();
 loadData();
+// Удаляем дубликаты при загрузке (одноразово)
+setTimeout(()=>removeDuplicates(),1000);
 // Устанавливаем текущий месяц по умолчанию
 (function(){
   const today=new Date();
@@ -1108,24 +1143,28 @@ async function syncFromCRM() {
     if (crmErr) { console.warn('❌ CRM sync error:', crmErr.message); return; }
     if (!crmRows || !crmRows.length) { console.log('ℹ️ CRM: нет новых записей'); return; }
 
-    const { data: existing } = await sb
-      .from('nastavniki')
-      .select('crm_id')
-      .not('crm_id', 'is', null);
-
-    const existingIds = new Set((existing||[]).map(r => r.crm_id));
-    console.log(`📊 CRM: ${crmRows.length} записей, уже есть ${existingIds.size}`);
+    // Берём ВСЕ записи для проверки дубликатов
+    const { data: allRecords } = await sb.from('nastavniki').select('name,date_account,city,crm_id');
+    
+    // Создаём сет уникальных комбинаций (name + date + city + crm_id)
+    const existingKeys = new Set(
+      (allRecords||[]).map(r => `${r.name}|${r.date_account}|${r.city}|${r.crm_id}`)
+    );
+    
+    console.log(`📊 CRM: ${crmRows.length} записей, уже есть ${allRecords?.length || 0}`);
 
     let added=0;
     for (const c of crmRows) {
-      if (existingIds.has(String(c.id))) {
-        console.log(`⏭️  Пропущен (уже есть): ${c.fio} (ID: ${c.id})`);
-        continue;
-      }
-
       const mapped = getCityAndNastavnik(c.city, c.okrug);
       if (!mapped) {
         console.log(`⏭️  Пропущен (не МСК/СПБ): ${c.fio}`);
+        continue;
+      }
+
+      const key = `${c.fio}|${c.date}|${mapped.city}|${c.id}`;
+      
+      if (existingKeys.has(key)) {
+        console.log(`⏭️  Пропущен (уже есть): ${c.fio} (${c.date})`);
         continue;
       }
 
@@ -1149,6 +1188,7 @@ async function syncFromCRM() {
       } else {
         console.log(`✅ Добавлен: ${c.fio}`);
         added++;
+        existingKeys.add(key);
       }
     }
 
@@ -1176,7 +1216,7 @@ async function syncFromCRM() {
   }
 }
 
-// СИНХРОНИЗАЦИЯ С CRM
+// СИНХРОНИЗАЦИЯ С CRM (исправленная логика)
 console.log('🔄 Синхронизация CRM включена');
 syncFromCRM();
 setInterval(() => { if (!document.hidden) syncFromCRM(); }, 30000);
