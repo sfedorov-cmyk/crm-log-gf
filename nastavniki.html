@@ -329,6 +329,7 @@ tr:hover td{background:var(--bg3)!important}
           <th>Округ</th>
           <th>Наставник</th>
           <th>Статус</th>
+          <th>Номер тел</th>
           <th>Комментарий</th>
           <th style="text-align:center">Смен</th>
           <th style="text-align:center">Сумма</th>
@@ -636,7 +637,7 @@ function initTableEvents(){
 function renderTable(){
   const fr=getFiltered();
   const tbody=document.getElementById('tbody');
-  if(!fr.length){tbody.innerHTML=`<tr><td colspan="11"><div class="empty-state"><div class="icon">📋</div>Нет записей</div></td></tr>`;return;}
+  if(!fr.length){tbody.innerHTML=`<tr><td colspan="13"><div class="empty-state"><div class="icon">📋</div>Нет записей</div></td></tr>`;return;}
   tbody.innerHTML=fr.map(r=>{
     const bonus=calcBonus(r.smeny);
     return`<tr class="${statusClass(r.status)}">
@@ -654,7 +655,8 @@ function renderTable(){
           </div>
         </div>
       </td>
-      <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.comment||''}">${inlineEdit(r.id,'comment',r.comment)}</td>
+      <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.comment||''}">${r.comment||'—'}</td>
+      <td style="color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${inlineEdit(r.id,'notes',r.notes)}</td>
       <td style="text-align:center">${inlineSmeny(r.id,r.smeny)}</td>
       <td style="text-align:center" class="sum-cell">${bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>'}</td>
       <td>${inlineBonus(r.id,r.bonus)}</td>
