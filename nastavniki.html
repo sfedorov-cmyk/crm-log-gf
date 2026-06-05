@@ -256,6 +256,7 @@ tr:hover td{background:var(--bg3)!important}
     <div style="display:flex;gap:6px">
       <button class="btn btn-active" id="viewTableBtn" onclick="setView('table')">Таблица</button>
       <button class="btn" id="viewReportBtn" onclick="setView('report')">Отчёт</button>
+      <button class="btn" id="viewDashBtn" onclick="setView('dash')">Дашборд</button>
     </div>
     <div class="topbar-right">
       <div class="sync-dot" id="syncDot"></div>
@@ -350,6 +351,23 @@ tr:hover td{background:var(--bg3)!important}
       <button class="btn btn-gold" onclick="buildReport()">🔄 Обновить</button>
     </div>
     <div id="reportContent"></div>
+  </div>
+
+  <div id="dashWrap" style="display:none;flex:1;overflow-y:auto;padding:20px">
+    <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center;flex-wrap:wrap">
+      <div style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold)">Дашборд</div>
+      <select class="finput" id="dashCity" onchange="renderDashboard()" style="width:200px">
+        <option value="">Все города</option>
+        <option value="spb">🌊 СПБ</option>
+        <option value="msk_yug">🏙️ МСК Юг</option>
+        <option value="msk_sever">🏙️ МСК Север</option>
+      </select>
+      <span style="font-size:12px;color:var(--text2)">Период:</span>
+      <input type="date" class="finput" id="dashFrom" onchange="renderDashboard()">
+      <input type="date" class="finput" id="dashTo" onchange="renderDashboard()">
+      <button class="btn" onclick="clearDashFilters()">Сбросить</button>
+    </div>
+    <div id="dashContent" style="display:grid;gap:15px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))"></div>
   </div>
 </div>
 
@@ -744,6 +762,63 @@ async function saveComment(id,text,modal){
   renderTable();
 }
 window.saveComment=saveComment;
+function renderDashboard(){
+  const city=document.getElementById('dashCity').value;
+  const from=document.getElementById('dashFrom').value;
+  const to=document.getElementById('dashTo').value;
+  
+  // Фильтруем данные
+  const filtered=rows.filter(r=>{
+    if(city && r.city!==city)return false;
+    if(from && r.date_account<from)return false;
+    if(to && r.date_account>to)return false;
+    return true;
+  });
+  
+  // Подсчитываем статусы
+  const stats={};
+  const statusLabels={
+    'handed':'Передан наставнику',
+    'works':'Работает',
+    'coming':'Выйдет',
+    'nodial':'Недозвон',
+    'block':'Блок',
+    'other':'Иное'
+  };
+  
+  for(const r of filtered){
+    const s=r.status||'other';
+    stats[s]=(stats[s]||0)+1;
+  }
+  
+  // Выводим карточки
+  const html=Object.entries(stats).map(([status,count])=>{
+    const colors={
+      'handed':'var(--purple-bg)',
+      'works':'var(--green-bg)',
+      'coming':'var(--orange-bg)',
+      'nodial':'var(--orange-bg)',
+      'block':'var(--red-bg)',
+      'other':'var(--text2)'
+    };
+    return `<div style="background:${colors[status]||'#333'};color:white;padding:20px;border-radius:8px;text-align:center">
+      <div style="font-size:32px;font-weight:bold">${count}</div>
+      <div style="font-size:14px;margin-top:8px">${statusLabels[status]}</div>
+    </div>`;
+  }).join('');
+  
+  document.getElementById('dashContent').innerHTML=html||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text2)">Нет данных</div>';
+}
+
+function clearDashFilters(){
+  document.getElementById('dashCity').value='';
+  document.getElementById('dashFrom').value='';
+  document.getElementById('dashTo').value='';
+  renderDashboard();
+}
+
+window.renderDashboard=renderDashboard;
+window.clearDashFilters=clearDashFilters;
 function switchTab(tab){
   currentTab=tab;
   localStorage.setItem('nastavniki_tab', tab);
@@ -754,10 +829,11 @@ function setView(v){
   currentView=v;
   document.getElementById('tableWrap').style.display=v==='table'?'':'none';
   document.getElementById('reportWrap').style.display=v==='report'?'flex':'none';
-  document.getElementById('reportWrap').style.flexDirection='column';
+  document.getElementById('dashWrap').style.display=v==='dash'?'flex':'none';
   document.getElementById('viewTableBtn').className=`btn${v==='table'?' btn-active':''}`;
   document.getElementById('viewReportBtn').className=`btn${v==='report'?' btn-active':''}`;
-  if(v==='report')buildReport();
+  document.getElementById('viewDashBtn').className=`btn${v==='dash'?' btn-active':''}`;
+  if(v==='dash')renderDashboard();
 }
 function buildReport(){
   const from=document.getElementById('dateFrom').value;
