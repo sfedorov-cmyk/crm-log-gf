@@ -767,6 +767,11 @@ function renderDashboard(){
   const from=document.getElementById('dashFrom').value;
   const to=document.getElementById('dashTo').value;
   
+  // Логируем для отладки
+  console.log('Dashboard filters:', {city, from, to});
+  console.log('Total rows:', rows.length);
+  console.log('Sample cities:', rows.slice(0,3).map(r=>r.city));
+  
   // Фильтруем данные
   const filtered=rows.filter(r=>{
     if(city && r.city!==city)return false;
@@ -774,6 +779,8 @@ function renderDashboard(){
     if(to && r.date_account>to)return false;
     return true;
   });
+  
+  console.log('Filtered rows:', filtered.length);
   
   // Подсчитываем статусы
   const stats={};
@@ -786,28 +793,55 @@ function renderDashboard(){
     'other':'Иное'
   };
   
+  const statusColors={
+    'handed':'#7c5fb8',
+    'works':'#48bb78',
+    'coming':'#ed8936',
+    'nodial':'#ed8936',
+    'block':'#f56565',
+    'other':'#718096'
+  };
+  
   for(const r of filtered){
     const s=r.status||'other';
     stats[s]=(stats[s]||0)+1;
   }
   
-  // Выводим карточки
-  const html=Object.entries(stats).map(([status,count])=>{
-    const colors={
-      'handed':'var(--purple-bg)',
-      'works':'var(--green-bg)',
-      'coming':'var(--orange-bg)',
-      'nodial':'var(--orange-bg)',
-      'block':'var(--red-bg)',
-      'other':'var(--text2)'
-    };
-    return `<div style="background:${colors[status]||'#333'};color:white;padding:20px;border-radius:8px;text-align:center">
-      <div style="font-size:32px;font-weight:bold">${count}</div>
-      <div style="font-size:14px;margin-top:8px">${statusLabels[status]}</div>
-    </div>`;
-  }).join('');
+  if(Object.keys(stats).length===0){
+    document.getElementById('dashContent').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text2)">Нет данных</div>';
+    return;
+  }
   
-  document.getElementById('dashContent').innerHTML=html||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text2)">Нет данных</div>';
+  // Создаём диаграмму
+  const chartId='dashChart_'+Date.now();
+  const html=`<canvas id="${chartId}" style="max-width:400px;margin:0 auto"></canvas>`;
+  document.getElementById('dashContent').innerHTML=html;
+  
+  setTimeout(()=>{
+    const ctx=document.getElementById(chartId);
+    if(!ctx)return;
+    
+    new Chart(ctx,{
+      type:'doughnut',
+      data:{
+        labels:Object.keys(stats).map(s=>statusLabels[s]),
+        datasets:[{
+          data:Object.values(stats),
+          backgroundColor:Object.keys(stats).map(s=>statusColors[s]),
+          borderColor:'var(--bg)',
+          borderWidth:3
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:true,
+        plugins:{
+          legend:{position:'bottom',labels:{color:'var(--text)',font:{size:14}}},
+          tooltip:{titleColor:'var(--text)',bodyColor:'var(--text)',backgroundColor:'rgba(0,0,0,0.8)'}
+        }
+      }
+    });
+  },100);
 }
 
 function clearDashFilters(){
