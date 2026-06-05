@@ -656,7 +656,7 @@ function renderTable(){
         </div>
       </td>
       <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.comment||''}">${r.comment||'—'}</td>
-      <td style="color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${inlineEdit(r.id,'notes',r.notes)}</td>
+      <td style="text-align:center"><button class="edit-btn" onclick="openCommentModal('${r.id}')">✏️</button></td>
       <td style="text-align:center">${inlineSmeny(r.id,r.smeny)}</td>
       <td style="text-align:center" class="sum-cell">${bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>'}</td>
       <td>${inlineBonus(r.id,r.bonus)}</td>
@@ -717,6 +717,33 @@ async function saveBlock(id,reason,modal){
   renderTable();
 }
 window.saveBlock=saveBlock;
+function openCommentModal(id){
+  const r=rows.find(x=>x.id===id);
+  if(!r)return;
+  const bg=document.createElement('div');
+  bg.className='modal-bg open';
+  bg.style.zIndex='300';
+  bg.innerHTML=`<div class="block-modal">
+    <h4>📝 Комментарий</h4>
+    <textarea id="commentText" placeholder="Введите комментарий...">${r.notes||''}</textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-cancel" style="flex:1" onclick="this.closest('.modal-bg').remove()">Отмена</button>
+      <button class="btn-save" style="flex:1" onclick="saveComment('${id}',document.getElementById('commentText').value,this.closest('.modal-bg'))">Сохранить</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bg);
+  setTimeout(()=>document.getElementById('commentText').focus(),100);
+}
+window.openCommentModal=openCommentModal;
+
+async function saveComment(id,text,modal){
+  await sb.from('nastavniki').update({notes:text}).eq('id',id);
+  const r=rows.find(x=>x.id===id);
+  if(r)r.notes=text;
+  modal.remove();
+  renderTable();
+}
+window.saveComment=saveComment;
 function switchTab(tab){
   currentTab=tab;
   localStorage.setItem('nastavniki_tab', tab);
@@ -1078,8 +1105,8 @@ async function syncFromCRM() {
       .select('id,fio,city,okrug,date,tel')
       .eq('status', 'проверка СБ')
 
-    if (crmErr) { console.warn('CRM sync error:', crmErr.message); return; }
-    if (!crmRows || !crmRows.length) return;
+    if (crmErr) { console.warn('❌ CRM sync error:', crmErr.message); return; }
+    if (!crmRows || !crmRows.length) { console.log('ℹ️ CRM: нет новых записей'); return; }
 
     const { data: existing } = await sb
       .from('nastavniki')
@@ -1087,12 +1114,20 @@ async function syncFromCRM() {
       .not('crm_id', 'is', null);
 
     const existingIds = new Set((existing||[]).map(r => r.crm_id));
+    console.log(`📊 CRM: ${crmRows.length} записей, уже есть ${existingIds.size}`);
 
+    let added=0;
     for (const c of crmRows) {
-      if (existingIds.has(String(c.id))) continue;
+      if (existingIds.has(String(c.id))) {
+        console.log(`⏭️  Пропущен (уже есть): ${c.fio} (ID: ${c.id})`);
+        continue;
+      }
 
       const mapped = getCityAndNastavnik(c.city, c.okrug);
-      if (!mapped) continue;
+      if (!mapped) {
+        console.log(`⏭️  Пропущен (не МСК/СПБ): ${c.fio}`);
+        continue;
+      }
 
       const newRecord = {
         crm_id:          String(c.id),
@@ -1109,7 +1144,12 @@ async function syncFromCRM() {
       };
 
       const { error: insErr } = await sb.from('nastavniki').insert(newRecord);
-      if (insErr) console.warn('Insert error:', insErr.message);
+      if (insErr) {
+        console.warn(`❌ Ошибка добавления ${c.fio}:`, insErr.message);
+      } else {
+        console.log(`✅ Добавлен: ${c.fio}`);
+        added++;
+      }
     }
 
     const { data: smenaRows } = await sb
@@ -1124,9 +1164,11 @@ async function syncFromCRM() {
         .update({ status: 'works' })
         .in('crm_id', smenaIds)
         .neq('status', 'works');
-      if (updErr) console.warn('Status sync error:', updErr.message);
+      if (updErr) console.warn('❌ Status sync error:', updErr.message);
+      else console.log(`🔄 Обновлено статусов: ${smenaIds.length}`);
     }
 
+    console.log(`✨ Синхронизация готова: добавлено ${added} записей`);
     await loadData();
 
   } catch(e) {
@@ -1134,6 +1176,8 @@ async function syncFromCRM() {
   }
 }
 
+// СИНХРОНИЗАЦИЯ С CRM
+console.log('🔄 Синхронизация CRM включена');
 syncFromCRM();
 setInterval(() => { if (!document.hidden) syncFromCRM(); }, 30000);
 // ===== END СИНХРОНИЗАЦИЯ С CRM =====
