@@ -132,6 +132,7 @@ tr:hover td{background:var(--bg3)!important}
 .sbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;white-space:nowrap}
 .sbadge:hover{filter:brightness(1.15)}
 .sb-works{background:var(--green-bg);color:var(--green-text)}
+.sb-learning{background:#d4e6f1;color:#1f618d}
 .sb-coming{background:var(--yellow-bg);color:var(--yellow-text)}
 .sb-nodial{background:var(--orange-bg);color:var(--orange-text)}
 .sb-block{background:var(--red-bg);color:var(--red-text)}
@@ -279,18 +280,18 @@ tr:hover td{background:var(--bg3)!important}
   <div class="tariff-wrap">
     <span class="tariff-label">Тарифы наставника</span>
     <div class="tariff-item">
-      <span>1 смена</span>
+      <span>Обучен, не вышел</span>
+      <input type="number" class="tariff-val" id="learning" placeholder="0" onchange="saveTariffs()">
+      <span>₽</span>
+    </div>
+    <div class="tariff-item">
+      <span>1-2 смены</span>
       <input type="number" class="tariff-val" id="t1" placeholder="0" onchange="saveTariffs()">
       <span>₽</span>
     </div>
     <div class="tariff-item">
-      <span>3 смены</span>
+      <span>3+ смены</span>
       <input type="number" class="tariff-val" id="t3" placeholder="0" onchange="saveTariffs()">
-      <span>₽</span>
-    </div>
-    <div class="tariff-item">
-      <span>5 смен</span>
-      <input type="number" class="tariff-val" id="t5" placeholder="0" onchange="saveTariffs()">
       <span>₽</span>
     </div>
   </div>
@@ -453,31 +454,31 @@ const NASTAVNIK_MAP={
     'ВАО':'Морозов Максим'
   }
 };
-let tariffs={t1:500,t3:1000,t5:1500};
+let tariffs={learning:250,t1:500,t3:1000};
 
 function loadTariffs(){
   try{const t=JSON.parse(localStorage.getItem('nastavniki_tariffs')||'null');if(t)tariffs=t;}catch(e){}
+  document.getElementById('learning').value=tariffs.learning;
   document.getElementById('t1').value=tariffs.t1;
   document.getElementById('t3').value=tariffs.t3;
-  document.getElementById('t5').value=tariffs.t5;
 }
 function saveTariffs(){
+  tariffs.learning=+document.getElementById('learning').value||0;
   tariffs.t1=+document.getElementById('t1').value||0;
   tariffs.t3=+document.getElementById('t3').value||0;
-  tariffs.t5=+document.getElementById('t5').value||0;
   localStorage.setItem('nastavniki_tariffs',JSON.stringify(tariffs));
   renderTable();
 }
 function calcBonus(s){
   const n=+s;
-  if(n>=5)return tariffs.t5;
+  if(n===0)return tariffs.learning;
   if(n>=3)return tariffs.t3;
   if(n>=1)return tariffs.t1;
   return 0;
 }
 function statusClass(s){return{works:'s-works',learning:'s-learning',coming:'s-coming',nodial:'s-nodial',block:'s-block',other:'s-other',handed:'s-handed'}[s]||'s-other';}
-function statusLabel(s){return{works:'Работает',coming:'Выйдет. Дата',nodial:'Недозвон. Дата',block:'Блок. Причина',other:'Иное',handed:'Передан наставнику'}[s]||s;}
-function statusBadgeClass(s){return{works:'sb-works',coming:'sb-coming',nodial:'sb-nodial',block:'sb-block',other:'sb-other',handed:'sb-handed'}[s]||'sb-other';}
+function statusLabel(s){return{works:'Работает',learning:'Обучен, но не вышел',coming:'Выйдет. Дата',nodial:'Недозвон. Дата',block:'Блок. Причина',other:'Иное',handed:'Передан наставнику'}[s]||s;}
+function statusBadgeClass(s){return{works:'sb-works',learning:'sb-learning',coming:'sb-coming',nodial:'sb-nodial',block:'sb-block',other:'sb-other',handed:'sb-handed'}[s]||'sb-other';}
 function bonusLabel(b){return{paid:'✅ Выплачен',unpaid:'⏳ Не выплачен',none:'—'}[b]||'—';}
 function bonusClass(b){return{paid:'bc-paid',unpaid:'bc-unpaid',none:'bc-none'}[b]||'bc-none';}
 function fd(d){if(!d)return'—';try{const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0];}catch(e){return d;}}
