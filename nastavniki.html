@@ -1112,8 +1112,8 @@ loadTariffs();
   }
 })();
 loadData();
-// Удаляем дубликаты при загрузке
-setTimeout(()=>removeDuplicates(),1500);
+// Удаляем дубликаты при загрузке (отключено - синхронизация проверяет по телефону)
+// setTimeout(()=>removeDuplicates(),1500);
 // Устанавливаем текущий месяц по умолчанию
 (function(){
   const today=new Date();
@@ -1213,28 +1213,33 @@ async function syncFromCRM() {
     if (crmErr) { console.warn('❌ CRM sync error:', crmErr.message); return; }
     if (!crmRows || !crmRows.length) { console.log('ℹ️ CRM: нет новых записей'); return; }
 
-    // Берём ВСЕ записи для проверки дубликатов
-    const { data: allRecords } = await sb.from('nastavniki').select('name,date_account,city,crm_id');
+    // Берём ВСЕ записи для проверки дубликатов по телефону
+    const { data: allRecords } = await sb.from('nastavniki').select('id,comment');
     
-    // Создаём сет уникальных комбинаций (name + date + city + crm_id)
-    const existingKeys = new Set(
-      (allRecords||[]).map(r => `${r.name}|${r.date_account}|${r.city}|${r.crm_id}`)
-    );
+    // Извлекаем все телефоны из существующих записей
+    const existingPhones = new Set();
+    (allRecords||[]).forEach(r => {
+      if(r.comment && r.comment.includes('📞')){
+        const tel = r.comment.replace('📞 ','').trim();
+        existingPhones.add(tel);
+      }
+    });
     
-    console.log(`📊 CRM: ${crmRows.length} записей, уже есть ${allRecords?.length || 0}`);
+    console.log(`📊 CRM: ${crmRows.length} записей, уже есть ${existingPhones.size} телефонов`);
 
     let added=0;
     for (const c of crmRows) {
-      const mapped = getCityAndNastavnik(c.city, c.okrug);
-      if (!mapped) {
-        console.log(`⏭️  Пропущен (не МСК/СПБ): ${c.fio}`);
+      const tel = (c.tel || '').trim();
+      
+      // Проверяем по номеру телефона
+      if(tel && existingPhones.has(tel)){
+        console.log(`⏭️  Пропущен (телефон уже есть): ${c.fio} (${tel})`);
         continue;
       }
 
-      const key = `${c.fio}|${c.date}|${mapped.city}|${c.id}`;
-      
-      if (existingKeys.has(key)) {
-        console.log(`⏭️  Пропущен (уже есть): ${c.fio} (${c.date})`);
+      const mapped = getCityAndNastavnik(c.city, c.okrug);
+      if (!mapped) {
+        console.log(`⏭️  Пропущен (не МСК/СПБ): ${c.fio}`);
         continue;
       }
 
@@ -1257,8 +1262,8 @@ async function syncFromCRM() {
         console.warn(`❌ Ошибка добавления ${c.fio}:`, insErr.message);
       } else {
         console.log(`✅ Добавлен: ${c.fio}`);
+        if(tel) existingPhones.add(tel);
         added++;
-        existingKeys.add(key);
       }
     }
 
