@@ -1291,10 +1291,10 @@ async function syncFromCRM() {
   }
 }
 
-// СИНХРОНИЗАЦИЯ С CRM (отключена)
-console.log('🔄 Синхронизация CRM отключена');
-// syncFromCRM();
-// setInterval(() => { if (!document.hidden) syncFromCRM(); }, 30000);
+// СИНХРОНИЗАЦИЯ С CRM (проверка по номеру телефона)
+console.log('🔄 Синхронизация CRM включена');
+syncFromCRM();
+setInterval(() => { if (!document.hidden) syncFromCRM(); }, 30000);
 // ===== END СИНХРОНИЗАЦИЯ С CRM =====
 </script>
 </body>
