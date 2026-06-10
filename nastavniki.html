@@ -1112,8 +1112,8 @@ loadTariffs();
   }
 })();
 loadData();
-// Удаляем дубликаты при загрузке (отключено - синхронизация проверяет по телефону)
-// setTimeout(()=>removeDuplicates(),1500);
+// Очищаем существующие дубликаты один раз
+setTimeout(()=>removeDuplicates(),1500);
 // Устанавливаем текущий месяц по умолчанию
 (function(){
   const today=new Date();
