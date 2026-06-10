@@ -1112,8 +1112,8 @@ loadTariffs();
   }
 })();
 loadData();
-// Очищаем существующие дубликаты один раз
-setTimeout(()=>removeDuplicates(),1500);
+// Удаляем дубликаты при загрузке (отключено - уже очищены, синхронизация проверяет по телефону)
+// setTimeout(()=>removeDuplicates(),1500);
 // Устанавливаем текущий месяц по умолчанию
 (function(){
   const today=new Date();
@@ -1291,10 +1291,10 @@ async function syncFromCRM() {
   }
 }
 
-// СИНХРОНИЗАЦИЯ С CRM (исправленная логика)
-console.log('🔄 Синхронизация CRM включена');
-syncFromCRM();
-setInterval(() => { if (!document.hidden) syncFromCRM(); }, 30000);
+// СИНХРОНИЗАЦИЯ С CRM (отключена)
+console.log('🔄 Синхронизация CRM отключена');
+// syncFromCRM();
+// setInterval(() => { if (!document.hidden) syncFromCRM(); }, 30000);
 // ===== END СИНХРОНИЗАЦИЯ С CRM =====
 </script>
 </body>
