@@ -483,23 +483,88 @@ function bonusLabel(b){return{paid:'✅ Выплачен',unpaid:'⏳ Не вы�
 function bonusClass(b){return{paid:'bc-paid',unpaid:'bc-unpaid',none:'bc-none'}[b]||'bc-none';}
 function fd(d){if(!d)return'—';try{const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0];}catch(e){return d;}}
 
-let _loadTimer=null;
-async function loadData(){
-  if(_loadTimer)clearTimeout(_loadTimer);
-  document.getElementById('syncDot').style.background='#666';
-  document.getElementById('syncStatus').textContent='загрузка...';
-  const{data,error}=await sb.from('nastavniki').select('*').eq('city',currentTab).order('created_at',{ascending:false});
-  if(error){
-    console.error('Load error:',error);
-    rows=[];
-  }else rows=data||[];
-  document.getElementById('syncDot').style.background='var(--green-text)';
-  document.getElementById('syncStatus').textContent='онлайн';
-  renderTable();
-  renderCards(getFiltered());
-  updateNastavnikFilter();
-  initTableEvents();
+// Безопасная запись в Supabase: показывает ошибку и не теряет правки молча
+async function safeUpdate(id,patch,el){
+  try{
+    if(!navigator.onLine)throw new Error('Нет подключения к сети');
+    const{error}=await sb.from('nastavniki').update(patch).eq('id',id);
+    if(error)throw error;
+    if(el){el.style.outline='';el.title='';}
+    return true;
+  }catch(e){
+    console.error('Save error:',e);
+    if(el){
+      el.style.outline='2px solid var(--red-text)';
+      el.title='Не сохранено: '+(e.message||'ошибка сети')+'. Изменения будут повторно отправлены автоматически.';
+    }
+    // отметим что есть несохранённые изменения — попробуем переотправить при восстановлении сети
+    _pendingWrites.push({id,patch,el});
+    return false;
+  }
 }
+const _pendingWrites=[];
+window.addEventListener('online',async()=>{
+  if(!_pendingWrites.length)return;
+  console.log('🔁 Повторная отправка',_pendingWrites.length,'несохранённых изменений');
+  const queue=_pendingWrites.splice(0,_pendingWrites.length);
+  for(const item of queue){
+    await safeUpdate(item.id,item.patch,item.el);
+  }
+});
+
+let _loadTimer=null;
+let _loadInFlight=false;
+async function loadData(){
+  if(_loadInFlight)return; // не дублируем параллельные запросы
+  _loadInFlight=true;
+  if(_loadTimer)clearTimeout(_loadTimer);
+
+  const dot=document.getElementById('syncDot');
+  const status=document.getElementById('syncStatus');
+
+  if(!navigator.onLine){
+    dot.style.background='var(--red-text)';
+    status.textContent='нет сети';
+    _loadInFlight=false;
+    return;
+  }
+
+  dot.style.background='#666';
+  status.textContent='загрузка...';
+
+  try{
+    const{data,error}=await sb.from('nastavniki').select('*').eq('city',currentTab).order('created_at',{ascending:false});
+    if(error)throw error;
+    rows=data||[];
+    dot.style.background='var(--green-text)';
+    status.textContent='онлайн';
+    renderTable();
+    renderCards(getFiltered());
+    updateNastavnikFilter();
+    initTableEvents();
+  }catch(e){
+    console.error('Load error:',e);
+    dot.style.background='var(--red-text)';
+    status.textContent='ошибка связи · повтор через 5с';
+    // быстрый повтор при ошибке вместо ожидания 30с
+    _loadTimer=setTimeout(()=>{if(!document.hidden)loadData();},5000);
+  }finally{
+    _loadInFlight=false;
+  }
+}
+
+// Реакция на реальные события браузера online/offline
+window.addEventListener('online',()=>{
+  console.log('🟢 Соединение восстановлено');
+  loadData();
+});
+window.addEventListener('offline',()=>{
+  console.log('🔴 Соединение потеряно');
+  const dot=document.getElementById('syncDot');
+  const status=document.getElementById('syncStatus');
+  if(dot)dot.style.background='var(--red-text)';
+  if(status)status.textContent='нет сети';
+});
 function updateNastavnikFilter(){
   const sel=document.getElementById('filterNastavnik');const val=sel.value;
   const names=[...new Set(rows.map(r=>r.nastavnik).filter(Boolean))].sort();
@@ -593,7 +658,7 @@ async function mobileChangeSmeny(id,delta,btn){
   const bonus=calcBonus(r.smeny);
   const bonEl=document.getElementById('mb-'+id);
   if(bonEl)bonEl.innerHTML=bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>';
-  await sb.from('nastavniki').update({smeny:r.smeny}).eq('id',id);
+  await safeUpdate(id,{smeny:r.smeny},document.getElementById('ms-'+id));
 }
 window.mobileChangeSmeny=mobileChangeSmeny;
 
@@ -603,7 +668,7 @@ async function mobileCycleBonus(id,cur){
   r.bonus=BONUS_ORDER[(BONUS_ORDER.indexOf(cur)+1)%BONUS_ORDER.length];
   const btn=document.getElementById('mbon-'+id);
   if(btn)btn.textContent=bonusLabel(r.bonus);
-  await sb.from('nastavniki').update({bonus:r.bonus}).eq('id',id);
+  await safeUpdate(id,{bonus:r.bonus},document.getElementById('mbon-'+id));
 }
 window.mobileCycleBonus=mobileCycleBonus;
 
@@ -617,9 +682,8 @@ function initTableEvents(){
     if(!el.classList.contains('inline-cell'))return;
     const id=el.dataset.id,field=el.dataset.field,val=el.textContent.trim();
     const r=rows.find(x=>x.id===id);if(r)r[field]=val;
-    await sb.from('nastavniki').update({[field]:val}).eq('id',id);
+    await safeUpdate(id,{[field]:val},el);
   },true);
-  // Enter для contenteditable
   tbody.addEventListener('keydown',function(e){
     if(e.key==='Enter'&&e.target.classList.contains('inline-cell')){e.preventDefault();e.target.blur();}
   });
@@ -644,7 +708,7 @@ function initTableEvents(){
       const bonus=calcBonus(val);
       if(sumCell)sumCell.innerHTML=bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>';
     }
-    await sb.from('nastavniki').update({[field]:val}).eq('id',id);
+    await safeUpdate(id,{[field]:val},el);
   });
 }
 
@@ -696,7 +760,8 @@ async function selectStatus(id,status){
     showBlockModal(id);
     return;
   }
-  await sb.from('nastavniki').update({status}).eq('id',id);
+  const ok=await safeUpdate(id,{status});
+  if(!ok)alert('⚠️ Статус не сохранён — нет связи с сервером. Будет отправлено повторно при восстановлении подключения.');
   const r=rows.find(x=>x.id===id);if(r)r.status=status;
   renderTable();
 }
@@ -724,7 +789,8 @@ function showBlockModal(id){
 window.showBlockModal=showBlockModal;
 
 async function saveBlock(id,reason,modal){
-  await sb.from('nastavniki').update({status:'block',comment:reason}).eq('id',id);
+  const ok=await safeUpdate(id,{status:'block',comment:reason});
+  if(!ok)alert('⚠️ Не сохранено — нет связи. Будет отправлено повторно автоматически.');
   const r=rows.find(x=>x.id===id);
   if(r){r.status='block';r.comment=reason;}
   modal.remove();
@@ -751,7 +817,8 @@ function openCommentModal(id){
 window.openCommentModal=openCommentModal;
 
 async function saveComment(id,text,modal){
-  await sb.from('nastavniki').update({notes:text}).eq('id',id);
+  const ok=await safeUpdate(id,{notes:text});
+  if(!ok)alert('⚠️ Комментарий не сохранён — нет связи. Будет отправлено повторно автоматически.');
   const r=rows.find(x=>x.id===id);
   if(r)r.notes=text;
   modal.remove();
@@ -927,9 +994,22 @@ document.getElementById('modalBg').onclick=function(e){if(e.target===this)closeM
 async function saveRecord(){
   const d={city:document.getElementById('fCity').value||currentTab,date_account:document.getElementById('fDate').value,date_first_shift:document.getElementById('fDateFirst').value,name:document.getElementById('fName').value.trim(),okrug:document.getElementById('fOkrug').value,nastavnik:document.getElementById('fNastavnik').value.trim(),status:document.getElementById('fStatus').value,comment:document.getElementById('fComment').value.trim(),smeny:+document.getElementById('fSmeny').value,bonus:document.getElementById('fBonus').value};
   if(!d.name){alert('Введите ФИО курьера');return;}
-  if(editId){await sb.from('nastavniki').update(d).eq('id',editId);}
-  else{await sb.from('nastavniki').insert(d);}
-  closeModal();await loadData();
+  if(!navigator.onLine){alert('❌ Нет подключения к сети. Дождитесь восстановления связи и повторите сохранение.');return;}
+  const btn=document.querySelector('.btn-save');
+  if(btn){btn.disabled=true;btn.textContent='Сохранение...';}
+  try{
+    let error;
+    if(editId){({error}=await sb.from('nastavniki').update(d).eq('id',editId));}
+    else{({error}=await sb.from('nastavniki').insert(d));}
+    if(error)throw error;
+    closeModal();
+    await loadData();
+  }catch(e){
+    console.error('❌ Ошибка сохранения:',e);
+    alert('❌ Не удалось сохранить запись: '+(e.message||'ошибка сети')+'\n\nПопробуйте ещё раз — модальное окно останется открытым, данные не потеряны.');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Сохранить';}
+  }
 }
 async function deleteRecord(){
   if(!editId||!confirm('Удалить запись?'))return;
@@ -957,6 +1037,10 @@ function clearFilters(){
 document.getElementById('addBtn').onclick=openModal;
 // Лёгкий polling вместо realtime
 setInterval(()=>{if(!document.hidden)loadData();},30000);
+// Подгружаем данные сразу при возврате на вкладку — не ждём до 30 сек
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden)loadData();
+});
 // ПАРСИНГ ТЕКСТА АККАУНТА
 function parseAccountText(text){
   const result={};
