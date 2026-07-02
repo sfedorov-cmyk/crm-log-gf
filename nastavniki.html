@@ -499,6 +499,23 @@ let _pendingWrites = [];
 (function restore(){
   try { dirtyRows      = JSON.parse(localStorage.getItem(LS_DIRTY)  ||'{}'); } catch(e){}
   try { _pendingWrites = JSON.parse(localStorage.getItem(LS_PENDING)||'[]'); } catch(e){}
+
+  // Чистим устаревшие правки с несуществующим полем 'notes'
+  const INVALID_FIELDS = ['notes'];
+  let cleaned = false;
+  _pendingWrites = _pendingWrites.filter(p => {
+    const hasInvalid = INVALID_FIELDS.some(f => f in p.patch);
+    if(hasInvalid){ console.log('🧹 Удалён устаревший pending с notes:', p.id); cleaned=true; }
+    return !hasInvalid;
+  });
+  Object.keys(dirtyRows).forEach(id => {
+    INVALID_FIELDS.forEach(f => {
+      if(f in dirtyRows[id]){ delete dirtyRows[id][f]; cleaned=true; console.log('🧹 Удалён dirty notes для:', id); }
+    });
+    if(!Object.keys(dirtyRows[id]).length) delete dirtyRows[id];
+  });
+  if(cleaned){ localStorage.setItem(LS_DIRTY, JSON.stringify(dirtyRows)); localStorage.setItem(LS_PENDING, JSON.stringify(_pendingWrites)); }
+
   if(_pendingWrites.length) console.log('📦 В очереди:', _pendingWrites.length, 'несохранённых изменений');
 })();
 
