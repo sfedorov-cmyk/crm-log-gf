@@ -887,12 +887,14 @@ function showBlockModal(id){
     <h4>🔴 Блок — укажите причину</h4>
     <textarea id="blockReason" placeholder="Причина блокировки...">${existing}</textarea>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn-cancel" style="flex:1" onclick="this.closest('.modal-bg').remove()">Отмена</button>
-      <button class="btn-save" style="flex:1" onclick="saveBlock('${id}',document.getElementById('blockReason').value,this.closest('.modal-bg'))">Сохранить</button>
+      <button class="btn-cancel" style="flex:1" id="cancelBlockBtn">Отмена</button>
+      <button class="btn-save" style="flex:1" id="saveBlockBtn">Сохранить</button>
     </div>
   </div>`;
   document.body.appendChild(bg);
-  setTimeout(()=>document.getElementById('blockReason').focus(),100);
+  bg.querySelector('#cancelBlockBtn').addEventListener('click', ()=>bg.remove());
+  bg.querySelector('#saveBlockBtn').addEventListener('click', ()=>saveBlock(id, bg.querySelector('#blockReason').value, bg));
+  setTimeout(()=>bg.querySelector('#blockReason').focus(),100);
 }
 window.showBlockModal=showBlockModal;
 
@@ -911,28 +913,27 @@ function openCommentModal(id){
   const bg=document.createElement('div');
   bg.className='modal-bg open';
   bg.style.zIndex='300';
-  const bgId='cm-'+id;
-  bg.id=bgId;
   bg.innerHTML=`<div class="block-modal">
     <h4>📝 Комментарий</h4>
     <textarea id="commentText" placeholder="Введите комментарий..." style="min-height:100px">${r.comment||''}</textarea>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn-cancel" style="flex:1" onclick="saveComment('${id}',document.getElementById('commentText').value,this.closest('.modal-bg'))">Сохранить и закрыть</button>
+      <button class="btn-cancel" style="flex:1" id="saveCommentBtn">Сохранить и закрыть</button>
     </div>
     <div style="font-size:11px;color:var(--text2);text-align:center;margin-top:8px">Ctrl+Enter — сохранить</div>
   </div>`;
-  // Ctrl+Enter сохраняет
-  bg.querySelector('#commentText').addEventListener('keydown', function(e){
-    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){
-      saveComment('${id}',this.value,bg);
-    }
-  });
-  // Клик по фону — сохраняет (не теряет)
-  bg.addEventListener('click', function(e){
-    if(e.target===this) saveComment('${id}',document.getElementById('commentText').value,this);
-  });
   document.body.appendChild(bg);
-  setTimeout(()=>document.getElementById('commentText').focus(),100);
+  const ta = bg.querySelector('#commentText');
+  const saveBtn = bg.querySelector('#saveCommentBtn');
+  // Используем реальную переменную id через замыкание — не строку
+  const doSave = () => saveComment(id, ta.value, bg);
+  saveBtn.addEventListener('click', doSave);
+  ta.addEventListener('keydown', function(e){
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) doSave();
+  });
+  bg.addEventListener('click', function(e){
+    if(e.target===this) doSave();
+  });
+  setTimeout(()=>ta.focus(),100);
 }
 window.openCommentModal=openCommentModal;
 
