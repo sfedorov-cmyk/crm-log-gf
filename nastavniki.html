@@ -484,6 +484,14 @@ function bonusClass(b){return{paid:'bc-paid',unpaid:'bc-unpaid',none:'bc-none'}[
 function fd(d){if(!d)return'—';try{const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0];}catch(e){return d;}}
 
 // Безопасная запись в Supabase: показывает ошибку и не теряет правки молча
+function showToast(msg, color){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:'+(color||'#333')+';color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:500;z-index:9999;pointer-events:none;opacity:1;transition:opacity .4s';
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),400);},2500);
+}
+
 async function safeUpdate(id,patch,el){
   // Сразу запоминаем изменение локально — оно не пропадёт при loadData()
   setDirty(id, patch);
@@ -499,8 +507,9 @@ async function safeUpdate(id,patch,el){
     console.error('Save error:',e);
     if(el){
       el.style.outline='2px solid var(--red-text)';
-      el.title='Не сохранено: '+(e.message||'ошибка сети')+'. Будет отправлено повторно.';
+      el.title='Не сохранено — будет повторно отправлено автоматически';
     }
+    showToast('⚠️ Нет связи — сохранится автоматически','#8a4a00');
     // Добавляем в очередь повторной отправки
     _pendingWrites.push({id,patch,el});
     return false;
@@ -804,7 +813,7 @@ async function selectStatus(id,status){
     return;
   }
   const ok=await safeUpdate(id,{status});
-  if(!ok)alert('⚠️ Статус не сохранён — нет связи с сервером. Будет отправлено повторно при восстановлении подключения.');
+  if(!ok)console.warn('⚠️ selectStatus: нет связи, в очереди');
   const r=rows.find(x=>x.id===id);if(r)r.status=status;
   renderTable();
 }
@@ -833,7 +842,7 @@ window.showBlockModal=showBlockModal;
 
 async function saveBlock(id,reason,modal){
   const ok=await safeUpdate(id,{status:'block',comment:reason});
-  if(!ok)alert('⚠️ Не сохранено — нет связи. Будет отправлено повторно автоматически.');
+  if(!ok)console.warn('⚠️ saveBlock: нет связи, в очереди');
   const r=rows.find(x=>x.id===id);
   if(r){r.status='block';r.comment=reason;}
   modal.remove();
@@ -846,14 +855,26 @@ function openCommentModal(id){
   const bg=document.createElement('div');
   bg.className='modal-bg open';
   bg.style.zIndex='300';
+  const bgId='cm-'+id;
+  bg.id=bgId;
   bg.innerHTML=`<div class="block-modal">
     <h4>📝 Комментарий</h4>
-    <textarea id="commentText" placeholder="Введите комментарий...">${r.notes||''}</textarea>
+    <textarea id="commentText" placeholder="Введите комментарий..." style="min-height:100px">${r.notes||''}</textarea>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn-cancel" style="flex:1" onclick="this.closest('.modal-bg').remove()">Отмена</button>
-      <button class="btn-save" style="flex:1" onclick="saveComment('${id}',document.getElementById('commentText').value,this.closest('.modal-bg'))">Сохранить</button>
+      <button class="btn-cancel" style="flex:1" onclick="saveComment('${id}',document.getElementById('commentText').value,this.closest('.modal-bg'))">Сохранить и закрыть</button>
     </div>
+    <div style="font-size:11px;color:var(--text2);text-align:center;margin-top:8px">Ctrl+Enter — сохранить</div>
   </div>`;
+  // Ctrl+Enter сохраняет
+  bg.querySelector('#commentText').addEventListener('keydown', function(e){
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){
+      saveComment('${id}',this.value,bg);
+    }
+  });
+  // Клик по фону — сохраняет (не теряет)
+  bg.addEventListener('click', function(e){
+    if(e.target===this) saveComment('${id}',document.getElementById('commentText').value,this);
+  });
   document.body.appendChild(bg);
   setTimeout(()=>document.getElementById('commentText').focus(),100);
 }
@@ -861,7 +882,7 @@ window.openCommentModal=openCommentModal;
 
 async function saveComment(id,text,modal){
   const ok=await safeUpdate(id,{notes:text});
-  if(!ok)alert('⚠️ Комментарий не сохранён — нет связи. Будет отправлено повторно автоматически.');
+  if(!ok)console.warn('⚠️ saveComment: нет связи, в очереди');
   const r=rows.find(x=>x.id===id);
   if(r)r.notes=text;
   modal.remove();
