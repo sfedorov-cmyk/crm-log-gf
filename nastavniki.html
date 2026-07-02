@@ -401,14 +401,7 @@ tr:hover td{background:var(--bg3)!important}
     </div>
     <div class="fg"><label>Комментарий</label><input type="text" id="fComment" placeholder="Заметки..."></div>
     <div class="fg"><label>Смен отработано</label>
-      <select id="fSmeny">
-        <option value="0">0 смен</option>
-        <option value="1">1 смена</option>
-        <option value="2">2 смены</option>
-        <option value="3">3 смены</option>
-        <option value="4">4 смены</option>
-        <option value="5">5+ смен</option>
-      </select>
+      <input type="number" id="fSmeny" min="0" max="999" value="0" style="width:120px">
     </div>
     <div class="fg"><label>Бонус наставнику</label>
       <select id="fBonus">
@@ -497,24 +490,39 @@ const LS_PENDING = 'ns_pending';  // очередь к отправке   [ { id
 let dirtyRows = {};
 let _pendingWrites = [];
 (function restore(){
+  // Версия схемы — при смене сбрасываем весь pending и dirty
+  const SCHEMA_VER = 'v3'; // увеличить при изменении полей БД
+  const savedVer = localStorage.getItem('ns_schema_ver');
+  if(savedVer !== SCHEMA_VER){
+    console.log('🔄 Новая схема БД — сбрасываю pending/dirty очереди');
+    localStorage.removeItem(LS_PENDING);
+    localStorage.removeItem(LS_DIRTY);
+    localStorage.setItem('ns_schema_ver', SCHEMA_VER);
+    return; // dirtyRows и _pendingWrites остаются пустыми
+  }
+
   try { dirtyRows      = JSON.parse(localStorage.getItem(LS_DIRTY)  ||'{}'); } catch(e){}
   try { _pendingWrites = JSON.parse(localStorage.getItem(LS_PENDING)||'[]'); } catch(e){}
 
-  // Чистим устаревшие правки с несуществующим полем 'notes'
+  // Чистим устаревшие правки с несуществующими полями
   const INVALID_FIELDS = ['notes'];
   let cleaned = false;
   _pendingWrites = _pendingWrites.filter(p => {
-    const hasInvalid = INVALID_FIELDS.some(f => f in p.patch);
-    if(hasInvalid){ console.log('🧹 Удалён устаревший pending с notes:', p.id); cleaned=true; }
+    const hasInvalid = INVALID_FIELDS.some(f => p.patch && f in p.patch);
+    if(hasInvalid){ console.log('🧹 Удалён устаревший pending:', p.id, p.patch); cleaned=true; }
     return !hasInvalid;
   });
   Object.keys(dirtyRows).forEach(id => {
     INVALID_FIELDS.forEach(f => {
-      if(f in dirtyRows[id]){ delete dirtyRows[id][f]; cleaned=true; console.log('🧹 Удалён dirty notes для:', id); }
+      if(dirtyRows[id] && f in dirtyRows[id]){ delete dirtyRows[id][f]; cleaned=true; }
     });
-    if(!Object.keys(dirtyRows[id]).length) delete dirtyRows[id];
+    if(dirtyRows[id] && !Object.keys(dirtyRows[id]).length) delete dirtyRows[id];
   });
-  if(cleaned){ localStorage.setItem(LS_DIRTY, JSON.stringify(dirtyRows)); localStorage.setItem(LS_PENDING, JSON.stringify(_pendingWrites)); }
+  if(cleaned){
+    localStorage.setItem(LS_DIRTY, JSON.stringify(dirtyRows));
+    localStorage.setItem(LS_PENDING, JSON.stringify(_pendingWrites));
+    console.log('🧹 Очищены устаревшие данные из очереди');
+  }
 
   if(_pendingWrites.length) console.log('📦 В очереди:', _pendingWrites.length, 'несохранённых изменений');
 })();
@@ -666,18 +674,7 @@ async function loadData(){
   }
 }
 
-// Реакция на реальные события браузера online/offline
-window.addEventListener('online',()=>{
-  console.log('🟢 Соединение восстановлено');
-  loadData();
-});
-window.addEventListener('offline',()=>{
-  console.log('🔴 Соединение потеряно');
-  const dot=document.getElementById('syncDot');
-  const status=document.getElementById('syncStatus');
-  if(dot)dot.style.background='var(--red-text)';
-  if(status)status.textContent='нет сети';
-});
+// online/offline обрабатываются выше в блоке надёжного хранения
 function updateNastavnikFilter(){
   const sel=document.getElementById('filterNastavnik');const val=sel.value;
   const names=[...new Set(rows.map(r=>r.nastavnik).filter(Boolean))].sort();
@@ -1113,7 +1110,7 @@ function openEdit(id){
   document.getElementById('fNastavnik').value=r.nastavnik||'';
   document.getElementById('fStatus').value=r.status||'works';
   document.getElementById('fComment').value=r.comment||'';
-  document.getElementById('fSmeny').value=r.smeny||'0';
+  document.getElementById('fSmeny').value=r.smeny||0;
   document.getElementById('fBonus').value=r.bonus||'none';
   document.getElementById('modalBg').classList.add('open');
 }
@@ -1556,8 +1553,12 @@ async function syncFromCRM() {
       else console.log(`🔄 Обновлено статусов: ${smenaIds.length}`);
     }
 
-    console.log(`✨ Синхронизация готова: добавлено ${added} записей`);
-    await loadData();
+    if(added > 0){
+      console.log(`✨ Синхронизация готова: добавлено ${added} записей`);
+      await loadData(); // перезагружаем только если что-то добавилось
+    } else {
+      console.log('✨ Синхронизация: нет новых записей');
+    }
 
   } catch(e) {
     console.warn('Sync exception:', e);
