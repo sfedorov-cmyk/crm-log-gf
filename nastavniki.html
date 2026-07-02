@@ -484,72 +484,126 @@ function bonusClass(b){return{paid:'bc-paid',unpaid:'bc-unpaid',none:'bc-none'}[
 function fd(d){if(!d)return'—';try{const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0];}catch(e){return d;}}
 
 // Безопасная запись в Supabase: показывает ошибку и не теряет правки молча
-function showToast(msg, color){
-  const t=document.createElement('div');
-  t.textContent=msg;
-  t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:'+(color||'#333')+';color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:500;z-index:9999;pointer-events:none;opacity:1;transition:opacity .4s';
-  document.body.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),400);},2500);
-}
+// ============================================================
+// НАДЁЖНОЕ ХРАНЕНИЕ ИЗМЕНЕНИЙ
+// Все правки сначала пишутся в localStorage, потом в Supabase.
+// При обновлении страницы — восстанавливаются и отправляются.
+// ============================================================
 
-async function safeUpdate(id,patch,el){
-  // Сразу запоминаем изменение локально — оно не пропадёт при loadData()
-  setDirty(id, patch);
-  try{
-    if(!navigator.onLine)throw new Error('Нет подключения к сети');
-    const{error}=await sb.from('nastavniki').update(patch).eq('id',id);
-    if(error)throw error;
-    if(el){el.style.outline='';el.title='';}
-    // Успешно сохранено — убираем из dirty только эти поля
-    clearDirty(id, Object.keys(patch));
-    return true;
-  }catch(e){
-    console.error('Save error:',e);
-    if(el){
-      el.style.outline='2px solid var(--red-text)';
-      el.title='Не сохранено — будет повторно отправлено автоматически';
-    }
-    showToast('⚠️ Нет связи — сохранится автоматически','#8a4a00');
-    // Добавляем в очередь повторной отправки
-    _pendingWrites.push({id,patch,el});
-    return false;
-  }
-}
-const _pendingWrites=[];
-window.addEventListener('online',async()=>{
-  if(!_pendingWrites.length)return;
-  console.log('🔁 Повторная отправка',_pendingWrites.length,'несохранённых изменений');
-  const queue=_pendingWrites.splice(0,_pendingWrites.length);
-  for(const item of queue){
-    await safeUpdate(item.id,item.patch,item.el);
-  }
-});
+const LS_DIRTY   = 'ns_dirty';    // несохранённые правки { id: { field: val } }
+const LS_PENDING = 'ns_pending';  // очередь к отправке   [ { id, patch } ]
 
-// Карта локальных изменений — защищает от перезаписи при loadData()
-// Формат: { rowId: { field: value, ... } }
-const dirtyRows = {};
+// --- загружаем из localStorage при старте ---
+let dirtyRows = {};
+let _pendingWrites = [];
+(function restore(){
+  try { dirtyRows      = JSON.parse(localStorage.getItem(LS_DIRTY)  ||'{}'); } catch(e){}
+  try { _pendingWrites = JSON.parse(localStorage.getItem(LS_PENDING)||'[]'); } catch(e){}
+  if(_pendingWrites.length) console.log('📦 В очереди:', _pendingWrites.length, 'несохранённых изменений');
+})();
 
-function applyDirty(serverRows){
-  // Применяем все локальные изменения поверх серверных данных
-  if(!Object.keys(dirtyRows).length) return serverRows;
-  return serverRows.map(r => {
-    if(dirtyRows[r.id]) return {...r, ...dirtyRows[r.id]};
-    return r;
-  });
-}
+function _saveDirty()  { try{ localStorage.setItem(LS_DIRTY,   JSON.stringify(dirtyRows));      }catch(e){} }
+function _savePending(){ try{ localStorage.setItem(LS_PENDING, JSON.stringify(_pendingWrites));  }catch(e){} }
 
+// Добавить/обновить локальное изменение
 function setDirty(id, patch){
-  // Запоминаем изменение
-  if(!dirtyRows[id]) dirtyRows[id]={};
+  if(!dirtyRows[id]) dirtyRows[id] = {};
   Object.assign(dirtyRows[id], patch);
+  _saveDirty();
 }
 
+// Удалить поля из dirty после успешного сохранения
 function clearDirty(id, fields){
-  // Очищаем поля после успешного сохранения (вызываем после подтверждения от сервера)
   if(!dirtyRows[id]) return;
   fields.forEach(f => delete dirtyRows[id][f]);
   if(!Object.keys(dirtyRows[id]).length) delete dirtyRows[id];
+  _saveDirty();
 }
+
+// Наложить локальные правки поверх серверных данных
+function applyDirty(serverRows){
+  if(!Object.keys(dirtyRows).length) return serverRows;
+  return serverRows.map(r => dirtyRows[r.id] ? {...r, ...dirtyRows[r.id]} : r);
+}
+
+// Тост-уведомление (без alert)
+function showToast(msg, color){
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:'+(color||'#333')+';color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:500;z-index:9999;pointer-events:none;transition:opacity .4s';
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 2500);
+}
+
+// Отправить всю очередь на сервер
+async function flushPending(){
+  if(!_pendingWrites.length || !navigator.onLine) return;
+  console.log('🔁 Отправляю очередь:', _pendingWrites.length, 'записей');
+  const queue = [..._pendingWrites];
+  _pendingWrites = [];
+  _savePending();
+  for(const item of queue){
+    try{
+      const {error} = await sb.from('nastavniki').update(item.patch).eq('id', item.id);
+      if(error) throw error;
+      clearDirty(item.id, Object.keys(item.patch));
+      console.log('✅ Отправлено:', item.id, item.patch);
+    }catch(e){
+      // не получилось — возвращаем в очередь
+      _pendingWrites.push(item);
+      console.warn('❌ Ошибка отправки, вернул в очередь:', e.message);
+    }
+  }
+  _savePending();
+}
+
+// Основная функция сохранения одного изменения
+async function safeUpdate(id, patch, el){
+  // 1. Сразу пишем локально — не потеряется ни при каком сценарии
+  setDirty(id, patch);
+
+  // 2. Если офлайн — кладём в очередь и выходим
+  if(!navigator.onLine){
+    _pendingWrites.push({id, patch});
+    _savePending();
+    if(el){ el.style.outline='2px solid var(--gold)'; el.title='Сохранено локально, отправится при подключении'; }
+    showToast('📴 Офлайн — сохранено локально', '#7a5c1a');
+    return false;
+  }
+
+  // 3. Отправляем на сервер
+  try{
+    const {error} = await sb.from('nastavniki').update(patch).eq('id', id);
+    if(error) throw error;
+    // Успех — чистим dirty для этих полей
+    clearDirty(id, Object.keys(patch));
+    // Убираем из pending если было там
+    _pendingWrites = _pendingWrites.filter(p => !(p.id===id && Object.keys(patch).every(k => k in p.patch)));
+    _savePending();
+    if(el){ el.style.outline=''; el.title=''; }
+    return true;
+  }catch(e){
+    // Ошибка — кладём в очередь, данные уже в dirty
+    _pendingWrites.push({id, patch});
+    _savePending();
+    console.warn('❌ Ошибка сохранения, в очереди:', e.message);
+    if(el){ el.style.outline='2px solid var(--red-text)'; el.title='Нет связи — сохранится автоматически'; }
+    showToast('⚠️ Нет связи — сохранится автоматически', '#8a4a00');
+    return false;
+  }
+}
+
+// При восстановлении сети — сразу отправляем очередь
+window.addEventListener('online', ()=>{
+  console.log('🟢 Сеть восстановлена');
+  flushPending().then(()=>loadData());
+});
+window.addEventListener('offline', ()=>{
+  const dot=document.getElementById('syncDot');
+  const status=document.getElementById('syncStatus');
+  if(dot) dot.style.background='var(--red-text)';
+  if(status) status.textContent='нет сети';
+});
 
 let _loadTimer=null;
 let _loadInFlight=false;
@@ -577,7 +631,9 @@ async function loadData(){
     // Применяем локальные изменения поверх серверных данных
     rows=applyDirty(data||[]);
     dot.style.background='var(--green-text)';
-    status.textContent='онлайн';
+    status.textContent=_pendingWrites.length ? `онлайн · очередь: ${_pendingWrites.length}` : 'онлайн';
+    // Отправляем накопившуюся очередь
+    await flushPending();
     renderTable();
     renderCards(getFiltered());
     updateNastavnikFilter();
@@ -786,7 +842,7 @@ function renderTable(){
         </div>
       </td>
       <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.comment||''}">${r.comment||'—'}</td>
-      <td style="color:var(--text2);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.notes||''}">${r.notes||'—'} <button class="edit-btn" onclick="openCommentModal('${r.id}')" style="margin-left:8px">✏️</button></td>
+      <td style="color:var(--text2);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.comment||''}">${r.comment||'—'} <button class="edit-btn" onclick="openCommentModal('${r.id}')" style="margin-left:8px">✏️</button></td>
       <td style="text-align:center">${inlineSmeny(r.id,r.smeny)}</td>
       <td style="text-align:center" class="sum-cell">${bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>'}</td>
       <td>${inlineBonus(r.id,r.bonus)}</td>
@@ -859,7 +915,7 @@ function openCommentModal(id){
   bg.id=bgId;
   bg.innerHTML=`<div class="block-modal">
     <h4>📝 Комментарий</h4>
-    <textarea id="commentText" placeholder="Введите комментарий..." style="min-height:100px">${r.notes||''}</textarea>
+    <textarea id="commentText" placeholder="Введите комментарий..." style="min-height:100px">${r.comment||''}</textarea>
     <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn-cancel" style="flex:1" onclick="saveComment('${id}',document.getElementById('commentText').value,this.closest('.modal-bg'))">Сохранить и закрыть</button>
     </div>
@@ -881,10 +937,10 @@ function openCommentModal(id){
 window.openCommentModal=openCommentModal;
 
 async function saveComment(id,text,modal){
-  const ok=await safeUpdate(id,{notes:text});
+  const ok=await safeUpdate(id,{comment:text});
   if(!ok)console.warn('⚠️ saveComment: нет связи, в очереди');
   const r=rows.find(x=>x.id===id);
-  if(r)r.notes=text;
+  if(r)r.comment=text;
   modal.remove();
   renderTable();
 }
