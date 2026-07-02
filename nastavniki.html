@@ -485,19 +485,23 @@ function fd(d){if(!d)return'—';try{const p=d.split('-');return p[2]+'.'+p[1]+'
 
 // Безопасная запись в Supabase: показывает ошибку и не теряет правки молча
 async function safeUpdate(id,patch,el){
+  // Сразу запоминаем изменение локально — оно не пропадёт при loadData()
+  setDirty(id, patch);
   try{
     if(!navigator.onLine)throw new Error('Нет подключения к сети');
     const{error}=await sb.from('nastavniki').update(patch).eq('id',id);
     if(error)throw error;
     if(el){el.style.outline='';el.title='';}
+    // Успешно сохранено — убираем из dirty только эти поля
+    clearDirty(id, Object.keys(patch));
     return true;
   }catch(e){
     console.error('Save error:',e);
     if(el){
       el.style.outline='2px solid var(--red-text)';
-      el.title='Не сохранено: '+(e.message||'ошибка сети')+'. Изменения будут повторно отправлены автоматически.';
+      el.title='Не сохранено: '+(e.message||'ошибка сети')+'. Будет отправлено повторно.';
     }
-    // отметим что есть несохранённые изменения — попробуем переотправить при восстановлении сети
+    // Добавляем в очередь повторной отправки
     _pendingWrites.push({id,patch,el});
     return false;
   }
@@ -511,6 +515,32 @@ window.addEventListener('online',async()=>{
     await safeUpdate(item.id,item.patch,item.el);
   }
 });
+
+// Карта локальных изменений — защищает от перезаписи при loadData()
+// Формат: { rowId: { field: value, ... } }
+const dirtyRows = {};
+
+function applyDirty(serverRows){
+  // Применяем все локальные изменения поверх серверных данных
+  if(!Object.keys(dirtyRows).length) return serverRows;
+  return serverRows.map(r => {
+    if(dirtyRows[r.id]) return {...r, ...dirtyRows[r.id]};
+    return r;
+  });
+}
+
+function setDirty(id, patch){
+  // Запоминаем изменение
+  if(!dirtyRows[id]) dirtyRows[id]={};
+  Object.assign(dirtyRows[id], patch);
+}
+
+function clearDirty(id, fields){
+  // Очищаем поля после успешного сохранения (вызываем после подтверждения от сервера)
+  if(!dirtyRows[id]) return;
+  fields.forEach(f => delete dirtyRows[id][f]);
+  if(!Object.keys(dirtyRows[id]).length) delete dirtyRows[id];
+}
 
 let _loadTimer=null;
 let _loadInFlight=false;
@@ -535,7 +565,8 @@ async function loadData(){
   try{
     const{data,error}=await sb.from('nastavniki').select('*').eq('city',currentTab).order('created_at',{ascending:false});
     if(error)throw error;
-    rows=data||[];
+    // Применяем локальные изменения поверх серверных данных
+    rows=applyDirty(data||[]);
     dot.style.background='var(--green-text)';
     status.textContent='онлайн';
     renderTable();
@@ -653,12 +684,18 @@ function renderCards(fr){
 
 async function mobileChangeSmeny(id,delta,btn){
   const r=rows.find(x=>x.id===id);if(!r)return;
-  r.smeny=Math.max(0,Math.min(5,(+r.smeny||0)+delta));
+  r.smeny=Math.max(0,(+r.smeny||0)+delta);
   document.getElementById('ms-'+id).textContent=r.smeny;
   const bonus=calcBonus(r.smeny);
   const bonEl=document.getElementById('mb-'+id);
   if(bonEl)bonEl.innerHTML=bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>';
-  await safeUpdate(id,{smeny:r.smeny},document.getElementById('ms-'+id));
+  const el=document.getElementById('ms-'+id);
+  if(el){el.style.color='var(--gold)';el.style.fontWeight='900';}
+  const ok=await safeUpdate(id,{smeny:r.smeny},el);
+  if(ok&&el){
+    el.style.color='var(--green)';
+    setTimeout(()=>{el.style.color='';el.style.fontWeight='';},1500);
+  }
 }
 window.mobileChangeSmeny=mobileChangeSmeny;
 
@@ -668,7 +705,13 @@ async function mobileCycleBonus(id,cur){
   r.bonus=BONUS_ORDER[(BONUS_ORDER.indexOf(cur)+1)%BONUS_ORDER.length];
   const btn=document.getElementById('mbon-'+id);
   if(btn)btn.textContent=bonusLabel(r.bonus);
-  await safeUpdate(id,{bonus:r.bonus},document.getElementById('mbon-'+id));
+  const bonEl=document.getElementById('mbon-'+id);
+  if(bonEl){bonEl.style.opacity='0.5';}
+  const ok2=await safeUpdate(id,{bonus:r.bonus},bonEl);
+  if(bonEl){
+    bonEl.style.opacity='';
+    if(!ok2){bonEl.style.outline='2px solid red';setTimeout(()=>{bonEl.style.outline='';},3000);}
+  }
 }
 window.mobileCycleBonus=mobileCycleBonus;
 
