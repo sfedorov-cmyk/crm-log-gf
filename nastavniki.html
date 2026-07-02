@@ -1153,37 +1153,74 @@ async function deleteSelected(){
 }
 window.deleteSelected=deleteSelected;
 
-// Функция для удаления дубликатов
+// Функция для удаления дубликатов — по телефону, crm_id и имени+городу
 async function removeDuplicates(){
   console.log('🔍 Ищу дубликаты...');
-  const {data:allRows}=await sb.from('nastavniki').select('id,name,city,created_at').order('created_at',{ascending:true});
-  if(!allRows || !allRows.length)return;
-  
-  const seen={};
+  const {data:allRows}=await sb.from('nastavniki').select('id,name,city,comment,crm_id,created_at').order('created_at',{ascending:true});
+  if(!allRows || !allRows.length){ console.log('Нет данных'); return 0; }
+
+  function normP(s){ return (s||'').replace(/\D/g,'').slice(-10); }
+
+  const seenPhone={}; // нормализованный телефон -> id
+  const seenCrmId={}; // crm_id -> id
+  const seenNameCity={}; // name|city -> id
   const toDelete=[];
-  
+
   for(const r of allRows){
-    const key=`${r.name}|${r.city}`;
-    if(seen[key]){
+    let isDup=false;
+
+    // Телефон из поля comment ("📞 +7...")
+    let phone='';
+    if(r.comment){
+      const m=r.comment.match(/[+\d][\d\s\-\(\)]{8,}/);
+      if(m) phone=normP(m[0]);
+    }
+
+    // Проверка по crm_id
+    if(r.crm_id && seenCrmId[String(r.crm_id)]!==undefined){
       toDelete.push(r.id);
-      console.log(`❌ Дубль найден: ${r.name} (город: ${r.city})`);
-    }else{
-      seen[key]=r.id;
+      console.log('❌ Дубль по crm_id:', r.name, r.crm_id);
+      isDup=true;
+    }
+    // Проверка по телефону
+    else if(phone.length>=10 && seenPhone[phone]!==undefined){
+      toDelete.push(r.id);
+      console.log('❌ Дубль по телефону:', r.name, phone);
+      isDup=true;
+    }
+    // Проверка по имени+городу (fallback)
+    else {
+      const key=(r.name||'').trim()+'|'+(r.city||'').trim();
+      if(key!=='|' && seenNameCity[key]!==undefined){
+        toDelete.push(r.id);
+        console.log('❌ Дубль по имени+городу:', r.name, r.city);
+        isDup=true;
+      }
+    }
+
+    if(!isDup){
+      if(r.crm_id) seenCrmId[String(r.crm_id)]=r.id;
+      if(phone.length>=10) seenPhone[phone]=r.id;
+      const key=(r.name||'').trim()+'|'+(r.city||'').trim();
+      if(key!=='|') seenNameCity[key]=r.id;
     }
   }
-  
+
   if(toDelete.length===0){
     console.log('✅ Дубликатов не найдено');
-    return;
+    return 0;
   }
-  
-  console.log(`🗑️ Удаляю ${toDelete.length} дубликатов...`);
+
+  console.log('🗑️ Удаляю', toDelete.length, 'дубликатов...');
+  let deleted=0;
   for(const id of toDelete){
-    await sb.from('nastavniki').delete().eq('id',id);
+    const {error}=await sb.from('nastavniki').delete().eq('id',id);
+    if(!error) deleted++;
+    else console.warn('Ошибка удаления id='+id, error.message);
   }
-  
-  console.log(`✨ Удалено ${toDelete.length} дубликатов!`);
+  console.log('✨ Удалено', deleted, 'дубликатов!');
   await loadData();
+  return deleted;
 }
 
 loadTariffs();
@@ -1196,8 +1233,8 @@ loadTariffs();
   }
 })();
 loadData();
-// Удаляем дубликаты при загрузке (отключено - уже очищены, синхронизация проверяет по телефону)
-// setTimeout(()=>removeDuplicates(),1500);
+// Удаляем дубликаты при загрузке
+setTimeout(()=>removeDuplicates(),2000);
 // Устанавливаем текущий месяц по умолчанию
 (function(){
   const today=new Date();
@@ -1297,26 +1334,39 @@ async function syncFromCRM() {
     if (crmErr) { console.warn('❌ CRM sync error:', crmErr.message); return; }
     if (!crmRows || !crmRows.length) { console.log('ℹ️ CRM: нет новых записей'); return; }
 
-    // Берём ВСЕ записи для проверки дубликатов по телефону
-    const { data: allRecords } = await sb.from('nastavniki').select('id,comment');
+    // Берём ВСЕ записи для проверки дубликатов по телефону и crm_id
+    const { data: allRecords } = await sb.from('nastavniki').select('id,comment,crm_id');
     
-    // Извлекаем все телефоны из существующих записей
+    // Нормализуем телефон — оставляем только последние 10 цифр для сравнения
+    function normPhone(s){ return (s||'').replace(/\D/g,'').slice(-10); }
+    
+    // Собираем все телефоны и crm_id из существующих записей
     const existingPhones = new Set();
+    const existingCrmIds = new Set();
     (allRecords||[]).forEach(r => {
-      if(r.comment && r.comment.includes('📞')){
-        const tel = r.comment.replace('📞 ','').trim();
-        existingPhones.add(tel);
+      if(r.comment){
+        const m = r.comment.match(/[+\d][\d\s\-\(\)]{8,}/);
+        if(m){ const n = normPhone(m[0]); if(n.length >= 10) existingPhones.add(n); }
       }
+      if(r.crm_id) existingCrmIds.add(String(r.crm_id));
     });
     
-    console.log(`📊 CRM: ${crmRows.length} записей, уже есть ${existingPhones.size} телефонов`);
+    console.log(`📊 CRM: ${crmRows.length} записей, уже есть ${existingPhones.size} телефонов, ${existingCrmIds.size} crm_id`);
 
     let added=0;
     for (const c of crmRows) {
       const tel = (c.tel || '').trim();
+      const telNorm = normPhone(tel);
+      const crmId = String(c.id);
       
-      // Проверяем по номеру телефона
-      if(tel && existingPhones.has(tel)){
+      // Проверяем по crm_id (самая надёжная проверка)
+      if(existingCrmIds.has(crmId)){
+        console.log(`⏭️  Пропущен (crm_id уже есть): ${c.fio} (${crmId})`);
+        continue;
+      }
+      
+      // Проверяем по нормализованному номеру телефона
+      if(telNorm.length >= 10 && existingPhones.has(telNorm)){
         console.log(`⏭️  Пропущен (телефон уже есть): ${c.fio} (${tel})`);
         continue;
       }
@@ -1346,7 +1396,8 @@ async function syncFromCRM() {
         console.warn(`❌ Ошибка добавления ${c.fio}:`, insErr.message);
       } else {
         console.log(`✅ Добавлен: ${c.fio}`);
-        if(tel) existingPhones.add(tel);
+        if(telNorm.length >= 10) existingPhones.add(telNorm);
+        if(crmId) existingCrmIds.add(crmId);
         added++;
       }
     }
