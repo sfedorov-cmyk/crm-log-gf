@@ -313,7 +313,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
       <div class="fg"><label>Да/Нет</label><select id="fDa"><option value="—">—</option><option value="да">Да</option><option value="нет">Нет</option><option value="думает">Думает</option></select></div>
       <div class="fg"><label>Статус</label><select id="fStatus"><option value="—">—</option><option>думает</option><option>недозвон</option><option>отказ</option><option>принят</option><option>оформление</option><option>стажировка</option><option>резерв</option><option>жду доки</option><option>проверка СБ</option><option>передан в логистику</option><option>вышел в смену</option><option>перезвонить</option></select></div>
       <div class="fg"><label>Юр. Статус</label><select id="fJur"><option value="—">—</option><option>СМЗ</option><option>ИП</option><option>ТД</option><option>ГПХ</option></select></div>
-      <div class="fg"><label>Город</label><select id="fCity"><option value="—">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Нижний Новгород</option><option>Воронеж</option><option>Тольятти</option><option>Другой</option></select></div>
+      <div class="fg"><label>Город</label><select id="fCity"><option value="—">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Самара</option><option>Нижний Новгород</option><option>Воронеж</option><option>Тольятти</option><option>Другой</option></select></div>
       <div class="fg full"><label>Комментарий</label>
         <div style="position:relative">
           <textarea id="fComment" placeholder="Заметки..." style="padding-right:44px"></textarea>
@@ -340,7 +340,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
         <div class="tel-wrap"><span class="tel-prefix">+7</span><input type="tel" id="dTel" class="tel-input" placeholder="номер" maxlength="15" oninput="this.value=this.value.replace(/[^0-9\s\-\(\)]/g,'')"></div>
       </div>
       <div class="fg"><label>Город</label>
-        <select id="dCity"><option value="—">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Нижний Новгород</option><option>Воронеж</option><option>Другой</option></select>
+        <select id="dCity"><option value="—">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Самара</option><option>Нижний Новгород</option><option>Воронеж</option><option>Другой</option></select>
       </div>
       <div class="fg"><label>Причина деактивации</label>
         <select id="dReason"><option value="—">—</option><option>Прогул</option><option>Нарушение правил</option><option>Конфликт</option><option>Мошенничество</option><option>Долг</option><option>Другое</option></select>
@@ -1420,7 +1420,7 @@ function renderFilters(){
       <span class="flabel">Статус</span>
       <select class="finput" id="fSt2"><option value="">Все</option>${['думает','недозвон','отказ','принят','оформление','стажировка','резерв','жду доки','проверка СБ','передан в логистику','вышел в смену','перезвонить'].map(o=>`<option${F.status===o?' selected':''}>${o}</option>`).join('')}</select>
       <span class="flabel">Город</span>
-      <select class="finput" id="fCi2"><option value="">Все</option>${['Санкт-Петербург','Москва','Казань','Нижний Новгород','Воронеж','Тольятти'].map(o=>`<option${F.city===o?' selected':''}>${o}</option>`).join('')}</select>
+      <select class="finput" id="fCi2"><option value="">Все</option>${['Санкт-Петербург','Москва','Казань','Самара','Нижний Новгород','Воронеж','Тольятти'].map(o=>`<option${F.city===o?' selected':''}>${o}</option>`).join('')}</select>
       <button class="btn-reset" id="resetBtn">Сбросить</button>
       ${canAdd?'<button class="btn-new" id="newBtn">+ Запись</button>':''}
     </div>`;
