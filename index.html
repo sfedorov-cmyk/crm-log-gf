@@ -1214,8 +1214,9 @@ let dashMode=false;
 
 function renderTabs(){
   const recs=getRecs();
-  let tabs=recs.filter(r=>!ARCHIVE_R.includes(r)).map(r=>{const origI=recs.indexOf(r);return`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&origI===tab?' active':''}" data-i="${origI}">${r} <span class="pdot" data-rec="${r}" style="font-size:11px">🤍</span></div>`;}).join('');
+  let tabs='';
   if(isAdmin)tabs+=`<div class="tab${dashMode?' active':''}" data-dash="1">📊 Дашборд</div>`;
+  tabs+=recs.filter(r=>!ARCHIVE_R.includes(r)).map(r=>{const origI=recs.indexOf(r);return`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&origI===tab?' active':''}" data-i="${origI}">${r} <span class="pdot" data-rec="${r}" style="font-size:11px">🤍</span></div>`;}).join('');
   if(isAdmin)tabs+=`<div class="tab${okrugMode?' active':''}" data-okrug="1">🗺️ Округа</div>`;
   tabs+=`<div class="tab${mentorMode?' active':''}" data-mentor="1">🤝 Наставники</div>`;
   tabs+=`<div class="tab${vacationMode?' active':''}" data-vacation="1">🌴 Отпуска</div>`;
