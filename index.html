@@ -1217,7 +1217,6 @@ function renderTabs(){
   let tabs=recs.filter(r=>!ARCHIVE_R.includes(r)).map(r=>{const origI=recs.indexOf(r);return`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&origI===tab?' active':''}" data-i="${origI}">${r} <span class="pdot" data-rec="${r}" style="font-size:11px">🤍</span></div>`;}).join('');
   if(isAdmin)tabs+=`<div class="tab${dashMode?' active':''}" data-dash="1">📊 Дашборд</div>`;
   if(isAdmin)tabs+=`<div class="tab${okrugMode?' active':''}" data-okrug="1">🗺️ Округа</div>`;
-  tabs+=`<div class="tab${kpiMode?' active':''}" data-kpi="1">🏆 KPI</div>`;
   tabs+=`<div class="tab${mentorMode?' active':''}" data-mentor="1">🤝 Наставники</div>`;
   tabs+=`<div class="tab${vacationMode?' active':''}" data-vacation="1">🌴 Отпуска</div>`;
   tabs+=`<div class="tab${infoMode?' active':''}" data-info="1">📚 Инфо</div>`;
@@ -1227,7 +1226,6 @@ function renderTabs(){
   const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=async()=>{dashMode=true;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;clearSelection();await loadData();render();};
   const it=document.querySelector('.tab[data-info]');if(it)it.onclick=()=>{infoMode=true;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;clearSelection();render();};
   const ot=document.querySelector('.tab[data-okrug]');if(ot)ot.onclick=()=>{okrugMode=true;kpiMode=false;mentorMode=false;vacationMode=false;infoMode=false;dashMode=false;deactivMode=false;clearSelection();render();};
-  const kt=document.querySelector('.tab[data-kpi]');if(kt)kt.onclick=()=>{kpiMode=true;mentorMode=false;vacationMode=false;infoMode=false;dashMode=false;deactivMode=false;okrugMode=false;clearSelection();render();};
   const mt=document.querySelector('.tab[data-mentor]');if(mt)mt.onclick=()=>{mentorMode=true;vacationMode=false;infoMode=false;dashMode=false;deactivMode=false;kpiMode=false;okrugMode=false;clearSelection();render();};
   const vt=document.querySelector('.tab[data-vacation]');if(vt)vt.onclick=()=>{vacationMode=true;infoMode=false;dashMode=false;deactivMode=false;mentorMode=false;kpiMode=false;okrugMode=false;clearSelection();render();};
   renderPresence();
