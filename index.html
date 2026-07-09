@@ -1335,6 +1335,8 @@ async function renderDashMain(from,to){
   const totalLog = data.filter(r=>r.status==='передан в логистику').length;
   const totalSmena = data.filter(r=>r.status==='вышел в смену').length;
   const totalCombined = totalSB + totalLog;
+  const totalAccepted = totalCombined + totalSmena;
+  const smenaPercent = totalAccepted > 0 ? Math.round(totalSmena / totalAccepted * 100) : 0;
 
   document.getElementById('dashContent').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
@@ -1347,7 +1349,7 @@ async function renderDashMain(from,to){
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#dcfce7;border-radius:10px">
             <span style="font-size:13px;color:#15803d;font-weight:500">Вышел в смену</span>
-            <span style="font-size:22px;font-weight:700;color:#15803d">${totalSmena}</span>
+            <span style="font-size:22px;font-weight:700;color:#15803d">${totalSmena} <span style="font-size:13px;font-weight:500;color:#16a34a">(${smenaPercent}%)</span></span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:var(--bg);border-radius:10px">
             <span style="font-size:11px;color:var(--muted)">из них: проверка СБ</span>
@@ -1364,7 +1366,11 @@ async function renderDashMain(from,to){
         <div style="display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg);border-radius:10px">
             <span style="font-size:13px;color:var(--text);font-weight:500">Итого принято</span>
-            <span style="font-size:22px;font-weight:700;color:var(--accent-dark)">${totalCombined+totalSmena}</span>
+            <span style="font-size:22px;font-weight:700;color:var(--accent-dark)">${totalAccepted}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#dcfce7;border-radius:10px">
+            <span style="font-size:11px;color:#15803d">% вышедших от принятых</span>
+            <span style="font-size:16px;font-weight:700;color:#15803d">${smenaPercent}%</span>
           </div>
         </div>
       </div>
