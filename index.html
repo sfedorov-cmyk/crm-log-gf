@@ -441,6 +441,7 @@ setInterval(()=>{if(isOnline&&getQueue().length)syncQueue()},15000);
 
 const EMAP={'osipova@growfood.pro':'Осипова А.','dupina@growfood.pro':'Дюпина Е.','kislyakova@growfood.pro':'Кислякова Е.','racheeva@growfood.pro':'Рачеева Д.','stepakova@growfood.pro':'Степакова М.','yakovleva@growfood.pro':'Яковлева А.','a.yakovleva@growfood.pro':'Яковлева А.','d.elsafadi@growfood.pro':'Эль-Сафади Д.','ya.fedorova@growfood.pro':'Федорова Я.','s.fedorov@growfood.pro':'Федоров С.'};
 const ALL_R=['Осипова А.','Наседко Е.','Дюпина Е.','Смоленцева К.','Кислякова Е.','Рачеева Д.','Степакова М.','Яковлева А.'];
+const ARCHIVE_R=['Наседко Е.','Смоленцева К.','Дюпина Е.'];
 const ADMINS=['d.elsafadi@growfood.pro','ya.fedorova@growfood.pro','stepakova@growfood.pro','yakovleva@growfood.pro','a.yakovleva@growfood.pro','s.fedorov@growfood.pro'];
 const SPB=['СПБ : СЗ','СПБ : СВ','СПБ : ВОСТОК','СПБ : ЮВ','СПБ : ЮЗ'];
 const MSK=['МСК : САО','МСК : СВАО','МСК : СЗАО','МСК : ВАО','МСК : ЮАО','МСК : ЮВАО','МСК : ЮЗАО','МСК : ЗАО'];
@@ -1213,13 +1214,14 @@ let dashMode=false;
 
 function renderTabs(){
   const recs=getRecs();
-  let tabs=recs.map((r,i)=>`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&i===tab?' active':''}" data-i="${i}">${r} <span class="pdot" data-rec="${r}" style="font-size:11px">🤍</span></div>`).join('');
+  let tabs=recs.filter(r=>!ARCHIVE_R.includes(r)).map(r=>{const origI=recs.indexOf(r);return`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&origI===tab?' active':''}" data-i="${origI}">${r} <span class="pdot" data-rec="${r}" style="font-size:11px">🤍</span></div>`;}).join('');
   if(isAdmin)tabs+=`<div class="tab${dashMode?' active':''}" data-dash="1">📊 Дашборд</div>`;
   if(isAdmin)tabs+=`<div class="tab${okrugMode?' active':''}" data-okrug="1">🗺️ Округа</div>`;
   tabs+=`<div class="tab${kpiMode?' active':''}" data-kpi="1">🏆 KPI</div>`;
   tabs+=`<div class="tab${mentorMode?' active':''}" data-mentor="1">🤝 Наставники</div>`;
   tabs+=`<div class="tab${vacationMode?' active':''}" data-vacation="1">🌴 Отпуска</div>`;
   tabs+=`<div class="tab${infoMode?' active':''}" data-info="1">📚 Инфо</div>`;
+  tabs+=recs.filter(r=>ARCHIVE_R.includes(r)).map(r=>{const origI=recs.indexOf(r);return`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&origI===tab?' active':''}" data-i="${origI}" style="opacity:0.65">${r} <span class="pdot" data-rec="${r}" style="font-size:11px">🤍</span></div>`;}).join('');
   document.getElementById('tabsWrap').innerHTML=tabs;
   document.querySelectorAll('.tab[data-i]').forEach(t=>{t.onclick=()=>{dashMode=false;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;tab=+t.dataset.i;F={from:td(),to:td(),okrug:'',da:'',status:'',city:'',fio:'',tel:''};clearSelection();loadData()}});
   const dt=document.querySelector('.tab[data-dash]');if(dt)dt.onclick=async()=>{dashMode=true;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;clearSelection();await loadData();render();};
