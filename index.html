@@ -1491,13 +1491,14 @@ function renderCards(fr){
       <button onclick="event.stopPropagation();copyRow('${r.id}')" title="Копировать" style="position:absolute;top:12px;right:40px;background:none;border:none;cursor:pointer;font-size:14px;opacity:.6" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">📋</button>
       <div onclick="openEdit('${r.id}')">
         <div class="card-top"><div class="card-name">${r.fio||'—'}</div><div class="card-time">${fd(r.date)} ${r.time||''}</div></div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <div class="card-tel" style="margin-bottom:0" onclick="event.stopPropagation();copyPhone('${esc(r.tel||'')}')">${r.tel||'—'}</div>
-          ${r.tel&&r.tel!=='—'?`<a href="https://wa.me/${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#25d366;color:#fff;border-radius:12px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0">💬 WA</a> <a href="https://t.me/+${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" title="Telegram" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#229ed9;color:#fff;border-radius:12px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0">✈️ TG</a>`:''}
-        </div>
+        <div class="card-tel" onclick="event.stopPropagation();copyPhone('${esc(r.tel||'')}')">${r.tel||'—'}</div>
         <div class="card-chips">${r.okrug&&r.okrug!=='—'?`<span class="chip c-empty">${r.okrug}</span>`:''}${daBadge(r.da)}${stBadge(r.status)}${r.jur&&r.jur!=='—'?`<span class="chip c-empty">${r.jur}</span>`:''}${r.city&&r.city!=='—'?`<span class="chip c-empty">${r.city}</span>`:''}</div>
         ${r.comment?`<div class="card-comment">${r.comment}</div>`:''}
       </div>
+      ${r.tel&&r.tel!=='—'?`<div style="display:flex;gap:6px;margin-top:6px">
+        <a href="https://wa.me/${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:3px;padding:4px 10px;background:#25d366;color:#fff;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none">💬 WA</a>
+        <a href="https://t.me/+${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:3px;padding:4px 10px;background:#229ed9;color:#fff;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none">✈️ TG</a>
+      </div>`:''}
     </div>`}).join('');
 }
 
