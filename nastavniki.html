@@ -203,6 +203,9 @@ tr:hover td{background:var(--bg3)!important}
 .inline-cell:hover{background:var(--gold-bg)}
 .inline-date{border-radius:4px}
 .inline-date:hover{background:var(--gold-bg)!important}
+.inline-date.date-filled{background:var(--green-text)!important;color:#fff;border-color:var(--green-text)}
+.inline-date.date-filled:hover{background:var(--green)!important;color:#fff}
+.inline-date.date-filled::-webkit-calendar-picker-indicator{filter:invert(1)}
 .inline-select{border-radius:4px;-webkit-appearance:none;appearance:none;padding:2px 4px}
 .inline-select:hover{background:var(--gold-bg)!important}
 /* OKRUG */
@@ -701,7 +704,8 @@ function inlineEdit(id,field,value){
   return`<span class="inline-cell" contenteditable="true" data-id="${id}" data-field="${field}">${value||''}</span>`;
 }
 function inlineDate(id,field,value){
-  return`<input type="date" class="inline-date" data-id="${id}" data-field="${field}" value="${value||''}">`;
+  const filledCls=(field==='date_first_shift'&&value)?' date-filled':'';
+  return`<input type="date" class="inline-date${filledCls}" data-id="${id}" data-field="${field}" value="${value||''}">`;
 }
 function inlineSmeny(id,value){
   const opts=[0,1,2,3,4,5].map(n=>`<option value="${n}" ${+value===n?'selected':''}>${n}${n===5?'+':''}</option>`).join('');
@@ -823,6 +827,10 @@ function initTableEvents(){
     const id=el.dataset.id,field=el.dataset.field;
     const val=field==='smeny'?+el.value:el.value;
     const r=rows.find(x=>x.id===id);if(r)r[field]=val;
+    // подсветка зелёным при заполнении даты выхода
+    if(field==='date_first_shift'){
+      el.classList.toggle('date-filled',!!val);
+    }
     // обновляем сумму без перерендера
     if(field==='smeny'){
       const row=el.closest('tr');
