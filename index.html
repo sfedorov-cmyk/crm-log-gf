@@ -1330,7 +1330,7 @@ async function renderDashMain(from,to){
   const ST={'думает':'#3730a3','недозвон':'#8e8e93','отказ':'#b91c1c','принят':'#15803d','оформление':'#0e7490','стажировка':'#7e22ce','резерв':'#1d4ed8','жду доки':'#9d174d','проверка СБ':'#854d0e','передан в логистику':'#15803d'};
   const stats={};ALL_R.forEach(r=>{stats[r]={total:0,logistic:0,combined:0,statuses:{}}});
   data.forEach(row=>{if(!stats[row.recruiter])return;stats[row.recruiter].total++;if(['передан в логистику','проверка СБ','вышел в смену'].includes(row.status))stats[row.recruiter].logistic++;if(['передан в логистику','проверка СБ','вышел в смену'].includes(row.status))stats[row.recruiter].combined++;if(row.status&&row.status!=='—')stats[row.recruiter].statuses[row.status]=(stats[row.recruiter].statuses[row.status]||0)+1;});
-  const rating=[...ALL_R].sort((a,b)=>stats[b].logistic-stats[a].logistic);const maxL=Math.max(...ALL_R.map(r=>stats[r].logistic),1);
+  const RATING_R=ALL_R.filter(r=>!ARCHIVE_R.includes(r));const rating=[...RATING_R].sort((a,b)=>stats[b].logistic-stats[a].logistic);const maxL=Math.max(...RATING_R.map(r=>stats[r].logistic),1);
   // Общие итоги
   const totalSB = data.filter(r=>r.status==='проверка СБ').length;
   const totalLog = data.filter(r=>r.status==='передан в логистику').length;
@@ -1491,7 +1491,10 @@ function renderCards(fr){
       <button onclick="event.stopPropagation();copyRow('${r.id}')" title="Копировать" style="position:absolute;top:12px;right:40px;background:none;border:none;cursor:pointer;font-size:14px;opacity:.6" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">📋</button>
       <div onclick="openEdit('${r.id}')">
         <div class="card-top"><div class="card-name">${r.fio||'—'}</div><div class="card-time">${fd(r.date)} ${r.time||''}</div></div>
-        <div class="card-tel" onclick="event.stopPropagation();copyPhone('${esc(r.tel||'')}')">${r.tel||'—'}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <div class="card-tel" style="margin-bottom:0" onclick="event.stopPropagation();copyPhone('${esc(r.tel||'')}')">${r.tel||'—'}</div>
+          ${r.tel&&r.tel!=='—'?`<a href="https://wa.me/${r.tel.replace(/[^0-9]/g,'')}?text=${encodeURIComponent('Здравствуйте, ${r.fio ? r.fio.split(' ')[0] : ''}! Не смогли дозвониться до вас. Это компания Grow Food, по позиции водителя-курьера. Отправили вам приглашение на HH — посмотрите, пожалуйста. Будем рады пообщаться!')}" target="_blank" onclick="event.stopPropagation()" title="Написать в WhatsApp" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#25d366;color:#fff;border-radius:12px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0">💬 WA</a><a href="https://t.me/+${r.tel.replace(/[^0-9]/g,'').replace(/^7/,'7')}?text=${encodeURIComponent('Здравствуйте, ${r.fio ? r.fio.split(\' \')[0] : \'\'}! Не смогли дозвониться до вас. Это компания Grow Food, по позиции водителя-курьера. Отправили вам приглашение на HH — посмотрите, пожалуйста. Будем рады пообщаться!')}" target="_blank" onclick="event.stopPropagation()" title="Написать в Telegram" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#229ed9;color:#fff;border-radius:12px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0">✈️ TG</a>`:''}`
+        </div>
         <div class="card-chips">${r.okrug&&r.okrug!=='—'?`<span class="chip c-empty">${r.okrug}</span>`:''}${daBadge(r.da)}${stBadge(r.status)}${r.jur&&r.jur!=='—'?`<span class="chip c-empty">${r.jur}</span>`:''}${r.city&&r.city!=='—'?`<span class="chip c-empty">${r.city}</span>`:''}</div>
         ${r.comment?`<div class="card-comment">${r.comment}</div>`:''}
       </div>
