@@ -1461,10 +1461,13 @@ function getCityAndNastavnik(crmCity, crmOkrug) {
 
 async function syncFromCRM() {
   try {
+    // ИСПРАВЛЕНО: теперь ловим три статуса, а не только "проверка СБ".
+    // Раньше кандидаты со статусами "передан в логистику" и "вышел в смену"
+    // никогда не попадали в таблицу наставников — это и было причиной пропусков за июль.
     const { data: crmRows, error: crmErr } = await sb
       .from('candidates')
       .select('id,fio,city,okrug,date,tel')
-      .eq('status', 'проверка СБ')
+      .in('status', ['проверка СБ', 'передан в логистику', 'вышел в смену'])
 
     if (crmErr) { console.warn('❌ CRM sync error:', crmErr.message); return; }
     if (!crmRows || !crmRows.length) { console.log('ℹ️ CRM: нет новых записей'); return; }
@@ -1500,7 +1503,7 @@ async function syncFromCRM() {
         continue;
       }
       
-      // Проверяем по нормализованному номеру телефона
+      // Проверяем по нормализованному номеру телефона — защита от дублей
       if(telNorm.length >= 10 && existingPhones.has(telNorm)){
         console.log(`⏭️  Пропущен (телефон уже есть): ${c.fio} (${tel})`);
         continue;
@@ -1566,7 +1569,7 @@ async function syncFromCRM() {
 }
 
 // СИНХРОНИЗАЦИЯ С CRM (проверка по номеру телефона)
-console.log('🔄 Синхронизация CRM включена');
+console.log('🔄 Синхронизация CRM включена (статусы: проверка СБ, передан в логистику, вышел в смену)');
 syncFromCRM();
 setInterval(() => { if (!document.hidden) syncFromCRM(); }, 30000);
 // ===== END СИНХРОНИЗАЦИЯ С CRM =====
