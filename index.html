@@ -1472,7 +1472,13 @@ function renderTable(fr){
       <td><span class="drag-handle">⠿</span></td>
       <td>${fd(r.date)}</td><td>${r.time||'—'}</td>
       <td style="font-weight:600;min-width:140px">${r.fio||'—'}</td>
-      <td style="white-space:nowrap;cursor:pointer;color:var(--text)" onclick="copyPhone('${esc(r.tel||'')}')" title="Копировать">${r.tel||'—'}</td>
+      <td style="white-space:nowrap">
+        <span style="cursor:pointer;color:var(--text)" onclick="copyPhone('${esc(r.tel||'')}')" title="Копировать">${r.tel||'—'}</span>
+        ${r.tel&&r.tel!=='—'?`<div style="display:flex;gap:4px;margin-top:4px">
+          <a href="https://wa.me/${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;padding:2px 7px;background:#25d366;color:#fff;border-radius:10px;font-size:11px;font-weight:600;text-decoration:none">💬 WA</a>
+          <a href="https://t.me/+${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;padding:2px 7px;background:#229ed9;color:#fff;border-radius:10px;font-size:11px;font-weight:600;text-decoration:none">✈️ TG</a>
+        </div>`:''}
+      </td>
       <td style="white-space:nowrap">${r.okrug||'—'}</td>
       <td>${daBadge(r.da)}</td><td>${stBadge(r.status)}</td>
       <td>${r.jur||'—'}</td><td>${r.city||'—'}</td>
