@@ -1475,8 +1475,8 @@ function renderTable(fr){
       <td style="white-space:nowrap">
         <span style="cursor:pointer;color:var(--text)" onclick="copyPhone('${esc(r.tel||'')}')" title="Копировать">${r.tel||'—'}</span>
         ${r.tel&&r.tel!=='—'?`<div style="display:flex;gap:4px;margin-top:4px">
-          <a href="https://wa.me/${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;padding:2px 7px;background:#25d366;color:#fff;border-radius:10px;font-size:11px;font-weight:600;text-decoration:none">💬 WA</a>
-          <a href="https://t.me/+${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;padding:2px 7px;background:#229ed9;color:#fff;border-radius:10px;font-size:11px;font-weight:600;text-decoration:none">✈️ TG</a>
+          <a href="https://wa.me/${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;padding:2px 7px;background:none;color:#25d366;border:1.5px solid #25d366;border-radius:10px;font-size:11px;font-weight:600;text-decoration:none">💬 WA</a>
+          <a href="https://t.me/+${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;padding:2px 7px;background:none;color:#229ed9;border:1.5px solid #229ed9;border-radius:10px;font-size:11px;font-weight:600;text-decoration:none">✈️ TG</a>
         </div>`:''}
       </td>
       <td style="white-space:nowrap">${r.okrug||'—'}</td>
@@ -1502,8 +1502,8 @@ function renderCards(fr){
         ${r.comment?`<div class="card-comment">${r.comment}</div>`:''}
       </div>
       ${r.tel&&r.tel!=='—'?`<div style="display:flex;gap:6px;margin-top:6px">
-        <a href="https://wa.me/${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:3px;padding:4px 10px;background:#25d366;color:#fff;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none">💬 WA</a>
-        <a href="https://t.me/+${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:3px;padding:4px 10px;background:#229ed9;color:#fff;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none">✈️ TG</a>
+        <a href="https://wa.me/${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:3px;padding:4px 10px;background:none;color:#25d366;border:1.5px solid #25d366;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none">💬 WA</a>
+        <a href="https://t.me/+${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:3px;padding:4px 10px;background:none;color:#229ed9;border:1.5px solid #229ed9;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none">✈️ TG</a>
       </div>`:''}
     </div>`}).join('');
 }
