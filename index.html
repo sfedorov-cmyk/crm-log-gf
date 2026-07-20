@@ -1476,7 +1476,7 @@ function renderTable(fr){
         <span style="cursor:pointer;color:var(--text)" onclick="copyPhone('${esc(r.tel||'')}')" title="Копировать">${r.tel||'—'}</span>
         ${r.tel&&r.tel!=='—'?`<div style="display:flex;gap:4px;margin-top:4px">
           <a href="https://wa.me/${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;padding:2px 7px;background:none;color:#25d366;border:1.5px solid #25d366;border-radius:10px;font-size:11px;font-weight:600;text-decoration:none">💬 WA</a>
-          <a href="https://t.me/+${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;padding:2px 7px;background:none;color:#229ed9;border:1.5px solid #229ed9;border-radius:10px;font-size:11px;font-weight:600;text-decoration:none">✈️ TG</a>
+          <a href="https://t.me/+${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation();copyTgMsg(this)" style="display:inline-flex;align-items:center;padding:2px 7px;background:none;color:#229ed9;border:1.5px solid #229ed9;border-radius:10px;font-size:11px;font-weight:600;text-decoration:none">✈️ TG</a>
         </div>`:''}
       </td>
       <td style="white-space:nowrap">${r.okrug||'—'}</td>
@@ -2437,6 +2437,30 @@ async function renderOkrug(){
 }
 window.renderOkrug = renderOkrug;
 // ===== END OKRUG TABLE =====
+
+function copyTgMsg(btn) {
+  const msg = 'Здравствуйте! Не смогли дозвониться до вас. Это компания Grow Food, по позиции водителя-курьера. Отправили вам приглашение на HH — посмотрите, пожалуйста. Будем рады пообщаться!';
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = msg;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const orig = btn.textContent;
+    btn.textContent = '✅ Скопировано';
+    setTimeout(() => btn.textContent = orig, 2000);
+  } catch(e) {
+    navigator.clipboard && navigator.clipboard.writeText(msg).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✅ Скопировано';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
+  }
+}
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
