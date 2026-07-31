@@ -1230,9 +1230,19 @@ function renderTabs(){
     const t=e.target.closest('[data-responses]');
     if(t){
       responsesMode=true;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;
-      document.getElementById('cardsWrap').style.display='none';
-      document.getElementById('filtersBar').style.display='none';
-      document.getElementById('statsBar').style.display='none';
+      const el_0=document.getElementById('cardsWrap');if(el_0)el_0.style.display='none';
+      const el_1=document.getElementById('filtersBar');if(el_1)el_1.style.display='none';
+      const el_2=document.getElementById('statsBar');if(el_2)el_2.style.display='none';
+      const el_3=document.getElementById('dashWrap');if(el_3)el_3.style.display='none';
+      const el_4=document.getElementById('infoWrap');if(el_4)el_4.style.display='none';
+      const el_5=document.getElementById('deactivWrap');if(el_5)el_5.style.display='none';
+      const el_6=document.getElementById('vacationWrap');if(el_6)el_6.style.display='none';
+      const el_7=document.getElementById('mentorWrap');if(el_7)el_7.style.display='none';
+      const el_8=document.getElementById('kpiWrap');if(el_8)el_8.style.display='none';
+      const el_9=document.getElementById('okrugWrap');if(el_9)el_9.style.display='none';
+      const el_10=document.getElementById('bulkBar');if(el_10)el_10.style.display='none';
+      const el_11=document.getElementById('copyBar');if(el_11)el_11.style.display='none';
+      document.querySelector('.table-wrap').style.display='none';
       clearSelection();renderResponses();renderTabs();
     }
   };
@@ -1248,9 +1258,19 @@ function renderTabs(){
 
 function render(){
   const rw=document.getElementById('responsesWrap');if(rw)rw.classList.add('hidden');
-  document.getElementById('cardsWrap').style.display='';
-  document.getElementById('filtersBar').style.display='';
-  document.getElementById('statsBar').style.display='';
+  const el_0=document.getElementById('cardsWrap');if(el_0)el_0.style.display='';
+  const el_1=document.getElementById('filtersBar');if(el_1)el_1.style.display='';
+  const el_2=document.getElementById('statsBar');if(el_2)el_2.style.display='';
+  const el_3=document.getElementById('dashWrap');if(el_3)el_3.style.display='';
+  const el_4=document.getElementById('infoWrap');if(el_4)el_4.style.display='';
+  const el_5=document.getElementById('deactivWrap');if(el_5)el_5.style.display='';
+  const el_6=document.getElementById('vacationWrap');if(el_6)el_6.style.display='';
+  const el_7=document.getElementById('mentorWrap');if(el_7)el_7.style.display='';
+  const el_8=document.getElementById('kpiWrap');if(el_8)el_8.style.display='';
+  const el_9=document.getElementById('okrugWrap');if(el_9)el_9.style.display='';
+  const el_10=document.getElementById('bulkBar');if(el_10)el_10.style.display='';
+  const el_11=document.getElementById('copyBar');if(el_11)el_11.style.display='';
+  document.querySelector('.table-wrap').style.display='';
   renderTabs();
   setTimeout(renderPresence,500);
   const dw=document.getElementById('dashWrap');const tw=document.querySelector('.table-wrap');const cw=document.getElementById('cardsWrap');
