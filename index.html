@@ -2722,6 +2722,9 @@ async function renderHH(){
         <button onclick="resetQueue()" style="background:none;border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer">
           ↺ Сбросить очередь
         </button>
+        <button onclick="markAllExistingAsLoaded(this)" ${!hasToken||tokenExpired?'disabled':''} style="background:none;border:1.5px solid #f59e0b;color:#f59e0b;border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer;opacity:${!hasToken||tokenExpired?'0.5':'1'}">
+          📌 Пометить все текущие как загруженные
+        </button>
       </div>
       <div id="hh-sync-log" style="margin-top:12px;font-size:12px;color:var(--muted)"></div>
     </div>
@@ -2943,6 +2946,74 @@ async function syncHHResponses(btn){
   } catch(e){
     log.textContent='❌ Ошибка: '+e.message;
     btn.disabled=false;btn.textContent='🔄 Загрузить новые отклики';
+  }
+}
+
+// Пометить все текущие отклики как загруженные (без распределения)
+async function markAllExistingAsLoaded(btn){
+  if(!confirm('Система запомнит все текущие отклики на HH как уже обработанные.\nПосле этого будут загружаться только НОВЫЕ отклики.\n\nПродолжить?'))return;
+
+  btn.disabled=true;btn.textContent='⏳ Загружаю...';
+  const log=document.getElementById('hh-sync-log');
+  log.textContent='📋 Получаю список текущих откликов...';
+
+  let settings=await getHHSettings();
+  if(!settings.access_token){log.textContent='❌ Нет токена — авторизуйся сначала';btn.disabled=false;btn.textContent='📌 Пометить все текущие как загруженные';return;}
+
+  // Обновляем токен если истёк
+  if(settings.expires_at && Date.now()>settings.expires_at){
+    const ok=await refreshHHToken();
+    if(!ok){log.textContent='❌ Токен истёк — нужна повторная авторизация';btn.disabled=false;btn.textContent='📌 Пометить все текущие как загруженные';return;}
+    settings=await getHHSettings();
+  }
+
+  const token=settings.access_token;
+  let totalMarked=0;
+
+  try {
+    // Получаем все активные вакансии
+    const vacResp=await fetch('https://api.hh.ru/vacancies/mine?status=published&per_page=50',{
+      headers:{'Authorization':`Bearer ${token}`,'HH-User-Agent':'GrowFood CRM (ya.fedorova@growfood.pro)'}
+    });
+    const vacData=await vacResp.json();
+    const vacancies=vacData.items||[];
+
+    // Получаем уже помеченные
+    const {data:existingResps}=await sb.from('responses').select('hh_id').not('hh_id','is',null);
+    const existingIds=new Set((existingResps||[]).map(r=>r.hh_id));
+
+    // Для каждой вакансии получаем отклики и помечаем без распределения
+    for(const vac of vacancies){
+      log.textContent=`🔍 Обрабатываю вакансию: ${vac.name}...`;
+      const negResp=await fetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,{
+        headers:{'Authorization':`Bearer ${token}`,'HH-User-Agent':'GrowFood CRM (ya.fedorova@growfood.pro)'}
+      });
+      const negData=await negResp.json();
+      const negotiations=negData.items||[];
+
+      for(const neg of negotiations){
+        const hhId=String(neg.id);
+        if(existingIds.has(hhId))continue;
+
+        // Сохраняем только hh_id без создания записи у рекрутёра
+        await sb.from('responses').insert({
+          recruiter:'__marked__',
+          fio:'—',
+          tel:'—',
+          hh_id:hhId
+        });
+        existingIds.add(hhId);
+        totalMarked++;
+      }
+    }
+
+    log.innerHTML=`✅ Готово! Помечено откликов: <b>${totalMarked}</b>. Теперь при синхронизации будут загружаться только новые.`;
+    btn.textContent='📌 Пометить все текущие как загруженные';
+    btn.disabled=false;
+
+  } catch(e){
+    log.textContent='❌ Ошибка: '+e.message;
+    btn.disabled=false;btn.textContent='📌 Пометить все текущие как загруженные';
   }
 }
 
