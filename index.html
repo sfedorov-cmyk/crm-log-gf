@@ -290,6 +290,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="info-wrap hidden" id="mentorWrap"></div>
   <div class="info-wrap hidden" id="kpiWrap"></div>
   <div class="info-wrap hidden" id="responsesWrap"></div>
+  <div class="info-wrap hidden" id="hhWrap"></div>
   <div class="info-wrap hidden" id="okrugWrap"></div>
 </div>
 
@@ -457,6 +458,7 @@ let calSelectedDate=td(),calNotes=[];
 let dashTab='main',dashPeriod='week',dashFrom='',dashTo='';
 let infoMode=false;
 let responsesMode=false;
+let hhMode=false;
 let deactivMode=false;
 let vacationMode=false;
 let mentorMode=false;
@@ -1225,8 +1227,17 @@ function renderTabs(){
   tabs+=`<div class="tab${infoMode?' active':''}" data-info="1">📚 Инфо</div>`;
   tabs+=recs.filter(r=>ARCHIVE_R.includes(r)).map(r=>{const origI=recs.indexOf(r);return`<div class="tab${!dashMode&&!infoMode&&!deactivMode&&origI===tab?' active':''}" data-i="${origI}" style="opacity:0.65">${r} <span class="pdot" data-rec="${r}" style="font-size:11px">🤍</span></div>`;}).join('');
   tabs+=`<div class="tab${responsesMode?' active':''}" data-responses="1">📥 Отклики</div>`;
+  if(isAdmin)tabs+=`<div class="tab${hhMode?' active':''}" data-hh="1">🔗 HH.ru</div>`;
   document.getElementById('tabsWrap').innerHTML=tabs;
   document.getElementById('tabsWrap').onclick=function(e){
+    const hh=e.target.closest('[data-hh]');
+    if(hh){
+      hhMode=true;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;
+      const allWraps=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','bulkBar','copyBar'];
+      allWraps.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+      try{document.querySelector('.table-wrap').style.display='none';}catch(e){}
+      clearSelection();renderHH();renderTabs();return;
+    }
     const t=e.target.closest('[data-responses]');
     if(t){
       responsesMode=true;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;
@@ -1258,6 +1269,8 @@ function renderTabs(){
 
 function render(){
   const rw=document.getElementById('responsesWrap');if(rw)rw.classList.add('hidden');
+  const hw=document.getElementById('hhWrap');if(hw)hw.classList.add('hidden');
+  hhMode=false;
   const el_0=document.getElementById('cardsWrap');if(el_0)el_0.style.display='';
   const el_1=document.getElementById('filtersBar');if(el_1)el_1.style.display='';
   const el_2=document.getElementById('statsBar');if(el_2)el_2.style.display='';
@@ -2610,6 +2623,347 @@ window.renderResponses=renderResponses;
 window.openAddResponse=openAddResponse;
 window.saveResponse=saveResponse;
 window.deleteResponse=deleteResponse;
+
+// =================== HH.ru ИНТЕГРАЦИЯ ===================
+
+const HH_REDIRECT = 'https://sfedorov-cmyk.github.io/crm-log-gf/';
+const HH_SCOPE = 'employer_negotiations';
+const ACTIVE_RECS_HH = ['Осипова А.','Кислякова Е.','Рачеева Д.','Степакова М.','Яковлева А.'];
+
+// Получаем настройки HH из Supabase
+async function getHHSettings(){
+  const {data}=await sb.from('info_data').select('*').eq('key','hh_settings').single();
+  return data ? JSON.parse(data.value||'{}') : {};
+}
+
+// Сохраняем настройки HH в Supabase
+async function saveHHSettings(settings){
+  const {data}=await sb.from('info_data').select('*').eq('key','hh_settings').single();
+  if(data){
+    await sb.from('info_data').update({value:JSON.stringify(settings)}).eq('key','hh_settings');
+  } else {
+    await sb.from('info_data').insert({key:'hh_settings',value:JSON.stringify(settings)});
+  }
+}
+
+// Получаем текущий индекс очереди рекрутёра
+async function getQueueIndex(){
+  const {data}=await sb.from('info_data').select('*').eq('key','hh_queue_index').single();
+  return data ? parseInt(data.value||'0') : 0;
+}
+
+// Сохраняем индекс очереди
+async function saveQueueIndex(idx){
+  const {data}=await sb.from('info_data').select('*').eq('key','hh_queue_index').single();
+  if(data){
+    await sb.from('info_data').update({value:String(idx)}).eq('key','hh_queue_index');
+  } else {
+    await sb.from('info_data').insert({key:'hh_queue_index',value:String(idx)});
+  }
+}
+
+// Рендер страницы HH настроек
+async function renderHH(){
+  const wrap=document.getElementById('hhWrap');
+  if(!wrap)return;
+  wrap.classList.remove('hidden');
+  wrap.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted)">Загрузка...</div>';
+
+  const settings=await getHHSettings();
+  const qIdx=await getQueueIndex();
+  const nextRec=ACTIVE_RECS_HH[qIdx % ACTIVE_RECS_HH.length];
+  const hasToken=!!settings.access_token;
+  const tokenExpired=settings.expires_at && Date.now() > settings.expires_at;
+
+  wrap.innerHTML=`<div style="padding:20px;max-width:700px;margin:0 auto">
+    <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px">🔗 Интеграция с HH.ru</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px">Автоматическое распределение откликов между рекрутёрами</div>
+
+    <!-- Блок настроек -->
+    <div style="background:var(--card);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px #0001">
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px">⚙️ Настройки приложения HH</div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px">CLIENT ID</label>
+        <input id="hh-client-id" type="text" placeholder="Вставьте client_id из dev.hh.ru" value="${settings.client_id||''}"
+          style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--bg);color:var(--text);outline:none;font-family:monospace">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px">CLIENT SECRET</label>
+        <input id="hh-client-secret" type="password" placeholder="Вставьте client_secret из dev.hh.ru" value="${settings.client_secret||''}"
+          style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--bg);color:var(--text);outline:none;font-family:monospace">
+      </div>
+      <button onclick="saveHHKeys()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer">
+        💾 Сохранить ключи
+      </button>
+    </div>
+
+    <!-- Блок авторизации -->
+    <div style="background:var(--card);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px #0001">
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">🔑 Авторизация в HH.ru</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">
+        ${hasToken && !tokenExpired
+          ? '✅ Авторизация активна'
+          : '❌ Требуется авторизация — нажми кнопку ниже'}
+      </div>
+      <button onclick="startHHAuth()" style="background:${hasToken && !tokenExpired ? '#34c759' : '#e84040'};color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer">
+        ${hasToken && !tokenExpired ? '🔄 Переавторизоваться' : '🔐 Авторизоваться через HH'}
+      </button>
+    </div>
+
+    <!-- Блок синхронизации -->
+    <div style="background:var(--card);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px #0001">
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">📥 Синхронизация откликов</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Следующий отклик уйдёт: <b style="color:var(--accent)">${nextRec}</b></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Очерёдность: ${ACTIVE_RECS_HH.map((r,i)=>`<span style="color:${i===qIdx%ACTIVE_RECS_HH.length?'var(--accent)':'var(--muted)'};font-weight:${i===qIdx%ACTIVE_RECS_HH.length?'700':'400'}">${r}</span>`).join(' → ')}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button onclick="syncHHResponses(this)" ${!hasToken||tokenExpired?'disabled':''} style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;opacity:${!hasToken||tokenExpired?'0.5':'1'}">
+          🔄 Загрузить новые отклики
+        </button>
+        <button onclick="resetQueue()" style="background:none;border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer">
+          ↺ Сбросить очередь
+        </button>
+      </div>
+      <div id="hh-sync-log" style="margin-top:12px;font-size:12px;color:var(--muted)"></div>
+    </div>
+
+    <!-- Инструкция -->
+    <div style="background:#f0f9ff;border-radius:14px;padding:16px;font-size:12px;color:#0369a1;line-height:1.6">
+      <b>Как это работает:</b><br>
+      1. Вставь client_id и client_secret из dev.hh.ru → сохрани<br>
+      2. Нажми «Авторизоваться через HH» → разреши доступ<br>
+      3. Нажми «Загрузить новые отклики» — система сама найдёт все активные вакансии<br>
+      4. Отклики распределятся по очереди между рекрутёрами<br>
+      5. Каждый рекрутёр увидит кандидата у себя во вкладке с пометкой «Отклик с HH»
+    </div>
+  </div>`;
+}
+
+// Сохраняем ключи
+async function saveHHKeys(){
+  const clientId=document.getElementById('hh-client-id').value.trim();
+  const clientSecret=document.getElementById('hh-client-secret').value.trim();
+  if(!clientId||!clientSecret){alert('Заполни оба поля');return;}
+  const settings=await getHHSettings();
+  settings.client_id=clientId;
+  settings.client_secret=clientSecret;
+  await saveHHSettings(settings);
+  alert('✅ Ключи сохранены!');
+}
+
+// Авторизация через HH
+async function startHHAuth(){
+  const settings=await getHHSettings();
+  if(!settings.client_id){alert('Сначала сохрани client_id');return;}
+  const state=Math.random().toString(36).slice(2);
+  localStorage.setItem('hh_state',state);
+  const url=`https://hh.ru/oauth/authorize?response_type=code&client_id=${settings.client_id}&redirect_uri=${encodeURIComponent(HH_REDIRECT)}&scope=${HH_SCOPE}&state=${state}`;
+  window.location.href=url;
+}
+
+// Обработка callback после авторизации HH
+async function handleHHCallback(){
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('code');
+  const state=params.get('state');
+  if(!code)return;
+  const savedState=localStorage.getItem('hh_state');
+  if(state!==savedState){alert('Ошибка авторизации: неверный state');return;}
+
+  const settings=await getHHSettings();
+  // Обмениваем code на token через Supabase Edge Function (чтобы не светить client_secret)
+  // Пока сохраняем code для ручного обмена
+  settings.auth_code=code;
+  settings.code_received_at=Date.now();
+  await saveHHSettings(settings);
+
+  // Убираем параметры из URL
+  window.history.replaceState({},'',window.location.pathname);
+
+  // Получаем токен
+  await exchangeHHCode(code, settings);
+}
+
+// Обмен кода на токен
+async function exchangeHHCode(code, settings){
+  try {
+    const resp=await fetch('https://hh.ru/oauth/token',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({
+        grant_type:'authorization_code',
+        client_id:settings.client_id,
+        client_secret:settings.client_secret,
+        code:code,
+        redirect_uri:HH_REDIRECT
+      })
+    });
+    const data=await resp.json();
+    if(data.access_token){
+      settings.access_token=data.access_token;
+      settings.refresh_token=data.refresh_token;
+      settings.expires_at=Date.now()+(data.expires_in*1000);
+      delete settings.auth_code;
+      await saveHHSettings(settings);
+      alert('✅ Авторизация прошла успешно!');
+      renderHH();
+    } else {
+      console.error('HH token error:',data);
+      alert('Ошибка получения токена: '+JSON.stringify(data));
+    }
+  } catch(e){
+    console.error('HH exchange error:',e);
+  }
+}
+
+// Обновление токена
+async function refreshHHToken(){
+  const settings=await getHHSettings();
+  if(!settings.refresh_token)return false;
+  try {
+    const resp=await fetch('https://hh.ru/oauth/token',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({
+        grant_type:'refresh_token',
+        refresh_token:settings.refresh_token
+      })
+    });
+    const data=await resp.json();
+    if(data.access_token){
+      settings.access_token=data.access_token;
+      settings.refresh_token=data.refresh_token;
+      settings.expires_at=Date.now()+(data.expires_in*1000);
+      await saveHHSettings(settings);
+      return true;
+    }
+  } catch(e){}
+  return false;
+}
+
+// Синхронизация откликов
+async function syncHHResponses(btn){
+  const log=document.getElementById('hh-sync-log');
+  btn.disabled=true;btn.textContent='⏳ Загружаю...';
+
+  let settings=await getHHSettings();
+
+  // Проверяем токен
+  if(!settings.access_token){log.textContent='❌ Нет токена — авторизуйся сначала';btn.disabled=false;btn.textContent='🔄 Загрузить новые отклики';return;}
+
+  // Обновляем токен если истёк
+  if(settings.expires_at && Date.now()>settings.expires_at){
+    log.textContent='🔄 Обновляю токен...';
+    const ok=await refreshHHToken();
+    if(!ok){log.textContent='❌ Токен истёк — нужна повторная авторизация';btn.disabled=false;btn.textContent='🔄 Загрузить новые отклики';return;}
+    settings=await getHHSettings();
+  }
+
+  const token=settings.access_token;
+  let totalNew=0;
+
+  try {
+    // 1. Получаем все активные вакансии
+    log.textContent='📋 Получаю список вакансий...';
+    const vacResp=await fetch('https://api.hh.ru/vacancies/mine?status=published&per_page=50',{
+      headers:{'Authorization':`Bearer ${token}`,'HH-User-Agent':'GrowFood CRM (ya.fedorova@growfood.pro)'}
+    });
+    const vacData=await vacResp.json();
+    const vacancies=vacData.items||[];
+    log.textContent=`📋 Найдено вакансий: ${vacancies.length}`;
+
+    if(vacancies.length===0){log.textContent='ℹ️ Активных вакансий не найдено';btn.disabled=false;btn.textContent='🔄 Загрузить новые отклики';return;}
+
+    // 2. Получаем уже загруженные отклики из нашей БД
+    const {data:existingResps}=await sb.from('responses').select('hh_id').not('hh_id','is',null);
+    const existingIds=new Set((existingResps||[]).map(r=>r.hh_id));
+
+    // 3. Получаем индекс очереди
+    let qIdx=await getQueueIndex();
+
+    // 4. Для каждой вакансии получаем отклики
+    for(const vac of vacancies){
+      log.textContent=`🔍 Проверяю вакансию: ${vac.name}...`;
+      const negResp=await fetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,{
+        headers:{'Authorization':`Bearer ${token}`,'HH-User-Agent':'GrowFood CRM (ya.fedorova@growfood.pro)'}
+      });
+      const negData=await negResp.json();
+      const negotiations=negData.items||[];
+
+      for(const neg of negotiations){
+        const hhId=neg.id;
+        if(existingIds.has(String(hhId)))continue; // уже загружен
+
+        // Определяем рекрутёра по очереди
+        const rec=ACTIVE_RECS_HH[qIdx % ACTIVE_RECS_HH.length];
+        qIdx++;
+
+        const resume=neg.resume||{};
+        const fio=[resume.last_name,resume.first_name,resume.middle_name].filter(Boolean).join(' ')||'—';
+        const tel=resume.contact?.find(c=>c.type?.id==='cell')?.value||'—';
+        const resumeUrl=resume.alternate_url||'';
+
+        // Сохраняем в responses
+        await sb.from('responses').insert({
+          recruiter:rec,
+          fio,
+          tel,
+          resume_url:resumeUrl,
+          hh_id:String(hhId)
+        });
+
+        // Создаём запись у рекрутёра
+        const today=new Date();
+        await sb.from('candidates').insert({
+          date:today.toISOString().split('T')[0],
+          time:today.toTimeString().slice(0,5),
+          fio:fio||'—',
+          tel:tel||'—',
+          okrug:'—',
+          da:'—',
+          status:'—',
+          jur:'—',
+          city:'—',
+          comment:resumeUrl ? `Отклик с HH: ${resumeUrl}` : 'Отклик с HH',
+          recruiter:rec
+        });
+
+        totalNew++;
+        existingIds.add(String(hhId));
+      }
+    }
+
+    // Сохраняем обновлённый индекс очереди
+    await saveQueueIndex(qIdx);
+
+    log.innerHTML=`✅ Готово! Загружено новых откликов: <b>${totalNew}</b>`;
+    btn.textContent='🔄 Загрузить новые отклики';
+    btn.disabled=false;
+    if(totalNew>0)setTimeout(()=>renderHH(),1000);
+
+  } catch(e){
+    log.textContent='❌ Ошибка: '+e.message;
+    btn.disabled=false;btn.textContent='🔄 Загрузить новые отклики';
+  }
+}
+
+// Сброс очереди
+async function resetQueue(){
+  if(!confirm('Сбросить очередь? Следующий отклик уйдёт Осиповой А.'))return;
+  await saveQueueIndex(0);
+  renderHH();
+}
+
+// Проверяем callback при загрузке страницы
+window.addEventListener('load',()=>{
+  if(window.location.search.includes('code='))handleHHCallback();
+});
+
+window.renderHH=renderHH;
+window.saveHHKeys=saveHHKeys;
+window.startHHAuth=startHHAuth;
+window.syncHHResponses=syncHHResponses;
+window.resetQueue=resetQueue;
+// =================== КОНЕЦ HH ИНТЕГРАЦИИ ===================
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
