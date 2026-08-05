@@ -392,6 +392,7 @@ tr:hover td{background:var(--bg3)!important}
       </select>
     </div>
     <div class="fg"><label>Наставник</label><input type="text" id="fNastavnik" placeholder="Фамилия наставника"></div>
+    <div class="fg"><label>Номер телефона</label><input type="text" id="fPhone" placeholder="+7..."></div>
     <div class="fg"><label>Статус</label>
       <select id="fStatus">
         <option value="handed">Передан наставнику</option>
@@ -739,6 +740,7 @@ function renderCards(fr){
         <span class="m-card-label">Наставник</span>
         <span class="m-card-val" style="color:var(--gold);font-weight:500">${r.nastavnik||'—'}</span>
       </div>
+      ${r.phone?`<div class="m-card-row"><span class="m-card-label">Телефон</span><span class="m-card-val">📞 ${r.phone}</span></div>`:''}
       <div class="m-card-row">
         <span class="m-card-label">Статус</span>
         <button class="sbadge ${statusBadgeClass(r.status)}" onclick="toggleStatusMenu('${r.id}')" style="position:relative">
@@ -863,7 +865,7 @@ function renderTable(){
           </div>
         </div>
       </td>
-      <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.comment||''}">${r.comment||'—'}</td>
+      <td style="font-size:12px;color:var(--text2)">${inlineEdit(r.id,'phone',r.phone)}</td>
       <td style="color:var(--text2);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r.comment||''}">${r.comment||'—'} <button class="edit-btn" onclick="openCommentModal('${r.id}')" style="margin-left:8px">✏️</button></td>
       <td style="text-align:center">${inlineSmeny(r.id,r.smeny)}</td>
       <td style="text-align:center" class="sum-cell">${bonus>0?`<span class="amount">${bonus} ₽</span>`:'<span style="color:var(--text2)">—</span>'}</td>
@@ -1097,7 +1099,7 @@ function openModal(){
   document.getElementById('delBtn').classList.add('hidden');
   document.getElementById('fCity').value=currentTab;
   document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
-  ['fName','fComment','fDateFirst'].forEach(id=>document.getElementById(id).value='');
+  ['fName','fComment','fDateFirst','fPhone'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fOkrug').value='';
   document.getElementById('fNastavnik').value='';
   document.getElementById('fStatus').value='works';
@@ -1116,6 +1118,7 @@ function openEdit(id){
   document.getElementById('fName').value=r.name||'';
   document.getElementById('fOkrug').value=r.okrug||'';
   document.getElementById('fNastavnik').value=r.nastavnik||'';
+  document.getElementById('fPhone').value=r.phone||'';
   document.getElementById('fStatus').value=r.status||'works';
   document.getElementById('fComment').value=r.comment||'';
   document.getElementById('fSmeny').value=r.smeny||0;
@@ -1135,7 +1138,7 @@ function autoFillNastavnik(){
 function closeModal(){document.getElementById('modalBg').classList.remove('open');}
 document.getElementById('modalBg').onclick=function(e){if(e.target===this)closeModal();};
 async function saveRecord(){
-  const d={city:document.getElementById('fCity').value||currentTab,date_account:document.getElementById('fDate').value,date_first_shift:document.getElementById('fDateFirst').value,name:document.getElementById('fName').value.trim(),okrug:document.getElementById('fOkrug').value,nastavnik:document.getElementById('fNastavnik').value.trim(),status:document.getElementById('fStatus').value,comment:document.getElementById('fComment').value.trim(),smeny:+document.getElementById('fSmeny').value,bonus:document.getElementById('fBonus').value};
+  const d={city:document.getElementById('fCity').value||currentTab,date_account:document.getElementById('fDate').value,date_first_shift:document.getElementById('fDateFirst').value,name:document.getElementById('fName').value.trim(),okrug:document.getElementById('fOkrug').value,nastavnik:document.getElementById('fNastavnik').value.trim(),phone:document.getElementById('fPhone').value.trim(),status:document.getElementById('fStatus').value,comment:document.getElementById('fComment').value.trim(),smeny:+document.getElementById('fSmeny').value,bonus:document.getElementById('fBonus').value};
   if(!d.name){alert('Введите ФИО курьера');return;}
   if(!navigator.onLine){alert('❌ Нет подключения к сети. Дождитесь восстановления связи и повторите сохранение.');return;}
   const btn=document.querySelector('.btn-save');
@@ -1226,9 +1229,9 @@ async function pasteRecord(){
     for(let o of sel.options){if(o.value===mapped||o.text===mapped){sel.value=o.value;break;}}
     autoFillNastavnik();
   }
+  if(parsed.phone)document.getElementById('fPhone').value=parsed.phone;
   const parts=[];
   if(parsed.tg)parts.push('TG: '+parsed.tg);
-  if(parsed.phone)parts.push('📞 '+parsed.phone);
   if(parsed.login)parts.push('Login: '+parsed.login);
   if(parts.length)document.getElementById('fComment').value=parts.join(' | ');
 }
@@ -1299,7 +1302,7 @@ window.deleteSelected=deleteSelected;
 // Функция для удаления дубликатов — по телефону, crm_id и имени+городу
 async function removeDuplicates(){
   console.log('🔍 Ищу дубликаты...');
-  const {data:allRows}=await sb.from('nastavniki').select('id,name,city,comment,crm_id,created_at').order('created_at',{ascending:true});
+  const {data:allRows}=await sb.from('nastavniki').select('id,name,city,phone,crm_id,created_at').order('created_at',{ascending:true});
   if(!allRows || !allRows.length){ console.log('Нет данных'); return 0; }
 
   function normP(s){ return (s||'').replace(/\D/g,'').slice(-10); }
@@ -1312,12 +1315,7 @@ async function removeDuplicates(){
   for(const r of allRows){
     let isDup=false;
 
-    // Телефон из поля comment ("📞 +7...")
-    let phone='';
-    if(r.comment){
-      const m=r.comment.match(/[+\d][\d\s\-\(\)]{8,}/);
-      if(m) phone=normP(m[0]);
-    }
+    const phone=normP(r.phone);
 
     // Проверка по crm_id
     if(r.crm_id && seenCrmId[String(r.crm_id)]!==undefined){
@@ -1481,7 +1479,7 @@ async function syncFromCRM() {
     if (!crmRows || !crmRows.length) { console.log('ℹ️ CRM: нет новых записей'); return; }
 
     // Берём ВСЕ записи для проверки дубликатов по телефону и crm_id
-    const { data: allRecords } = await sb.from('nastavniki').select('id,comment,crm_id');
+    const { data: allRecords } = await sb.from('nastavniki').select('id,phone,crm_id');
     
     // Нормализуем телефон — оставляем только последние 10 цифр для сравнения
     function normPhone(s){ return (s||'').replace(/\D/g,'').slice(-10); }
@@ -1490,10 +1488,8 @@ async function syncFromCRM() {
     const existingPhones = new Set();
     const existingCrmIds = new Set();
     (allRecords||[]).forEach(r => {
-      if(r.comment){
-        const m = r.comment.match(/[+\d][\d\s\-\(\)]{8,}/);
-        if(m){ const n = normPhone(m[0]); if(n.length >= 10) existingPhones.add(n); }
-      }
+      const n = normPhone(r.phone);
+      if(n.length >= 10) existingPhones.add(n);
       if(r.crm_id) existingCrmIds.add(String(r.crm_id));
     });
     
@@ -1529,10 +1525,11 @@ async function syncFromCRM() {
         name:            c.fio || '—',
         okrug:           c.okrug || '',
         nastavnik:       mapped.nastavnik,
+        phone:           c.tel && c.tel !== '—' ? c.tel : '',
         date_account:    c.date || new Date().toISOString().split('T')[0],
         date_first_shift:'',
         status:          'handed',
-        comment:         c.tel && c.tel !== '—' ? '📞 ' + c.tel : '',
+        comment:         '',
         smeny:           0,
         bonus:           'none',
       };
