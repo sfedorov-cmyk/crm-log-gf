@@ -241,8 +241,8 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="login-box">
     <div class="login-logo">HR GF</div>
     <div class="login-sub">Система подбора курьеров</div>
-    <div class="login-group"><label>Email</label><input type="email" id="lEmail" placeholder="your@growfood.pro"></div>
-    <div class="login-group"><label>Пароль</label><input type="password" id="lPass" placeholder="••••••••"></div>
+    <div class="login-group"><label>Email</label><input type="email" id="lEmail" placeholder="your@growfood.pro" autocomplete="username"></div>
+    <div class="login-group"><label>Пароль</label><input type="password" id="lPass" placeholder="••••••••" autocomplete="current-password"></div>
     <button class="login-btn" id="loginBtn">Войти</button>
     <div class="login-err" id="loginErr">Неверный email или пароль</div>
     <div class="login-ok" id="loginOk">Добро пожаловать! Продуктивного дня 🌿</div>
@@ -1144,6 +1144,8 @@ document.getElementById('loginBtn').onclick=async()=>{
   document.getElementById('loginOk').style.display='block';setTimeout(()=>initUser(data.user),1500);
 };
 document.getElementById('lPass').onkeydown=e=>{if(e.key==='Enter')document.getElementById('loginBtn').click()};
+// Отключаем автозаполнение для всех полей CRM кроме формы входа
+document.querySelectorAll('input:not(#lEmail):not(#lPass), textarea').forEach(el=>{el.setAttribute('autocomplete','off');});
 document.getElementById('lEmail').onkeydown=e=>{if(e.key==='Enter')document.getElementById('lPass').focus()};
 document.getElementById('logoutBtn').onclick=async()=>{saveScreenTime();await sb.auth.signOut();document.getElementById('appWrap').classList.add('hidden');document.getElementById('loginWrap').style.display='flex';document.getElementById('loginOk').style.display='none';};
 
