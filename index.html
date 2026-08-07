@@ -2791,18 +2791,18 @@ async function handleHHCallback(){
 // Обмен кода на токен
 async function exchangeHHCode(code, settings){
   try {
-    const resp=await fetch('https://hh.ru/oauth/token',{
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({
-        grant_type:'authorization_code',
-        client_id:settings.client_id,
-        client_secret:settings.client_secret,
-        code:code,
-        redirect_uri:HH_REDIRECT
-      })
+    const tokenParams=new URLSearchParams({
+      grant_type:'authorization_code',
+      client_id:settings.client_id,
+      client_secret:settings.client_secret,
+      code:code,
+      redirect_uri:HH_REDIRECT
     });
-    const data=await resp.json();
+    const resp=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://hh.ru/oauth/token')}&method=POST&body=${encodeURIComponent(tokenParams.toString())}`,{
+      headers:{'X-Requested-With':'XMLHttpRequest'}
+    });
+    const raw=await resp.json();
+    const data=JSON.parse(raw.contents||'{}');
     if(data.access_token){
       settings.access_token=data.access_token;
       settings.refresh_token=data.refresh_token;
@@ -2869,10 +2869,12 @@ async function syncHHResponses(btn){
   try {
     // 1. Получаем все активные вакансии
     log.textContent='📋 Получаю список вакансий...';
-    const vacResp=await fetch('https://api.hh.ru/vacancies/mine?status=published&per_page=50',{
-      headers:{'Authorization':`Bearer ${token}`,'HH-User-Agent':'GrowFood CRM (ya.fedorova@growfood.pro)'}
+    const vacUrl='https://api.hh.ru/vacancies/mine?status=published&per_page=50';
+    const vacResp=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(vacUrl)}`,{
+      headers:{'X-Requested-With':'XMLHttpRequest'}
     });
-    const vacData=await vacResp.json();
+    const vacRaw=await vacResp.json();
+    const vacData=JSON.parse(vacRaw.contents||'{}');
     const vacancies=vacData.items||[];
     log.textContent=`📋 Найдено вакансий: ${vacancies.length}`;
 
@@ -2888,10 +2890,12 @@ async function syncHHResponses(btn){
     // 4. Для каждой вакансии получаем отклики
     for(const vac of vacancies){
       log.textContent=`🔍 Проверяю вакансию: ${vac.name}...`;
-      const negResp=await fetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,{
-        headers:{'Authorization':`Bearer ${token}`,'HH-User-Agent':'GrowFood CRM (ya.fedorova@growfood.pro)'}
+      const negUrl=`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`;
+      const negResp=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(negUrl)}`,{
+        headers:{'X-Requested-With':'XMLHttpRequest'}
       });
-      const negData=await negResp.json();
+      const negRaw=await negResp.json();
+      const negData=JSON.parse(negRaw.contents||'{}');
       const negotiations=negData.items||[];
 
       for(const neg of negotiations){
@@ -2974,10 +2978,12 @@ async function markAllExistingAsLoaded(btn){
 
   try {
     // Получаем все активные вакансии
-    const vacResp=await fetch('https://api.hh.ru/vacancies/mine?status=published&per_page=50',{
-      headers:{'Authorization':`Bearer ${token}`,'HH-User-Agent':'GrowFood CRM (ya.fedorova@growfood.pro)'}
+    const vacUrl2='https://api.hh.ru/vacancies/mine?status=published&per_page=50';
+    const vacResp=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(vacUrl2)}`,{
+      headers:{'X-Requested-With':'XMLHttpRequest'}
     });
-    const vacData=await vacResp.json();
+    const vacRaw2=await vacResp.json();
+    const vacData=JSON.parse(vacRaw2.contents||'{}');
     const vacancies=vacData.items||[];
 
     // Получаем уже помеченные
@@ -2987,10 +2993,12 @@ async function markAllExistingAsLoaded(btn){
     // Для каждой вакансии получаем отклики и помечаем без распределения
     for(const vac of vacancies){
       log.textContent=`🔍 Обрабатываю вакансию: ${vac.name}...`;
-      const negResp=await fetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,{
-        headers:{'Authorization':`Bearer ${token}`,'HH-User-Agent':'GrowFood CRM (ya.fedorova@growfood.pro)'}
+      const negUrl=`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`;
+      const negResp=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(negUrl)}`,{
+        headers:{'X-Requested-With':'XMLHttpRequest'}
       });
-      const negData=await negResp.json();
+      const negRaw=await negResp.json();
+      const negData=JSON.parse(negRaw.contents||'{}');
       const negotiations=negData.items||[];
 
       for(const neg of negotiations){
