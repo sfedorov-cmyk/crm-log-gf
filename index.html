@@ -1473,6 +1473,7 @@ function renderFilters(){
       <span class="flabel">Тел</span><input class="finput" type="text" value="${esc(F.tel||'')}" placeholder="Номер..." id="fTel2" style="width:110px">
       <span class="flabel">С</span><input class="finput finput-date" type="date" value="${F.from}" id="fFrom">
       <span class="flabel">По</span><input class="finput finput-date" type="date" value="${F.to}" id="fTo">
+      <button onclick="exportToExcel()" style="display:flex;align-items:center;gap:4px;padding:6px 14px;background:#1a7a3c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">📥 Excel</button>
     </div>
     <div class="frow">
       <span class="flabel">Округ</span>
@@ -3047,6 +3048,58 @@ window.startHHAuth=startHHAuth;
 window.syncHHResponses=syncHHResponses;
 window.resetQueue=resetQueue;
 // =================== КОНЕЦ HH ИНТЕГРАЦИИ ===================
+
+// ========== ЭКСПОРТ В EXCEL ==========
+function exportToExcel(){
+  const fr=filtered();
+  if(!fr.length){alert('Нет данных для экспорта');return;}
+
+  const rec=getRecs()[tab]||'Рекрутёр';
+  const from=F.from||'—';
+  const to=F.to||'—';
+
+  // Заголовки
+  const headers=['Дата','Время','ФИО','Телефон','Округ','Да/Нет','Статус','Юр.Статус','Город','Комментарий'];
+
+  // Данные
+  const rows=fr.map(r=>[
+    fd(r.date),
+    r.time||'—',
+    r.fio||'—',
+    r.tel||'—',
+    r.okrug||'—',
+    r.da||'—',
+    r.status||'—',
+    r.jur||'—',
+    r.city||'—',
+    r.comment||'—'
+  ]);
+
+  // Формируем CSV с BOM для корректного открытия в Excel
+  const BOM='\uFEFF';
+  const sep=';';
+  const title=`Рекрутёр: ${rec} | Период: ${from} — ${to}`;
+  const csvRows=[
+    title,
+    '',
+    headers.join(sep),
+    ...rows.map(r=>r.map(cell=>`"${String(cell).replace(/"/g,'""')}"`).join(sep))
+  ];
+  const csv=BOM+csvRows.join('\n');
+
+  // Скачиваем файл
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`${rec}_${from}_${to}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+window.exportToExcel=exportToExcel;
+// ========== КОНЕЦ ЭКСПОРТА ==========
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
