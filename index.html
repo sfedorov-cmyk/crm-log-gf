@@ -2901,10 +2901,20 @@ async function syncHHResponses(btn){
     // 4. Для каждой вакансии получаем отклики
     for(const vac of vacancies){
       log.textContent=`🔍 Проверяю вакансию: ${vac.name}...`;
-      const negData=await hhFetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50&order_by=updated_at&order=desc`,token);
-      log.textContent='🔍 Вакансия '+vac.id+': '+JSON.stringify(negData).slice(0,300);
-      await new Promise(r=>setTimeout(r,3000));
-      const negotiations=negData.items||[];
+      // Пробуем разные endpoints
+      let negotiations=[];
+      const urls=[
+        `https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,
+        `https://api.hh.ru/negotiations?vacancy_id=${vac.id}&per_page=50&status=response`,
+        `https://api.hh.ru/vacancies/${vac.id}/negotiations?per_page=50`,
+      ];
+      for(const negUrl of urls){
+        const negData=await hhFetch(negUrl,token);
+        log.textContent='🔍 '+negUrl.split('/').slice(-1)[0].slice(0,30)+': '+JSON.stringify(negData).slice(0,200);
+        await new Promise(r=>setTimeout(r,2000));
+        if(negData.items && negData.items.length>0){negotiations=negData.items;break;}
+        if(negData.found>0){negotiations=negData.items||[];break;}
+      }
 
       for(const neg of negotiations){
         const hhId=neg.id;
@@ -2998,10 +3008,20 @@ async function markAllExistingAsLoaded(btn){
     // Для каждой вакансии получаем отклики и помечаем без распределения
     for(const vac of vacancies){
       log.textContent=`🔍 Обрабатываю вакансию: ${vac.name}...`;
-      const negData=await hhFetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50&order_by=updated_at&order=desc`,token);
-      log.textContent='🔍 Вакансия '+vac.id+': '+JSON.stringify(negData).slice(0,300);
-      await new Promise(r=>setTimeout(r,3000));
-      const negotiations=negData.items||[];
+      // Пробуем разные endpoints
+      let negotiations=[];
+      const urls=[
+        `https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,
+        `https://api.hh.ru/negotiations?vacancy_id=${vac.id}&per_page=50&status=response`,
+        `https://api.hh.ru/vacancies/${vac.id}/negotiations?per_page=50`,
+      ];
+      for(const negUrl of urls){
+        const negData=await hhFetch(negUrl,token);
+        log.textContent='🔍 '+negUrl.split('/').slice(-1)[0].slice(0,30)+': '+JSON.stringify(negData).slice(0,200);
+        await new Promise(r=>setTimeout(r,2000));
+        if(negData.items && negData.items.length>0){negotiations=negData.items;break;}
+        if(negData.found>0){negotiations=negData.items||[];break;}
+      }
 
       for(const neg of negotiations){
         const hhId=String(neg.id);
