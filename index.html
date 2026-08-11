@@ -3275,25 +3275,33 @@ function calcHHAnalytics(csvText){
       <div style="padding:16px;font-size:15px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border)">По рекрутёрам</div>
       <table style="width:100%;border-collapse:collapse">
         <thead>
-          <tr style="background:var(--bg2);font-size:11px;color:var(--muted)">
-            <th style="padding:10px 12px;text-align:left;font-weight:600">Рекрутёр</th>
-            <th style="padding:10px 12px;text-align:center;font-weight:600">Контактов из базы</th>
-            <th style="padding:10px 12px;text-align:center;font-weight:600">База (₽)</th>
-            <th style="padding:10px 12px;text-align:center;font-weight:600">Приглашений из откликов</th>
-            <th style="padding:10px 12px;text-align:center;font-weight:600">Публикации (₽)</th>
-            <th style="padding:10px 12px;text-align:center;font-weight:600">Итого (₽)</th>
-            <th style="padding:10px 12px;text-align:center;font-weight:600">₽/контакт</th>
+          <tr style="background:#e8f5e9;font-size:11px;color:#1a7a3c">
+            <th style="padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid #1a7a3c" colspan="1">Рекрутёр</th>
+            <th style="padding:10px 12px;text-align:center;font-weight:700;border-bottom:2px solid #1a7a3c;background:#e3f2fd;color:#1565c0" colspan="3">📥 Отклики (входящие)</th>
+            <th style="padding:10px 12px;text-align:center;font-weight:700;border-bottom:2px solid #1a7a3c;background:#fff3e0;color:#e65100" colspan="3">📞 Холодная база</th>
+            <th style="padding:10px 12px;text-align:center;font-weight:700;border-bottom:2px solid #1a7a3c" colspan="1">Итого</th>
+          </tr>
+          <tr style="background:var(--bg2);font-size:10px;color:var(--muted)">
+            <th style="padding:8px 12px;text-align:left;font-weight:600"></th>
+            <th style="padding:8px 12px;text-align:center;font-weight:600;background:#f3f8ff">Приглашений</th>
+            <th style="padding:8px 12px;text-align:center;font-weight:600;background:#f3f8ff">Потрачено (₽)</th>
+            <th style="padding:8px 12px;text-align:center;font-weight:600;background:#f3f8ff">₽ за 1</th>
+            <th style="padding:8px 12px;text-align:center;font-weight:600;background:#fff8f0">Контактов</th>
+            <th style="padding:8px 12px;text-align:center;font-weight:600;background:#fff8f0">Потрачено (₽)</th>
+            <th style="padding:8px 12px;text-align:center;font-weight:600;background:#fff8f0">₽ за 1</th>
+            <th style="padding:8px 12px;text-align:center;font-weight:600">₽</th>
           </tr>
         </thead>
         <tbody>
           ${recData.map((r,i)=>`<tr style="border-top:1px solid var(--border);background:${i%2?'var(--bg2)':'var(--card)'}">
             <td style="padding:10px 12px;font-size:13px;font-weight:500;color:var(--text)">${r.name}</td>
-            <td style="padding:10px 12px;font-size:13px;text-align:center">${r.baseContacts}</td>
-            <td style="padding:10px 12px;font-size:13px;text-align:center">${r.baseCost.toLocaleString('ru')}</td>
-            <td style="padding:10px 12px;font-size:13px;text-align:center">${r.invFromResp}</td>
-            <td style="padding:10px 12px;font-size:13px;text-align:center">${r.pubCost.toLocaleString('ru')}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;background:${i%2?'#eaf4ff':'#f3f8ff'}">${r.invFromResp}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;background:${i%2?'#eaf4ff':'#f3f8ff'}">${r.pubCost.toLocaleString('ru')}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;font-weight:600;color:#1565c0;background:${i%2?'#eaf4ff':'#f3f8ff'}">${r.invFromResp>0?Math.round(r.pubCost/r.invFromResp):'-'}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;background:${i%2?'#fff4e8':'#fff8f0'}">${r.baseContacts}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;background:${i%2?'#fff4e8':'#fff8f0'}">${r.baseCost.toLocaleString('ru')}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;font-weight:600;color:#e65100;background:${i%2?'#fff4e8':'#fff8f0'}">${r.baseContacts>0?Math.round(r.baseCost/r.baseContacts):'-'}</td>
             <td style="padding:10px 12px;font-size:13px;text-align:center;font-weight:700;color:var(--accent)">${r.total.toLocaleString('ru')}</td>
-            <td style="padding:10px 12px;font-size:13px;text-align:center">${r.baseContacts>0?Math.round(r.baseCost/r.baseContacts):'-'}</td>
           </tr>`).join('')}
         </tbody>
       </table>
