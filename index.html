@@ -2883,7 +2883,15 @@ async function syncHHResponses(btn){
   try {
     // 1. Получаем все активные вакансии
     log.textContent='📋 Получаю список вакансий...';
-    const vacData=await hhFetch('https://api.hh.ru/vacancies/mine?status=published&per_page=50',token);
+    // Сначала получаем ID работодателя
+    const meData=await hhFetch('https://api.hh.ru/me',token);
+    const employerId=meData.employer ? meData.employer.id : null;
+    let vacData={items:[]};
+    if(employerId){
+      vacData=await hhFetch('https://api.hh.ru/employers/'+employerId+'/vacancies?status=published&per_page=50',token);
+    } else {
+      vacData=await hhFetch('https://api.hh.ru/vacancies/mine?per_page=50',token);
+    }
     const vacancies=vacData.items||[];
     log.textContent=`📋 Найдено вакансий: ${vacancies.length}`;
 
@@ -2982,7 +2990,15 @@ async function markAllExistingAsLoaded(btn){
 
   try {
     // Получаем все активные вакансии
-    const vacData=await hhFetch('https://api.hh.ru/vacancies/mine?status=published&per_page=50',token);
+    // Сначала получаем ID работодателя
+    const meData=await hhFetch('https://api.hh.ru/me',token);
+    const employerId=meData.employer ? meData.employer.id : null;
+    let vacData={items:[]};
+    if(employerId){
+      vacData=await hhFetch('https://api.hh.ru/employers/'+employerId+'/vacancies?status=published&per_page=50',token);
+    } else {
+      vacData=await hhFetch('https://api.hh.ru/vacancies/mine?per_page=50',token);
+    }
     const vacancies=vacData.items||[];
 
     // Получаем уже помеченные
