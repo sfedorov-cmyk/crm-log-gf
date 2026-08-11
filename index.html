@@ -2629,6 +2629,21 @@ window.openAddResponse=openAddResponse;
 window.saveResponse=saveResponse;
 window.deleteResponse=deleteResponse;
 
+
+async function hhFetch(url, token, method, body) {
+  const resp = await fetch('https://orffvetweovwgowtprsv.supabase.co/functions/v1/hh-proxy', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + SKEY,
+      'apikey': SKEY,
+    },
+    body: JSON.stringify({ url, token, method: method || 'GET', body: body || null })
+  });
+  const text = await resp.text();
+  try { return JSON.parse(text); } catch(e) { return {}; }
+}
+
 // =================== HH.ru ИНТЕГРАЦИЯ ===================
 
 const HH_REDIRECT = 'https://sfedorov-cmyk.github.io/crm-log-gf/';
@@ -2801,11 +2816,7 @@ async function exchangeHHCode(code, settings){
       code:code,
       redirect_uri:HH_REDIRECT
     });
-    const resp=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://hh.ru/oauth/token')}&method=POST&body=${encodeURIComponent(tokenParams.toString())}`,{
-      headers:{'X-Requested-With':'XMLHttpRequest'}
-    });
-    const raw=await resp.json();
-    const data=JSON.parse(raw.contents||'{}');
+    const data=await hhFetch('https://hh.ru/oauth/token',null,'POST',tokenParams.toString());
     if(data.access_token){
       settings.access_token=data.access_token;
       settings.refresh_token=data.refresh_token;
@@ -2872,12 +2883,7 @@ async function syncHHResponses(btn){
   try {
     // 1. Получаем все активные вакансии
     log.textContent='📋 Получаю список вакансий...';
-    const vacUrl='https://api.hh.ru/vacancies/mine?status=published&per_page=50';
-    const vacResp=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(vacUrl)}`,{
-      headers:{'X-Requested-With':'XMLHttpRequest'}
-    });
-    const vacRaw=await vacResp.json();
-    const vacData=JSON.parse(vacRaw.contents||'{}');
+    const vacData=await hhFetch('https://api.hh.ru/vacancies/mine?status=published&per_page=50',token);
     const vacancies=vacData.items||[];
     log.textContent=`📋 Найдено вакансий: ${vacancies.length}`;
 
@@ -2893,12 +2899,7 @@ async function syncHHResponses(btn){
     // 4. Для каждой вакансии получаем отклики
     for(const vac of vacancies){
       log.textContent=`🔍 Проверяю вакансию: ${vac.name}...`;
-      const negUrl=`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`;
-      const negResp=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(negUrl)}`,{
-        headers:{'X-Requested-With':'XMLHttpRequest'}
-      });
-      const negRaw=await negResp.json();
-      const negData=JSON.parse(negRaw.contents||'{}');
+      const negData=await hhFetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,token);
       const negotiations=negData.items||[];
 
       for(const neg of negotiations){
@@ -2981,12 +2982,7 @@ async function markAllExistingAsLoaded(btn){
 
   try {
     // Получаем все активные вакансии
-    const vacUrl2='https://api.hh.ru/vacancies/mine?status=published&per_page=50';
-    const vacResp=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(vacUrl2)}`,{
-      headers:{'X-Requested-With':'XMLHttpRequest'}
-    });
-    const vacRaw2=await vacResp.json();
-    const vacData=JSON.parse(vacRaw2.contents||'{}');
+    const vacData=await hhFetch('https://api.hh.ru/vacancies/mine?status=published&per_page=50',token);
     const vacancies=vacData.items||[];
 
     // Получаем уже помеченные
@@ -2996,12 +2992,7 @@ async function markAllExistingAsLoaded(btn){
     // Для каждой вакансии получаем отклики и помечаем без распределения
     for(const vac of vacancies){
       log.textContent=`🔍 Обрабатываю вакансию: ${vac.name}...`;
-      const negUrl=`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`;
-      const negResp=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(negUrl)}`,{
-        headers:{'X-Requested-With':'XMLHttpRequest'}
-      });
-      const negRaw=await negResp.json();
-      const negData=JSON.parse(negRaw.contents||'{}');
+      const negData=await hhFetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,token);
       const negotiations=negData.items||[];
 
       for(const neg of negotiations){
