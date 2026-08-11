@@ -252,6 +252,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="topbar">
     <div class="logo">HR GF</div>
     <span class="sync-pill sync-loading" id="syncStatus">загрузка...</span>
+    <button id="analyticsTopBtn" onclick="analyticsMode=true;hhMode=false;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allWA=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','hhWrap','bulkBar','copyBar'];allWA.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderAnalytics();renderTabs()" style="display:none;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Аналитика</button>
     <button id="hhTopBtn" onclick="hhMode=true;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allW2=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','bulkBar','copyBar'];allW2.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderHH();renderTabs()" style="display:none;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🔗 HH.ru</button>
     <button onclick="location.reload(true)" title="Обновить страницу (Ctrl+Shift+R)" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🔄 Обновить</button>
     <button id="screenshotBtn" title="Скриншот экрана" onclick="takeScreenshot()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📸 Скрин</button>
@@ -294,6 +295,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="info-wrap hidden" id="kpiWrap"></div>
   <div class="info-wrap hidden" id="responsesWrap"></div>
   <div class="info-wrap hidden" id="hhWrap"></div>
+  <div class="info-wrap hidden" id="analyticsWrap"></div>
   <div class="info-wrap hidden" id="okrugWrap"></div>
 </div>
 
@@ -462,6 +464,7 @@ let dashTab='main',dashPeriod='week',dashFrom='',dashTo='';
 let infoMode=false;
 let responsesMode=false;
 let hhMode=false;
+let analyticsMode=false;
 let deactivMode=false;
 let vacationMode=false;
 let mentorMode=false;
@@ -1233,6 +1236,8 @@ function renderTabs(){
   document.getElementById('tabsWrap').innerHTML=tabs;
   const hhTopBtn=document.getElementById('hhTopBtn');
   if(hhTopBtn)hhTopBtn.style.display=isAdmin?'flex':'none';
+  const analyticsTopBtn=document.getElementById('analyticsTopBtn');
+  if(analyticsTopBtn)analyticsTopBtn.style.display=isAdmin?'flex':'none';
   document.getElementById('tabsWrap').onclick=function(e){
     const hh=e.target.closest('[data-hh]');
     if(hh){
@@ -1274,7 +1279,8 @@ function renderTabs(){
 function render(){
   const rw=document.getElementById('responsesWrap');if(rw)rw.classList.add('hidden');
   const hw=document.getElementById('hhWrap');if(hw)hw.classList.add('hidden');
-  hhMode=false;
+  const aw=document.getElementById('analyticsWrap');if(aw)aw.classList.add('hidden');
+  hhMode=false;analyticsMode=false;
   const el_0=document.getElementById('cardsWrap');if(el_0)el_0.style.display='';
   const el_1=document.getElementById('filtersBar');if(el_1)el_1.style.display='';
   const el_2=document.getElementById('statsBar');if(el_2)el_2.style.display='';
@@ -1344,6 +1350,7 @@ function render(){
 async function renderDashboard(){
   const dw=document.getElementById('dashWrap');if(!dw)return;
   const{from,to}=getDashPeriod();
+
   dw.innerHTML=`<div style="padding:12px 16px;width:100%;max-width:900px;margin:0 auto">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
       <button onclick="setDashTab('main')" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;background:${dashTab==='main'?'var(--accent-dark)':'var(--bg)'};color:${dashTab==='main'?'#fff':'var(--text)'}">📊 Статистика</button>
@@ -3160,6 +3167,177 @@ setTimeout(()=>{
   setInterval(autoSyncHH, 15*60*1000);
 }, 30000);
 // ========== КОНЕЦ АВТО-СИНХРОНИЗАЦИИ ==========
+
+// ========== АНАЛИТИКА HH ==========
+async function renderAnalytics(){
+  const wrap=document.getElementById('analyticsWrap');
+  if(!wrap)return;
+  wrap.classList.remove('hidden');
+
+  const lastHHReport=localStorage.getItem('hh_report_date');
+  const daysSinceReport=lastHHReport ? Math.floor((Date.now()-new Date(lastHHReport).getTime())/(24*60*60*1000)) : 999;
+  const currentMonth=new Date().toLocaleString('ru',{month:'long',year:'numeric'});
+  const reportData=localStorage.getItem('hh_report_data');
+
+  let analyticsHtml='';
+  if(reportData){
+    try {
+      analyticsHtml=calcHHAnalytics(reportData);
+    } catch(e){
+      analyticsHtml=`<div style="color:red">Ошибка обработки отчёта: ${e.message}</div>`;
+    }
+  }
+
+  wrap.innerHTML=`<div style="padding:16px;max-width:900px;margin:0 auto">
+    <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px">📊 Аналитика HH.ru</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Стоимость найма и эффективность рекрутёров</div>
+
+    <!-- Загрузка отчёта -->
+    <div style="background:var(--card);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px #0001">
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">📂 Отчёт HH.ru</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
+        ${daysSinceReport===999?'⚠️ Отчёт ещё не загружался':daysSinceReport>25?'⚠️ Последний отчёт загружен '+daysSinceReport+' дн. назад — пора обновить!':'✅ Отчёт загружен '+daysSinceReport+' дн. назад'}
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        Как скачать: HH.ru → Личный кабинет → Аналитика подбора → Статистика по менеджерам → Выгрузить CSV
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button onclick="document.getElementById('hhReportInput2').click()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer">
+          📂 ${daysSinceReport===999?'Загрузить отчёт':'Обновить отчёт'} за ${currentMonth}
+        </button>
+        <input type="file" id="hhReportInput2" accept=".csv" style="display:none" onchange="uploadHHReport(this)">
+        ${lastHHReport?`<span style="font-size:12px;color:var(--muted)">Загружен: ${new Date(lastHHReport).toLocaleDateString('ru')}</span>`:''}
+      </div>
+    </div>
+
+    <!-- Аналитика -->
+    ${reportData ? analyticsHtml : `<div style="background:var(--card);border-radius:14px;padding:40px;text-align:center;color:var(--muted)">
+      <div style="font-size:40px;margin-bottom:12px">📊</div>
+      <div style="font-size:15px;font-weight:600">Загрузи отчёт HH чтобы увидеть аналитику</div>
+      <div style="font-size:13px;margin-top:8px">Стоимость найма, эффективность рекрутёров, стоимость звонков</div>
+    </div>`}
+  </div>`;
+}
+
+function calcHHAnalytics(csvText){
+  const lines=csvText.split('\n').filter(l=>l.trim());
+  
+  // Находим строку с заголовками
+  let headerIdx=-1;
+  for(let i=0;i<lines.length;i++){
+    if(lines[i].includes('менеджер') || lines[i].includes('Менеджер') || lines[i].toLowerCase().includes('manager')){
+      headerIdx=i;break;
+    }
+  }
+  if(headerIdx===-1)return '<div style="color:orange">Не удалось найти заголовки в файле</div>';
+
+  const headers=lines[headerIdx].split(';').map(h=>h.replace(/"/g,'').trim().toLowerCase());
+  const rows=[];
+  for(let i=headerIdx+1;i<lines.length;i++){
+    const cols=lines[i].split(';').map(c=>c.replace(/"/g,'').trim());
+    if(cols.length<3||!cols[0])continue;
+    const row={};
+    headers.forEach((h,idx)=>row[h]=cols[idx]||'0');
+    rows.push(row);
+  }
+
+  // Считаем итоги
+  let totalColdCost=0,totalColdContacts=0,totalRespCost=0,totalRespInvites=0;
+  const recData=[];
+
+  for(const row of rows){
+    const name=row['менеджер']||row['manager']||row[headers[0]]||'';
+    if(!name||name.toLowerCase().includes('итог'))continue;
+
+    const coldContacts=parseInt(Object.values(row).find((v,i)=>headers[i].includes('контакт'))||0)||0;
+    const coldCost=parseFloat((Object.values(row).find((v,i)=>headers[i].includes('трат')&&headers[i].includes('контакт'))||'0').replace(',','.'))||0;
+    const respInvites=parseInt(Object.values(row).find((v,i)=>headers[i].includes('приглашен')&&headers[i].includes('отклик'))||0)||0;
+    const pubCost=parseFloat((Object.values(row).find((v,i)=>headers[i].includes('публикац'))||'0').replace(',','.'))||0;
+
+    totalColdCost+=coldCost;
+    totalColdContacts+=coldContacts;
+    totalRespCost+=pubCost;
+    totalRespInvites+=respInvites;
+
+    recData.push({name,coldContacts,coldCost,respInvites,pubCost});
+  }
+
+  const coldPerCall=totalColdContacts>0?Math.round(totalColdCost/totalColdContacts):0;
+  const respPerCall=totalRespInvites>0?Math.round(totalRespCost/totalRespInvites):0;
+
+  return `
+    <!-- Сводная статистика -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px">
+      <div style="background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001;text-align:center">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">💰 Холодный звонок</div>
+        <div style="font-size:28px;font-weight:700;color:var(--accent)">${coldPerCall} ₽</div>
+        <div style="font-size:11px;color:var(--muted)">${totalColdContacts} контактов на ${totalColdCost.toLocaleString('ru')} ₽</div>
+      </div>
+      <div style="background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001;text-align:center">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">📥 Звонок по отклику</div>
+        <div style="font-size:28px;font-weight:700;color:#2563eb">${respPerCall} ₽</div>
+        <div style="font-size:11px;color:var(--muted)">${totalRespInvites} приглашений на ${totalRespCost.toLocaleString('ru')} ₽</div>
+      </div>
+      <div style="background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001;text-align:center">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">📊 Разница</div>
+        <div style="font-size:28px;font-weight:700;color:#16a34a">${coldPerCall>0&&respPerCall>0?Math.round((coldPerCall-respPerCall)/coldPerCall*100):0}%</div>
+        <div style="font-size:11px;color:var(--muted)">отклики дешевле холодных</div>
+      </div>
+      <div style="background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001;text-align:center">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">💸 Общий бюджет HH</div>
+        <div style="font-size:28px;font-weight:700;color:var(--text)">${(totalColdCost+totalRespCost).toLocaleString('ru')} ₽</div>
+        <div style="font-size:11px;color:var(--muted)">за период</div>
+      </div>
+    </div>
+
+    <!-- Таблица по рекрутёрам -->
+    <div style="background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px #0001">
+      <div style="padding:16px;font-size:15px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border)">По рекрутёрам</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:var(--bg2);font-size:11px;color:var(--muted)">
+            <th style="padding:10px 12px;text-align:left;font-weight:600">Рекрутёр</th>
+            <th style="padding:10px 12px;text-align:center;font-weight:600">Контактов</th>
+            <th style="padding:10px 12px;text-align:center;font-weight:600">База (₽)</th>
+            <th style="padding:10px 12px;text-align:center;font-weight:600">Приглашений из откликов</th>
+            <th style="padding:10px 12px;text-align:center;font-weight:600">Публикации (₽)</th>
+            <th style="padding:10px 12px;text-align:center;font-weight:600">Итого (₽)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${recData.map((r,i)=>`<tr style="border-top:1px solid var(--border);background:${i%2?'var(--bg2)':'var(--card)'}">
+            <td style="padding:10px 12px;font-size:13px;font-weight:500;color:var(--text)">${r.name}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;color:var(--text)">${r.coldContacts}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;color:var(--text)">${r.coldCost.toLocaleString('ru')}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;color:var(--text)">${r.respInvites}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;color:var(--text)">${r.pubCost.toLocaleString('ru')}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;font-weight:700;color:var(--accent)">${(r.coldCost+r.pubCost).toLocaleString('ru')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function uploadHHReport(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try {
+      localStorage.setItem('hh_report_date', new Date().toISOString());
+      localStorage.setItem('hh_report_data', e.target.result);
+      alert('✅ Отчёт HH загружен!');
+      renderAnalytics();
+    } catch(err){
+      alert('Ошибка: '+err.message);
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+window.renderAnalytics=renderAnalytics;
+window.uploadHHReport=uploadHHReport;
+// ========== КОНЕЦ АНАЛИТИКИ HH ==========
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
