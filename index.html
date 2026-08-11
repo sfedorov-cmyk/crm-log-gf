@@ -3177,7 +3177,9 @@ async function renderAnalytics(){
   const lastHHReport=localStorage.getItem('hh_report_date');
   const daysSinceReport=lastHHReport ? Math.floor((Date.now()-new Date(lastHHReport).getTime())/(24*60*60*1000)) : 999;
   const currentMonth=new Date().toLocaleString('ru',{month:'long',year:'numeric'});
-  const reportData=localStorage.getItem('hh_report_data');
+  const reports=JSON.parse(localStorage.getItem('hh_reports_list')||'[]');
+  const selectedMonth=localStorage.getItem('hh_selected_month')||localStorage.getItem('hh_current_month')||'';
+  const reportData=selectedMonth?localStorage.getItem('hh_report_'+selectedMonth):localStorage.getItem('hh_report_data');
 
   let analyticsHtml='';
   if(reportData){
@@ -3209,6 +3211,14 @@ async function renderAnalytics(){
         ${lastHHReport?`<span style="font-size:12px;color:var(--muted)">Загружен: ${new Date(lastHHReport).toLocaleDateString('ru')}</span>`:''}
       </div>
     </div>
+
+    <!-- Переключатель месяцев -->
+    ${reports.length>0?`<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px #0001">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px">📅 История отчётов</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${reports.map(m=>`<button onclick="localStorage.setItem('hh_selected_month','${m}');renderAnalytics()" style="padding:6px 14px;border-radius:20px;border:1.5px solid ${(selectedMonth||reports[0])===m?'var(--accent)':'var(--border)'};background:${(selectedMonth||reports[0])===m?'var(--accent)':'var(--card)'};color:${(selectedMonth||reports[0])===m?'#fff':'var(--text)'};font-size:12px;font-weight:600;cursor:pointer">${m}</button>`).join('')}
+      </div>
+    </div>`:''}
 
     <!-- Аналитика -->
     ${reportData ? analyticsHtml : `<div style="background:var(--card);border-radius:14px;padding:40px;text-align:center;color:var(--muted)">
@@ -3309,6 +3319,37 @@ function calcHHAnalytics(csvText){
   `;
 }
 window.renderAnalytics=renderAnalytics;
+
+function uploadHHReport(input){
+  const file=input.files[0];
+  if(!file)return;
+  let monthKey='';
+  const match=file.name.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+  if(match){
+    const months=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    monthKey=months[parseInt(match[2])-1]+' '+match[3];
+  } else {
+    const now=new Date();
+    const months=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    monthKey=months[now.getMonth()]+' '+now.getFullYear();
+  }
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try {
+      const reports=JSON.parse(localStorage.getItem('hh_reports_list')||'[]');
+      if(!reports.includes(monthKey))reports.unshift(monthKey);
+      localStorage.setItem('hh_reports_list',JSON.stringify(reports));
+      localStorage.setItem('hh_report_'+monthKey,e.target.result);
+      localStorage.setItem('hh_report_date',new Date().toISOString());
+      localStorage.setItem('hh_report_data',e.target.result);
+      localStorage.setItem('hh_current_month',monthKey);
+      localStorage.setItem('hh_selected_month',monthKey);
+      alert('✅ Отчёт за '+monthKey+' загружен!');
+      renderAnalytics();
+    } catch(err){alert('Ошибка: '+err.message);}
+  };
+  reader.readAsText(file,'utf-8');
+}
 window.uploadHHReport=uploadHHReport;
 // ========== КОНЕЦ АНАЛИТИКИ HH ==========
 </script>
