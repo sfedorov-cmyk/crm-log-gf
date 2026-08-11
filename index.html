@@ -3221,119 +3221,84 @@ async function renderAnalytics(){
 
 function calcHHAnalytics(csvText){
   const lines=csvText.split('\n').filter(l=>l.trim());
-  
-  // Находим строку с заголовками
-  let headerIdx=-1;
-  for(let i=0;i<lines.length;i++){
-    if(lines[i].includes('менеджер') || lines[i].includes('Менеджер') || lines[i].toLowerCase().includes('manager')){
-      headerIdx=i;break;
-    }
-  }
-  if(headerIdx===-1)return '<div style="color:orange">Не удалось найти заголовки в файле</div>';
+  if(lines.length<2)return '<div style="color:orange">Файл пустой или неверный формат</div>';
 
-  const headers=lines[headerIdx].split(';').map(h=>h.replace(/"/g,'').trim().toLowerCase());
-  const rows=[];
-  for(let i=headerIdx+1;i<lines.length;i++){
-    const cols=lines[i].split(';').map(c=>c.replace(/"/g,'').trim());
-    if(cols.length<3||!cols[0])continue;
-    const row={};
-    headers.forEach((h,idx)=>row[h]=cols[idx]||'0');
-    rows.push(row);
-  }
+  function getNum(cols,idx){if(idx>=cols.length)return 0;const v=cols[idx].replace(/"/g,'').trim().replace(',','.');return parseFloat(v)||0;}
+  function getStr(cols,idx){if(idx>=cols.length)return '';return cols[idx].replace(/"/g,'').trim();}
 
-  // Считаем итоги
-  let totalColdCost=0,totalColdContacts=0,totalRespCost=0,totalRespInvites=0;
+  let totalPubCost=0,totalBaseCost=0,totalInvResp=0,totalBaseContacts=0;
   const recData=[];
 
-  for(const row of rows){
-    const name=row['менеджер']||row['manager']||row[headers[0]]||'';
-    if(!name||name.toLowerCase().includes('итог'))continue;
-
-    const coldContacts=parseInt(Object.values(row).find((v,i)=>headers[i].includes('контакт'))||0)||0;
-    const coldCost=parseFloat((Object.values(row).find((v,i)=>headers[i].includes('трат')&&headers[i].includes('контакт'))||'0').replace(',','.'))||0;
-    const respInvites=parseInt(Object.values(row).find((v,i)=>headers[i].includes('приглашен')&&headers[i].includes('отклик'))||0)||0;
-    const pubCost=parseFloat((Object.values(row).find((v,i)=>headers[i].includes('публикац'))||'0').replace(',','.'))||0;
-
-    totalColdCost+=coldCost;
-    totalColdContacts+=coldContacts;
-    totalRespCost+=pubCost;
-    totalRespInvites+=respInvites;
-
-    recData.push({name,coldContacts,coldCost,respInvites,pubCost});
+  for(let i=1;i<lines.length;i++){
+    const cols=lines[i].split(';');
+    const name=getStr(cols,0);
+    if(!name)continue;
+    const pubCost=getNum(cols,12);
+    const invFromResp=getNum(cols,17);
+    const invFromBase=getNum(cols,18);
+    const baseCost=getNum(cols,24);
+    const baseContacts=getNum(cols,25);
+    const total=pubCost+baseCost;
+    totalPubCost+=pubCost;totalBaseCost+=baseCost;
+    totalInvResp+=invFromResp;totalBaseContacts+=baseContacts;
+    recData.push({name,pubCost,invFromResp,invFromBase,baseCost,baseContacts,total});
   }
 
-  const coldPerCall=totalColdContacts>0?Math.round(totalColdCost/totalColdContacts):0;
-  const respPerCall=totalRespInvites>0?Math.round(totalRespCost/totalRespInvites):0;
+  const coldPerCall=totalBaseContacts>0?Math.round(totalBaseCost/totalBaseContacts):0;
+  const respPerCall=totalInvResp>0?Math.round(totalPubCost/totalInvResp):0;
+  const diff=coldPerCall>0&&respPerCall>0?Math.round((coldPerCall-respPerCall)/coldPerCall*100):0;
 
   return `
-    <!-- Сводная статистика -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px">
       <div style="background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001;text-align:center">
         <div style="font-size:12px;color:var(--muted);margin-bottom:4px">💰 Холодный звонок</div>
         <div style="font-size:28px;font-weight:700;color:var(--accent)">${coldPerCall} ₽</div>
-        <div style="font-size:11px;color:var(--muted)">${totalColdContacts} контактов на ${totalColdCost.toLocaleString('ru')} ₽</div>
+        <div style="font-size:11px;color:var(--muted)">${totalBaseContacts} контактов на ${totalBaseCost.toLocaleString('ru')} ₽</div>
       </div>
       <div style="background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001;text-align:center">
         <div style="font-size:12px;color:var(--muted);margin-bottom:4px">📥 Звонок по отклику</div>
         <div style="font-size:28px;font-weight:700;color:#2563eb">${respPerCall} ₽</div>
-        <div style="font-size:11px;color:var(--muted)">${totalRespInvites} приглашений на ${totalRespCost.toLocaleString('ru')} ₽</div>
+        <div style="font-size:11px;color:var(--muted)">${totalInvResp} приглашений на ${totalPubCost.toLocaleString('ru')} ₽</div>
       </div>
       <div style="background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001;text-align:center">
         <div style="font-size:12px;color:var(--muted);margin-bottom:4px">📊 Разница</div>
-        <div style="font-size:28px;font-weight:700;color:#16a34a">${coldPerCall>0&&respPerCall>0?Math.round((coldPerCall-respPerCall)/coldPerCall*100):0}%</div>
+        <div style="font-size:28px;font-weight:700;color:#16a34a">${diff}%</div>
         <div style="font-size:11px;color:var(--muted)">отклики дешевле холодных</div>
       </div>
       <div style="background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 4px #0001;text-align:center">
         <div style="font-size:12px;color:var(--muted);margin-bottom:4px">💸 Общий бюджет HH</div>
-        <div style="font-size:28px;font-weight:700;color:var(--text)">${(totalColdCost+totalRespCost).toLocaleString('ru')} ₽</div>
+        <div style="font-size:28px;font-weight:700;color:var(--text)">${(totalPubCost+totalBaseCost).toLocaleString('ru')} ₽</div>
         <div style="font-size:11px;color:var(--muted)">за период</div>
       </div>
     </div>
-
-    <!-- Таблица по рекрутёрам -->
     <div style="background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px #0001">
       <div style="padding:16px;font-size:15px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border)">По рекрутёрам</div>
       <table style="width:100%;border-collapse:collapse">
         <thead>
           <tr style="background:var(--bg2);font-size:11px;color:var(--muted)">
             <th style="padding:10px 12px;text-align:left;font-weight:600">Рекрутёр</th>
-            <th style="padding:10px 12px;text-align:center;font-weight:600">Контактов</th>
+            <th style="padding:10px 12px;text-align:center;font-weight:600">Контактов из базы</th>
             <th style="padding:10px 12px;text-align:center;font-weight:600">База (₽)</th>
             <th style="padding:10px 12px;text-align:center;font-weight:600">Приглашений из откликов</th>
             <th style="padding:10px 12px;text-align:center;font-weight:600">Публикации (₽)</th>
             <th style="padding:10px 12px;text-align:center;font-weight:600">Итого (₽)</th>
+            <th style="padding:10px 12px;text-align:center;font-weight:600">₽/контакт</th>
           </tr>
         </thead>
         <tbody>
           ${recData.map((r,i)=>`<tr style="border-top:1px solid var(--border);background:${i%2?'var(--bg2)':'var(--card)'}">
             <td style="padding:10px 12px;font-size:13px;font-weight:500;color:var(--text)">${r.name}</td>
-            <td style="padding:10px 12px;font-size:13px;text-align:center;color:var(--text)">${r.coldContacts}</td>
-            <td style="padding:10px 12px;font-size:13px;text-align:center;color:var(--text)">${r.coldCost.toLocaleString('ru')}</td>
-            <td style="padding:10px 12px;font-size:13px;text-align:center;color:var(--text)">${r.respInvites}</td>
-            <td style="padding:10px 12px;font-size:13px;text-align:center;color:var(--text)">${r.pubCost.toLocaleString('ru')}</td>
-            <td style="padding:10px 12px;font-size:13px;text-align:center;font-weight:700;color:var(--accent)">${(r.coldCost+r.pubCost).toLocaleString('ru')}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center">${r.baseContacts}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center">${r.baseCost.toLocaleString('ru')}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center">${r.invFromResp}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center">${r.pubCost.toLocaleString('ru')}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center;font-weight:700;color:var(--accent)">${r.total.toLocaleString('ru')}</td>
+            <td style="padding:10px 12px;font-size:13px;text-align:center">${r.baseContacts>0?Math.round(r.baseCost/r.baseContacts):'-'}</td>
           </tr>`).join('')}
         </tbody>
       </table>
     </div>
   `;
-}
-
-function uploadHHReport(input){
-  const file=input.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    try {
-      localStorage.setItem('hh_report_date', new Date().toISOString());
-      localStorage.setItem('hh_report_data', e.target.result);
-      alert('✅ Отчёт HH загружен!');
-      renderAnalytics();
-    } catch(err){
-      alert('Ошибка: '+err.message);
-    }
-  };
-  reader.readAsText(file, 'utf-8');
 }
 window.renderAnalytics=renderAnalytics;
 window.uploadHHReport=uploadHHReport;
