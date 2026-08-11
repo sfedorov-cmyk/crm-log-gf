@@ -2883,24 +2883,10 @@ async function syncHHResponses(btn){
   try {
     // 1. Получаем все активные вакансии
     log.textContent='📋 Получаю список вакансий...';
-    // Получаем данные аккаунта
-    const meData=await hhFetch('https://api.hh.ru/me',token);
-    log.textContent='👤 me: '+JSON.stringify(meData).slice(0,300);
-    await new Promise(r=>setTimeout(r,2000));
-    // Пробуем все возможные endpoints для вакансий
-    let vacData={items:[]};
-    const vacResp1=await hhFetch('https://api.hh.ru/vacancies/mine?per_page=50&manager_id=mine',token);
-    log.textContent='📋 mine: '+JSON.stringify(vacResp1).slice(0,200);
-    await new Promise(r=>setTimeout(r,2000));
-    if(vacResp1.items && vacResp1.items.length>0){
-      vacData=vacResp1;
-    } else {
-      const vacResp2=await hhFetch('https://api.hh.ru/vacancies?per_page=50&only_with_active_area=true',token);
-      log.textContent='📋 vacancies: '+JSON.stringify(vacResp2).slice(0,200);
-      await new Promise(r=>setTimeout(r,2000));
-      if(vacResp2.items && vacResp2.items.length>0) vacData=vacResp2;
-    }
-    const vacancies=vacData.items||[];
+    // Фиксированный список вакансий
+    const VACANCY_IDS=['135190090','135396085','134258152','134259761','135609850'];
+    const vacancies=VACANCY_IDS.map(id=>({id}));
+    log.textContent='📋 Вакансий: '+vacancies.length;
     log.textContent=`📋 Найдено вакансий: ${vacancies.length}`;
 
     if(vacancies.length===0){log.textContent='ℹ️ Активных вакансий не найдено';btn.disabled=false;btn.textContent='🔄 Загрузить новые отклики';return;}
@@ -2915,7 +2901,7 @@ async function syncHHResponses(btn){
     // 4. Для каждой вакансии получаем отклики
     for(const vac of vacancies){
       log.textContent=`🔍 Проверяю вакансию: ${vac.name}...`;
-      const negData=await hhFetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,token);
+      const negData=await hhFetch(`https://api.hh.ru/negotiations?vacancy_id=${vac.id}&per_page=50`,token);
       const negotiations=negData.items||[];
 
       for(const neg of negotiations){
@@ -2998,24 +2984,10 @@ async function markAllExistingAsLoaded(btn){
 
   try {
     // Получаем все активные вакансии
-    // Получаем данные аккаунта
-    const meData=await hhFetch('https://api.hh.ru/me',token);
-    log.textContent='👤 me: '+JSON.stringify(meData).slice(0,300);
-    await new Promise(r=>setTimeout(r,2000));
-    // Пробуем все возможные endpoints для вакансий
-    let vacData={items:[]};
-    const vacResp1=await hhFetch('https://api.hh.ru/vacancies/mine?per_page=50&manager_id=mine',token);
-    log.textContent='📋 mine: '+JSON.stringify(vacResp1).slice(0,200);
-    await new Promise(r=>setTimeout(r,2000));
-    if(vacResp1.items && vacResp1.items.length>0){
-      vacData=vacResp1;
-    } else {
-      const vacResp2=await hhFetch('https://api.hh.ru/vacancies?per_page=50&only_with_active_area=true',token);
-      log.textContent='📋 vacancies: '+JSON.stringify(vacResp2).slice(0,200);
-      await new Promise(r=>setTimeout(r,2000));
-      if(vacResp2.items && vacResp2.items.length>0) vacData=vacResp2;
-    }
-    const vacancies=vacData.items||[];
+    // Фиксированный список вакансий
+    const VACANCY_IDS=['135190090','135396085','134258152','134259761','135609850'];
+    const vacancies=VACANCY_IDS.map(id=>({id}));
+    log.textContent='📋 Вакансий: '+vacancies.length;
 
     // Получаем уже помеченные
     const {data:existingResps}=await sb.from('responses').select('hh_id').not('hh_id','is',null);
@@ -3024,7 +2996,7 @@ async function markAllExistingAsLoaded(btn){
     // Для каждой вакансии получаем отклики и помечаем без распределения
     for(const vac of vacancies){
       log.textContent=`🔍 Обрабатываю вакансию: ${vac.name}...`;
-      const negData=await hhFetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,token);
+      const negData=await hhFetch(`https://api.hh.ru/negotiations?vacancy_id=${vac.id}&per_page=50`,token);
       const negotiations=negData.items||[];
 
       for(const neg of negotiations){
