@@ -2882,11 +2882,11 @@ async function syncHHResponses(btn){
 
   try {
     // 1. Получаем все активные вакансии
-    log.textContent='📋 Получаю список вакансий...';
+    
     // Фиксированный список вакансий
     const VACANCY_IDS=['135190090','135396085','134258152','134259761','135609850'];
     const vacancies=VACANCY_IDS.map(id=>({id}));
-    log.textContent='📋 Вакансий: '+vacancies.length;
+    
     log.textContent=`📋 Найдено вакансий: ${vacancies.length}`;
 
     if(vacancies.length===0){log.textContent='ℹ️ Активных вакансий не найдено';btn.disabled=false;btn.textContent='🔄 Загрузить новые отклики';return;}
@@ -2910,8 +2910,8 @@ async function syncHHResponses(btn){
       ];
       for(const negUrl of urls){
         const negData=await hhFetch(negUrl,token);
-        log.textContent='🔍 '+negUrl.split('/').slice(-1)[0].slice(0,30)+': '+JSON.stringify(negData).slice(0,200);
-        await new Promise(r=>setTimeout(r,2000));
+        
+        
         if(negData.items && negData.items.length>0){negotiations=negData.items;break;}
         if(negData.found>0){negotiations=negData.items||[];break;}
       }
@@ -2979,7 +2979,7 @@ async function markAllExistingAsLoaded(btn){
 
   btn.disabled=true;btn.textContent='⏳ Загружаю...';
   const log=document.getElementById('hh-sync-log');
-  log.textContent='📋 Получаю список текущих откликов...';
+  
 
   let settings=await getHHSettings();
   if(!settings.access_token){log.textContent='❌ Нет токена — авторизуйся сначала';btn.disabled=false;btn.textContent='📌 Пометить все текущие как загруженные';return;}
@@ -2999,7 +2999,7 @@ async function markAllExistingAsLoaded(btn){
     // Фиксированный список вакансий
     const VACANCY_IDS=['135190090','135396085','134258152','134259761','135609850'];
     const vacancies=VACANCY_IDS.map(id=>({id}));
-    log.textContent='📋 Вакансий: '+vacancies.length;
+    
 
     // Получаем уже помеченные
     const {data:existingResps}=await sb.from('responses').select('hh_id').not('hh_id','is',null);
@@ -3017,8 +3017,8 @@ async function markAllExistingAsLoaded(btn){
       ];
       for(const negUrl of urls){
         const negData=await hhFetch(negUrl,token);
-        log.textContent='🔍 '+negUrl.split('/').slice(-1)[0].slice(0,30)+': '+JSON.stringify(negData).slice(0,200);
-        await new Promise(r=>setTimeout(r,2000));
+        
+        
         if(negData.items && negData.items.length>0){negotiations=negData.items;break;}
         if(negData.found>0){negotiations=negData.items||[];break;}
       }
