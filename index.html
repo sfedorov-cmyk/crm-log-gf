@@ -2902,6 +2902,8 @@ async function syncHHResponses(btn){
     for(const vac of vacancies){
       log.textContent=`🔍 Проверяю вакансию: ${vac.name}...`;
       const negData=await hhFetch(`https://api.hh.ru/negotiations?vacancy_id=${vac.id}&per_page=50`,token);
+      log.textContent='🔍 Вакансия '+vac.id+': '+JSON.stringify(negData).slice(0,300);
+      await new Promise(r=>setTimeout(r,3000));
       const negotiations=negData.items||[];
 
       for(const neg of negotiations){
@@ -2997,6 +2999,8 @@ async function markAllExistingAsLoaded(btn){
     for(const vac of vacancies){
       log.textContent=`🔍 Обрабатываю вакансию: ${vac.name}...`;
       const negData=await hhFetch(`https://api.hh.ru/negotiations?vacancy_id=${vac.id}&per_page=50`,token);
+      log.textContent='🔍 Вакансия '+vac.id+': '+JSON.stringify(negData).slice(0,300);
+      await new Promise(r=>setTimeout(r,3000));
       const negotiations=negData.items||[];
 
       for(const neg of negotiations){
