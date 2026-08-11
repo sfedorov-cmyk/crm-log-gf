@@ -2860,9 +2860,9 @@ async function refreshHHToken(){
 }
 
 // Синхронизация откликов
-async function syncHHResponses(btn){
+async function syncHHResponses(btn, silent=false){
   const log=document.getElementById('hh-sync-log');
-  btn.disabled=true;btn.textContent='⏳ Загружаю...';
+  if(!silent){btn.disabled=true;btn.textContent='⏳ Загружаю...';}
 
   let settings=await getHHSettings();
 
@@ -2970,9 +2970,18 @@ async function syncHHResponses(btn){
     // Сохраняем обновлённый индекс очереди
     await saveQueueIndex(qIdx);
 
-    log.innerHTML=`✅ Готово! Загружено новых откликов: <b>${totalNew}</b>`;
-    btn.textContent='🔄 Загрузить новые отклики';
-    btn.disabled=false;
+    if(!silent){
+      log.innerHTML=`✅ Готово! Загружено новых откликов: <b>${totalNew}</b>`;
+      btn.textContent='🔄 Загрузить новые отклики';
+      btn.disabled=false;
+    } else if(totalNew>0){
+      // Показываем уведомление о новых откликах
+      const notif=document.createElement('div');
+      notif.style.cssText='position:fixed;bottom:20px;right:20px;background:#1a7a3c;color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 12px #0003';
+      notif.textContent='📥 Новых откликов с HH: '+totalNew;
+      document.body.appendChild(notif);
+      setTimeout(()=>notif.remove(),5000);
+    }
     if(totalNew>0)setTimeout(()=>renderHH(),1000);
 
   } catch(e){
@@ -2985,7 +2994,7 @@ async function syncHHResponses(btn){
 async function markAllExistingAsLoaded(btn){
   if(!confirm('Система запомнит все текущие отклики на HH как уже обработанные.\nПосле этого будут загружаться только НОВЫЕ отклики.\n\nПродолжить?'))return;
 
-  btn.disabled=true;btn.textContent='⏳ Загружаю...';
+  if(!silent){btn.disabled=true;btn.textContent='⏳ Загружаю...';}
   const log=document.getElementById('hh-sync-log');
   
 
@@ -3129,6 +3138,28 @@ function exportToExcel(){
 }
 window.exportToExcel=exportToExcel;
 // ========== КОНЕЦ ЭКСПОРТА ==========
+
+// ========== АВТО-СИНХРОНИЗАЦИЯ HH ==========
+async function autoSyncHH(){
+  try {
+    const settings=await getHHSettings();
+    if(!settings.access_token)return; // нет токена — не синхронизируем
+    if(settings.expires_at && Date.now()>settings.expires_at){
+      const ok=await refreshHHToken();
+      if(!ok)return;
+    }
+    await syncHHResponses(null, true); // silent mode
+  } catch(e){
+    console.log('Авто-синхронизация HH:', e.message);
+  }
+}
+
+// Запускаем через 30 секунд после загрузки и потом каждые 15 минут
+setTimeout(()=>{
+  autoSyncHH();
+  setInterval(autoSyncHH, 15*60*1000);
+}, 30000);
+// ========== КОНЕЦ АВТО-СИНХРОНИЗАЦИИ ==========
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
