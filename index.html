@@ -2883,20 +2883,9 @@ async function syncHHResponses(btn){
   try {
     // 1. Получаем все активные вакансии
     log.textContent='📋 Получаю список вакансий...';
-    // Сначала получаем ID работодателя
+    // Получаем данные аккаунта
     const meData=await hhFetch('https://api.hh.ru/me',token);
-    log.textContent='👤 Аккаунт: '+(meData.email||meData.id||JSON.stringify(meData).slice(0,100));
-    await new Promise(r=>setTimeout(r,1000));
-    const employerId=meData.employer ? meData.employer.id : null;
-    log.textContent='🏢 ID работодателя: '+employerId;
-    await new Promise(r=>setTimeout(r,1000));
-    let vacData={items:[]};
-    if(employerId){
-      vacData=await hhFetch('https://api.hh.ru/employers/'+employerId+'/vacancies?status=published&per_page=50',token);
-    } else {
-      vacData=await hhFetch('https://api.hh.ru/vacancies/mine?per_page=50',token);
-    }
-    log.textContent='📋 Ответ HH: '+JSON.stringify(vacData).slice(0,200);
+    log.textContent='👤 me: '+JSON.stringify(meData).slice(0,300);
     await new Promise(r=>setTimeout(r,2000));
     const vacancies=vacData.items||[];
     log.textContent=`📋 Найдено вакансий: ${vacancies.length}`;
@@ -2996,20 +2985,9 @@ async function markAllExistingAsLoaded(btn){
 
   try {
     // Получаем все активные вакансии
-    // Сначала получаем ID работодателя
+    // Получаем данные аккаунта
     const meData=await hhFetch('https://api.hh.ru/me',token);
-    log.textContent='👤 Аккаунт: '+(meData.email||meData.id||JSON.stringify(meData).slice(0,100));
-    await new Promise(r=>setTimeout(r,1000));
-    const employerId=meData.employer ? meData.employer.id : null;
-    log.textContent='🏢 ID работодателя: '+employerId;
-    await new Promise(r=>setTimeout(r,1000));
-    let vacData={items:[]};
-    if(employerId){
-      vacData=await hhFetch('https://api.hh.ru/employers/'+employerId+'/vacancies?status=published&per_page=50',token);
-    } else {
-      vacData=await hhFetch('https://api.hh.ru/vacancies/mine?per_page=50',token);
-    }
-    log.textContent='📋 Ответ HH: '+JSON.stringify(vacData).slice(0,200);
+    log.textContent='👤 me: '+JSON.stringify(meData).slice(0,300);
     await new Promise(r=>setTimeout(r,2000));
     const vacancies=vacData.items||[];
 
