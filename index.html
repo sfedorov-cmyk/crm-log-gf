@@ -2919,7 +2919,9 @@ async function syncHHResponses(btn){
       for(const neg of negotiations){
         const hhId=neg.id;
         if(existingIds.has(String(hhId)))continue; // уже загружен
-
+        // Пропускаем отклики старше 2 дней
+        const negDate=new Date(neg.updated_at||neg.created_at||Date.now());
+        if(Date.now()-negDate.getTime()>2*24*60*60*1000)continue;
         // Определяем рекрутёра по очереди
         const rec=ACTIVE_RECS_HH[qIdx % ACTIVE_RECS_HH.length];
         qIdx++;
@@ -2938,8 +2940,14 @@ async function syncHHResponses(btn){
           hh_id:String(hhId)
         });
 
-        // Создаём запись у рекрутёра
+        // Создаём запись у рекрутёра только если нет дубля по телефону
         const today=new Date();
+        if(tel && tel!=='—'){
+          const {data:existTel}=await sb.from('candidates').select('id').eq('tel',tel).eq('recruiter',rec).limit(1);
+          if(existTel && existTel.length>0){
+            totalNew++;existingIds.add(String(hhId));continue;
+          }
+        }
         await sb.from('candidates').insert({
           date:today.toISOString().split('T')[0],
           time:today.toTimeString().slice(0,5),
@@ -3026,7 +3034,9 @@ async function markAllExistingAsLoaded(btn){
       for(const neg of negotiations){
         const hhId=String(neg.id);
         if(existingIds.has(hhId))continue;
-
+        // Пропускаем отклики старше 2 дней
+        const negDate2=new Date(neg.updated_at||neg.created_at||Date.now());
+        if(Date.now()-negDate2.getTime()>2*24*60*60*1000)continue;
         // Сохраняем только hh_id без создания записи у рекрутёра
         await sb.from('responses').insert({
           recruiter:'__marked__',
