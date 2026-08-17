@@ -25,6 +25,7 @@
 [data-theme="dark"] .r-rezerv td{background:#1a2040!important}
 [data-theme="dark"] .r-zhdu td{background:#3a1a2a!important}
 [data-theme="dark"] .r-sb td{background:#3a3010!important}
+[data-theme="dark"] .r-nosb td{background:#3a1010!important}
 [data-theme="dark"] .r-logistic td{background:#1a3a20!important}
 [data-theme="dark"] .modal{background:var(--surface)}
 [data-theme="dark"] .fg input,[data-theme="dark"] .fg select,[data-theme="dark"] .fg textarea{background:#3a3a3c;color:var(--text);border-color:var(--border)}
@@ -109,9 +110,9 @@ tr.selected td{background:#e8f5e9!important}
 .c-zhdu{background:var(--border);color:var(--text)}.c-sb{background:var(--border);color:var(--text)}.c-logistic{background:var(--border);color:var(--text)}.c-smena{background:var(--border);color:var(--text)}.c-perezv{background:#f3e8ff;color:#7e22ce}
 .r-dumaet td{background:#e0f2fe!important}.r-nedozvon td{background:transparent!important}.r-otkaz td{background:transparent!important}.r-prinyat td{background:transparent!important}
 .r-oformlenie td{background:transparent!important}.r-stazhirovka td{background:transparent!important}.r-rezerv td{background:#e0f2fe!important}
-.r-zhdu td{background:#fce7f3!important}.r-sb td{background:#fef9c3!important}.r-logistic td{background:#dcfce7!important}.r-smena td{background:#dcfce7!important}.r-perezv td{background:#faf5ff!important}
+.r-zhdu td{background:#fce7f3!important}.r-sb td{background:#fef9c3!important}.r-nosb td{background:#ffe4e4!important}.r-logistic td{background:#dcfce7!important}.r-smena td{background:#dcfce7!important}.r-perezv td{background:#faf5ff!important}
 .r-dumaet{background:#e0f2fe}.r-nedozvon{background:transparent}.r-otkaz{background:transparent}.r-prinyat{background:transparent}
-.r-oformlenie{background:transparent}.r-stazhirovka{background:transparent}.r-rezerv{background:#e0f2fe}.r-zhdu{background:#fce7f3}.r-sb{background:#fef9c3}.r-logistic{background:#dcfce7}.r-smena{background:#dcfce7}.r-perezv{background:#faf5ff}
+.r-oformlenie{background:transparent}.r-stazhirovka{background:transparent}.r-rezerv{background:#e0f2fe}.r-zhdu{background:#fce7f3}.r-sb{background:#fef9c3}.r-nosb{background:#ffe4e4}.r-logistic{background:#dcfce7}.r-smena{background:#dcfce7}.r-perezv{background:#faf5ff}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-end;justify-content:center}
 .modal-bg.open{display:flex}
 @media(min-width:600px){.modal-bg{align-items:center}}
@@ -318,7 +319,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
         </select>
       </div>
       <div class="fg"><label>Да/Нет</label><select id="fDa"><option value="—">—</option><option value="да">Да</option><option value="нет">Нет</option><option value="думает">Думает</option></select></div>
-      <div class="fg"><label>Статус</label><select id="fStatus"><option value="—">—</option><option>думает</option><option>недозвон</option><option>отказ</option><option>принят</option><option>оформление</option><option>стажировка</option><option>резерв</option><option>жду доки</option><option>проверка СБ</option><option>передан в логистику</option><option>вышел в смену</option><option>перезвонить</option></select></div>
+      <div class="fg"><label>Статус</label><select id="fStatus"><option value="—">—</option><option>думает</option><option>недозвон</option><option>отказ</option><option>принят</option><option>оформление</option><option>стажировка</option><option>резерв</option><option>жду доки</option><option>проверка СБ</option><option>не согласован СБ</option><option>передан в логистику</option><option>вышел в смену</option><option>перезвонить</option></select></div>
       <div class="fg"><label>Юр. Статус</label><select id="fJur"><option value="—">—</option><option>СМЗ</option><option>ИП</option><option>ТД</option><option>ГПХ</option></select></div>
       <div class="fg"><label>Город</label><select id="fCity"><option value="—">—</option><option>Санкт-Петербург</option><option>Москва</option><option>Казань</option><option>Самара</option><option>Нижний Новгород</option><option>Воронеж</option><option>Тольятти</option><option>Другой</option></select></div>
       <div class="fg full"><label>Комментарий</label>
@@ -1015,7 +1016,7 @@ function renderComment(comment){
   }).join('');
 }
 function getRecs(){return ALL_R}
-function sClass(s){return{думает:'dumaet',недозвон:'nedozvon',отказ:'otkaz',принят:'prinyat',оформление:'oformlenie',стажировка:'stazhirovka',резерв:'rezerv','жду доки':'zhdu','проверка СБ':'sb','передан в логистику':'logistic','вышел в смену':'smena','перезвонить':'perezv'}[s]||''}
+function sClass(s){return{думает:'dumaet',недозвон:'nedozvon',отказ:'otkaz',принят:'prinyat',оформление:'oformlenie',стажировка:'stazhirovka',резерв:'rezerv','жду доки':'zhdu','проверка СБ':'sb','передан в логистику':'logistic','вышел в смену':'smena','перезвонить':'perezv','не согласован СБ':'nosb'}[s]||''}
 function daBadge(v){if(v==='да')return'<span class="chip c-da-yes">Да</span>';if(v==='нет')return'<span class="chip c-da-no">Нет</span>';if(v==='думает')return'<span class="chip c-da-think">Думает</span>';return'<span class="chip c-empty">—</span>'}
 function stBadge(s){const c=sClass(s);return s&&s!=='—'?`<span class="chip c-${c}">${s}</span>`:'—'}
 function setSyncing(st,msg){const el=document.getElementById('syncStatus');el.className='sync-pill sync-'+st;el.textContent=msg}
@@ -1399,8 +1400,8 @@ async function renderDashMain(from,to){
   const data=allData;
   if(!data.length&&from2===0){document.getElementById('dashContent').innerHTML='<div style="color:var(--muted)">Нет данных</div>';return;}
   const STATS=['принят','оформление','стажировка','резерв','жду доки','проверка СБ','передан в логистику','вышел в смену'];
-  const SC={'думает':'#eef2ff','недозвон':'#f2f2f7','отказ':'#fef2f2','принят':'#f0fdf4','оформление':'#ecfeff','стажировка':'#faf5ff','резерв':'#dbeafe','жду доки':'#fce7f3','проверка СБ':'#fef9c3','передан в логистику':'#dcfce7'};
-  const ST={'думает':'#3730a3','недозвон':'#8e8e93','отказ':'#b91c1c','принят':'#15803d','оформление':'#0e7490','стажировка':'#7e22ce','резерв':'#1d4ed8','жду доки':'#9d174d','проверка СБ':'#854d0e','передан в логистику':'#15803d'};
+  const SC={'думает':'#eef2ff','недозвон':'#f2f2f7','отказ':'#fef2f2','принят':'#f0fdf4','оформление':'#ecfeff','стажировка':'#faf5ff','резерв':'#dbeafe','жду доки':'#fce7f3','проверка СБ':'#fef9c3','не согласован СБ':'#ffe4e4','передан в логистику':'#dcfce7'};
+  const ST={'думает':'#3730a3','недозвон':'#8e8e93','отказ':'#b91c1c','принят':'#15803d','оформление':'#0e7490','стажировка':'#7e22ce','резерв':'#1d4ed8','жду доки':'#9d174d','проверка СБ':'#854d0e','не согласован СБ':'#b91c1c','передан в логистику':'#15803d'};
   const stats={};ALL_R.forEach(r=>{stats[r]={total:0,logistic:0,combined:0,statuses:{}}});
   data.forEach(row=>{if(!stats[row.recruiter])return;stats[row.recruiter].total++;if(['передан в логистику','проверка СБ','вышел в смену'].includes(row.status))stats[row.recruiter].logistic++;if(['передан в логистику','проверка СБ','вышел в смену'].includes(row.status))stats[row.recruiter].combined++;if(row.status&&row.status!=='—')stats[row.recruiter].statuses[row.status]=(stats[row.recruiter].statuses[row.status]||0)+1;});
   const RATING_R=ALL_R.filter(r=>!ARCHIVE_R.includes(r));const rating=[...RATING_R].sort((a,b)=>stats[b].logistic-stats[a].logistic);const maxL=Math.max(...RATING_R.map(r=>stats[r].logistic),1);
@@ -1499,7 +1500,7 @@ function renderFilters(){
       <span class="flabel">Да/Нет</span>
       <select class="finput" id="fDa2"><option value="">Все</option><option${F.da==='да'?' selected':''} value="да">Да</option><option${F.da==='нет'?' selected':''} value="нет">Нет</option><option${F.da==='думает'?' selected':''} value="думает">Думает</option></select>
       <span class="flabel">Статус</span>
-      <select class="finput" id="fSt2"><option value="">Все</option>${['думает','недозвон','отказ','принят','оформление','стажировка','резерв','жду доки','проверка СБ','передан в логистику','вышел в смену','перезвонить'].map(o=>`<option${F.status===o?' selected':''}>${o}</option>`).join('')}</select>
+      <select class="finput" id="fSt2"><option value="">Все</option>${['думает','недозвон','отказ','принят','оформление','стажировка','резерв','жду доки','проверка СБ','не согласован СБ','передан в логистику','вышел в смену','перезвонить'].map(o=>`<option${F.status===o?' selected':''}>${o}</option>`).join('')}</select>
       <span class="flabel">Город</span>
       <select class="finput" id="fCi2"><option value="">Все</option>${['Санкт-Петербург','Москва','Казань','Самара','Нижний Новгород','Воронеж','Тольятти'].map(o=>`<option${F.city===o?' selected':''}>${o}</option>`).join('')}</select>
       <button class="btn-reset" id="resetBtn">Сбросить</button>
