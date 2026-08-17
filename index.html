@@ -1003,6 +1003,17 @@ window.saveSmzStep=saveSmzStep;
 function td(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
 function fd(d){if(!d)return'—';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function renderComment(comment){
+  if(!comment)return '—';
+  const parts=comment.split(/(https?:\/\/\S+)/g);
+  return parts.map(part=>{
+    if(/^https?:\/\//.test(part)){
+      const short=part.includes('hh.ru/resume')?'🔗 Резюме на HH':part.includes('hh.ru')?'🔗 HH':part.length>35?part.slice(0,35)+'...':part;
+      return '<a href="'+part+'" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent);text-decoration:none;font-weight:600;font-size:12px">'+short+'</a>';
+    }
+    return esc(part);
+  }).join('');
+}
 function getRecs(){return ALL_R}
 function sClass(s){return{думает:'dumaet',недозвон:'nedozvon',отказ:'otkaz',принят:'prinyat',оформление:'oformlenie',стажировка:'stazhirovka',резерв:'rezerv','жду доки':'zhdu','проверка СБ':'sb','передан в логистику':'logistic','вышел в смену':'smena','перезвонить':'perezv'}[s]||''}
 function daBadge(v){if(v==='да')return'<span class="chip c-da-yes">Да</span>';if(v==='нет')return'<span class="chip c-da-no">Нет</span>';if(v==='думает')return'<span class="chip c-da-think">Думает</span>';return'<span class="chip c-empty">—</span>'}
@@ -1545,7 +1556,7 @@ function renderTable(fr){
       <td style="white-space:nowrap">${r.okrug||'—'}</td>
       <td>${daBadge(r.da)}</td><td>${stBadge(r.status)}</td>
       <td>${r.jur||'—'}</td><td>${r.city||'—'}</td>
-      <td style="color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.comment)}">${r.comment||'—'}</td>
+      <td style="color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${r.comment||''}">${renderComment(r.comment)}</td>
       <td style="white-space:nowrap"><button onclick="copyRow('${r.id}')" title="Копировать строку" style="background:none;border:none;cursor:pointer;font-size:15px">📋</button><button onclick="openEdit('${r.id}')" style="background:none;border:none;cursor:pointer;font-size:15px">✏️</button></td>
     </tr>`}).join('');
   initDrag();
@@ -1562,7 +1573,7 @@ function renderCards(fr){
         <div class="card-top"><div class="card-name">${r.fio||'—'}</div><div class="card-time">${fd(r.date)} ${r.time||''}</div></div>
         <div class="card-tel" onclick="event.stopPropagation();copyPhone('${esc(r.tel||'')}')">${r.tel||'—'}</div>
         <div class="card-chips">${r.okrug&&r.okrug!=='—'?`<span class="chip c-empty">${r.okrug}</span>`:''}${daBadge(r.da)}${stBadge(r.status)}${r.jur&&r.jur!=='—'?`<span class="chip c-empty">${r.jur}</span>`:''}${r.city&&r.city!=='—'?`<span class="chip c-empty">${r.city}</span>`:''}</div>
-        ${r.comment?`<div class="card-comment">${r.comment}</div>`:''}
+        ${r.comment?`<div class="card-comment">${renderComment(r.comment)}</div>`:''}
       </div>
       ${r.tel&&r.tel!=='—'?`<div style="display:flex;gap:6px;margin-top:6px">
         <a href="https://wa.me/${r.tel.replace(/[^0-9]/g,'')}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:3px;padding:4px 10px;background:none;color:#25d366;border:1.5px solid #25d366;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none">💬 WA</a>
