@@ -2922,18 +2922,11 @@ async function syncHHResponses(btn, silent=false){
       log.textContent=`🔍 Проверяю вакансию: ${vac.name}...`;
       // Пробуем разные endpoints
       let negotiations=[];
-      const urls=[
-        `https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,
-        `https://api.hh.ru/negotiations?vacancy_id=${vac.id}&per_page=50&status=response`,
-        `https://api.hh.ru/vacancies/${vac.id}/negotiations?per_page=50`,
-      ];
-      for(const negUrl of urls){
-        const negData=await hhFetch(negUrl,token);
-        
-        
-        if(negData.items && negData.items.length>0){negotiations=negData.items;break;}
-        if(negData.found>0){negotiations=negData.items||[];break;}
-      }
+      try{
+        const negData=await hhFetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,token);
+        if(negData && negData.items){negotiations=negData.items;}
+        else if(negData && negData.errors){console.log('Вакансия '+vac.id+' — нет доступа или не найдена');continue;}
+      }catch(e){console.log('Ошибка вакансии '+vac.id+':',e.message);continue;}
 
       for(const neg of negotiations){
         const hhId=neg.id;
@@ -3046,18 +3039,11 @@ async function markAllExistingAsLoaded(btn){
       log.textContent=`🔍 Обрабатываю вакансию: ${vac.name}...`;
       // Пробуем разные endpoints
       let negotiations=[];
-      const urls=[
-        `https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,
-        `https://api.hh.ru/negotiations?vacancy_id=${vac.id}&per_page=50&status=response`,
-        `https://api.hh.ru/vacancies/${vac.id}/negotiations?per_page=50`,
-      ];
-      for(const negUrl of urls){
-        const negData=await hhFetch(negUrl,token);
-        
-        
-        if(negData.items && negData.items.length>0){negotiations=negData.items;break;}
-        if(negData.found>0){negotiations=negData.items||[];break;}
-      }
+      try{
+        const negData=await hhFetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,token);
+        if(negData && negData.items){negotiations=negData.items;}
+        else if(negData && negData.errors){console.log('Вакансия '+vac.id+' — нет доступа или не найдена');continue;}
+      }catch(e){console.log('Ошибка вакансии '+vac.id+':',e.message);continue;}
 
       for(const neg of negotiations){
         const hhId=String(neg.id);
