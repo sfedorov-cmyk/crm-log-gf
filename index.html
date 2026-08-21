@@ -2917,66 +2917,74 @@ async function syncHHResponses(btn, silent=false){
     // 3. Получаем индекс очереди
     let qIdx=await getQueueIndex();
 
-    // 4. Для каждой вакансии получаем отклики
+    // 4. Собираем ВСЕ отклики со всех вакансий
+    const allCandidates=[];
+    const seenPhones=new Set();
+
     for(const vac of vacancies){
-      log.textContent=`🔍 Проверяю вакансию: ${vac.name}...`;
-      // Пробуем разные endpoints
+      log.textContent=`🔍 Проверяю вакансию ${vac.id}...`;
       let negotiations=[];
       try{
         const negData=await hhFetch(`https://api.hh.ru/negotiations/response?vacancy_id=${vac.id}&per_page=50`,token);
         if(negData && negData.items){negotiations=negData.items;}
-        else if(negData && negData.errors){console.log('Вакансия '+vac.id+' — нет доступа или не найдена');continue;}
+        else if(negData && negData.errors){console.log('Вакансия '+vac.id+' — нет доступа');continue;}
       }catch(e){console.log('Ошибка вакансии '+vac.id+':',e.message);continue;}
 
       for(const neg of negotiations){
-        const hhId=neg.id;
-        if(existingIds.has(String(hhId)))continue; // уже загружен
-        // Пропускаем отклики старше 2 дней
+        const hhId=String(neg.id);
+        if(existingIds.has(hhId))continue;
         const negDate=new Date(neg.updated_at||neg.created_at||Date.now());
         if(Date.now()-negDate.getTime()>2*24*60*60*1000)continue;
-        // Определяем рекрутёра по очереди
-        const rec=ACTIVE_RECS_HH[qIdx % ACTIVE_RECS_HH.length];
-        qIdx++;
 
         const resume=neg.resume||{};
         const fio=[resume.last_name,resume.first_name,resume.middle_name].filter(Boolean).join(' ')||'—';
         const tel=resume.contact?.find(c=>c.type?.id==='cell')?.value||'—';
         const resumeUrl=resume.alternate_url||'';
 
-        // Сохраняем в responses
-        await sb.from('responses').insert({
-          recruiter:rec,
-          fio,
-          tel,
-          resume_url:resumeUrl,
-          hh_id:String(hhId)
-        });
-
-        // Создаём запись у рекрутёра только если нет дубля по телефону
-        const today=new Date();
-        if(tel && tel!=='—'){
-          const {data:existTel}=await sb.from('candidates').select('id').eq('tel',tel).eq('recruiter',rec).limit(1);
-          if(existTel && existTel.length>0){
-            totalNew++;existingIds.add(String(hhId));continue;
-          }
+        // Убираем дубли по телефону ВНУТРИ этой загрузки
+        const phoneKey=tel.replace(/[^0-9]/g,'');
+        if(phoneKey && seenPhones.has(phoneKey)){
+          existingIds.add(hhId); // помечаем как обработанный, но не создаём запись
+          continue;
         }
-        await sb.from('candidates').insert({
-          date:today.toISOString().split('T')[0],
-          time:today.toTimeString().slice(0,5),
-          fio:fio||'—',
-          tel:tel||'—',
-          okrug:'—',
-          da:'—',
-          status:'—',
-          jur:'—',
-          city:'—',
-          comment:resumeUrl ? `Отклик с HH: ${resumeUrl}` : 'Отклик с HH',
-          recruiter:rec
-        });
+        if(phoneKey)seenPhones.add(phoneKey);
 
-        totalNew++;
-        existingIds.add(String(hhId));
+        allCandidates.push({hhId,fio,tel,resumeUrl});
+        existingIds.add(hhId);
       }
+    }
+
+    // 5. Распределяем уникальных кандидатов по очереди
+    const today=new Date();
+    for(const cand of allCandidates){
+      // Проверяем нет ли уже такого телефона в базе у кого-то
+      if(cand.tel && cand.tel!=='—'){
+        const {data:existTel}=await sb.from('candidates').select('id').eq('tel',cand.tel).limit(1);
+        if(existTel && existTel.length>0){
+          // Дубль в базе — сохраняем только в responses без создания записи
+          await sb.from('responses').insert({recruiter:'__dup__',fio:cand.fio,tel:cand.tel,resume_url:cand.resumeUrl,hh_id:cand.hhId});
+          continue;
+        }
+      }
+
+      const rec=ACTIVE_RECS_HH[qIdx % ACTIVE_RECS_HH.length];
+      qIdx++;
+
+      await sb.from('responses').insert({
+        recruiter:rec,fio:cand.fio,tel:cand.tel,resume_url:cand.resumeUrl,hh_id:cand.hhId
+      });
+
+      await sb.from('candidates').insert({
+        date:today.toISOString().split('T')[0],
+        time:today.toTimeString().slice(0,5),
+        fio:cand.fio||'—',
+        tel:cand.tel||'—',
+        okrug:'—',da:'—',status:'—',jur:'—',city:'—',
+        comment:cand.resumeUrl ? `Отклик с HH: ${cand.resumeUrl}` : 'Отклик с HH',
+        recruiter:rec
+      });
+
+      totalNew++;
     }
 
     // Сохраняем обновлённый индекс очереди
