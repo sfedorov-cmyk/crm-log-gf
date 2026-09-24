@@ -2793,7 +2793,7 @@ async function hhFetch(url, token, method, body) {
 // ===== ПЕРЕКЛЮЧАТЕЛЬ ИНТЕГРАЦИИ С HH =====
 // false = интеграция полностью отключена (авто-синк и кнопки не работают)
 // true  = интеграция включена
-const HH_INTEGRATION_ENABLED = false;
+const HH_INTEGRATION_ENABLED = true;
 // ==========================================
 const HH_REDIRECT = 'https://sfedorov-cmyk.github.io/crm-log-gf/';
 const HH_SCOPE = 'employer_negotiations';
@@ -3064,7 +3064,7 @@ async function syncHHResponses(btn, silent=false){
     // 1. Получаем все активные вакансии
     
     // Фиксированный список вакансий
-    const VACANCY_IDS=['135190090','135396085','134258152','134259761','135609850','136362321','136362427','136682498','136769963','136456137','137040383','137040724','137041021'];
+    const VACANCY_IDS=['136362321','136362427','136682498','137040383','137040724','137041021'];
     const vacancies=VACANCY_IDS.map(id=>({id}));
     
     log.textContent=`📋 Найдено вакансий: ${vacancies.length}`;
@@ -3230,7 +3230,7 @@ async function markAllExistingAsLoaded(btn){
   try {
     // Получаем все активные вакансии
     // Фиксированный список вакансий
-    const VACANCY_IDS=['135190090','135396085','134258152','134259761','135609850','136362321','136362427','136682498','136769963','136456137','137040383','137040724','137041021'];
+    const VACANCY_IDS=['136362321','136362427','136682498','137040383','137040724','137041021'];
     const vacancies=VACANCY_IDS.map(id=>({id}));
     
 
