@@ -253,12 +253,13 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="topbar">
     <div class="logo">HR GF</div>
     <span class="sync-pill sync-loading" id="syncStatus">загрузка...</span>
-    <button id="analyticsTopBtn" onclick="analyticsMode=true;hhMode=false;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allWA=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','hhWrap','bulkBar','copyBar'];allWA.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderAnalytics();renderTabs()" style="display:none;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Аналитика</button>
-    <button id="hhTopBtn" onclick="hhMode=true;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allW2=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','bulkBar','copyBar'];allW2.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderHH();renderTabs()" style="display:none;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🔗 HH.ru</button>
+    <button id="analyticsTopBtn" onclick="analyticsMode=true;hhMode=false;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allWA=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','hhWrap','referralWrap','bulkBar','copyBar'];allWA.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderAnalytics();renderTabs()" style="display:none;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Аналитика</button>
+    <button id="hhTopBtn" onclick="hhMode=true;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allW2=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','referralWrap','bulkBar','copyBar'];allW2.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderHH();renderTabs()" style="display:none;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🔗 HH.ru</button>
     <button onclick="location.reload(true)" title="Обновить страницу (Ctrl+Shift+R)" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🔄 Обновить</button>
     <button id="screenshotBtn" title="Скриншот экрана" onclick="takeScreenshot()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📸 Скрин</button>
     <button onclick="dashMode=true;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;responsesMode=false;hhMode=false;clearSelection();render();renderTabs()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Дашборд</button>
-    <button onclick="responsesMode=true;hhMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allW=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','hhWrap','bulkBar','copyBar'];allW.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderResponses();renderTabs()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📥 Отклики</button>
+    <button onclick="responsesMode=true;hhMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allW=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','hhWrap','referralWrap','bulkBar','copyBar'];allW.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderResponses();renderTabs()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📥 Отклики</button>
+    <button onclick="openReferrals()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🤝 Приведи друга</button>
 
     <div class="topbar-right">
       <span id="queueBadge" style="display:none;font-size:11px;background:#fff3cd;color:#856404;padding:3px 8px;border-radius:20px;font-weight:500"></span>
@@ -297,6 +298,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="info-wrap hidden" id="responsesWrap"></div>
   <div class="info-wrap hidden" id="hhWrap"></div>
   <div class="info-wrap hidden" id="analyticsWrap"></div>
+  <div class="info-wrap hidden" id="referralWrap"></div>
   <div class="info-wrap hidden" id="okrugWrap"></div>
 </div>
 
@@ -466,6 +468,7 @@ let infoMode=false;
 let responsesMode=false;
 let hhMode=false;
 let analyticsMode=false;
+let referralMode=false;
 let deactivMode=false;
 let vacationMode=false;
 let mentorMode=false;
@@ -1174,7 +1177,7 @@ function initUser(user){
   loadData();updatePresence();setInterval(updatePresence,10000);setTimeout(renderPresence,1000);
   sb.channel('c1').on('postgres_changes',{event:'*',schema:'public',table:'candidates'},()=>loadData()).subscribe();
   // presence polling instead of realtime channel
-  sb.channel('c3').on('postgres_changes',{event:'*',schema:'public',table:'info_data'},()=>{if(infoMode)renderInfo();}).subscribe();
+  sb.channel('c3').on('postgres_changes',{event:'*',schema:'public',table:'info_data'},()=>{if(infoMode)renderInfo();if(referralMode)renderReferrals();}).subscribe();
   sb.channel('c4').on('postgres_changes',{event:'*',schema:'public',table:'deactivated'},()=>{if(deactivMode)renderDeactiv();}).subscribe();
   setInterval(syncQueue,30000);
 setInterval(renderPresence,10000);
@@ -1254,7 +1257,7 @@ function renderTabs(){
     const hh=e.target.closest('[data-hh]');
     if(hh){
       hhMode=true;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;
-      const allWraps=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','bulkBar','copyBar'];
+      const allWraps=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','referralWrap','bulkBar','copyBar'];
       allWraps.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
       try{document.querySelector('.table-wrap').style.display='none';}catch(e){}
       clearSelection();renderHH();renderTabs();return;
@@ -1292,6 +1295,8 @@ function render(){
   const rw=document.getElementById('responsesWrap');if(rw)rw.classList.add('hidden');
   const hw=document.getElementById('hhWrap');if(hw)hw.classList.add('hidden');
   const aw=document.getElementById('analyticsWrap');if(aw)aw.classList.add('hidden');
+  const rfw=document.getElementById('referralWrap');if(rfw){rfw.classList.add('hidden');rfw.style.display='';}
+  referralMode=false;
   hhMode=false;analyticsMode=false;
   const el_0=document.getElementById('cardsWrap');if(el_0)el_0.style.display='';
   const el_1=document.getElementById('filtersBar');if(el_1)el_1.style.display='';
@@ -3556,6 +3561,266 @@ function uploadHHReport(input){
 }
 window.uploadHHReport=uploadHHReport;
 // ========== КОНЕЦ АНАЛИТИКИ HH ==========
+
+// ========== ПРИВЕДИ ДРУГА ==========
+const REF_OKRUGS_SPB=['СПБ : СЗ','СПБ : СВ','СПБ : ВОСТОК','СПБ : ЮВ','СПБ : ЮЗ'];
+const REF_OKRUGS_MSK=['МСК : САО','МСК : СВАО','МСК : СЗАО','МСК : ВАО','МСК : ЮАО','МСК : ЮВАО','МСК : ЮЗАО','МСК : ЗАО'];
+let REF_ROWS=[];
+let REF_FILTER={q:'',okrug:''};
+
+function openReferrals(){
+  referralMode=true;
+  analyticsMode=false;hhMode=false;responsesMode=false;infoMode=false;
+  dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;
+  kpiMode=false;okrugMode=false;
+
+  ['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap',
+   'vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap',
+   'hhWrap','analyticsWrap','bulkBar','copyBar'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  try{document.querySelector('.table-wrap').style.display='none';}catch(e){}
+
+  const wrap=document.getElementById('referralWrap');
+  if(wrap){wrap.classList.remove('hidden');wrap.style.display='block';}
+  clearSelection();
+  renderReferrals();
+  renderTabs();
+}
+
+async function refLoad(){
+  const {data}=await sb.from('info_data').select('*').eq('key','referrals').limit(1);
+  if(!data||data.length===0)return [];
+  try{
+    const parsed=JSON.parse(data[0].value||'[]');
+    return Array.isArray(parsed)?parsed:[];
+  }catch(e){return [];}
+}
+
+async function refSave(list){
+  const payload=JSON.stringify(list);
+  const {data}=await sb.from('info_data').select('key').eq('key','referrals').limit(1);
+  if(data&&data.length>0){
+    const {error}=await sb.from('info_data').update({value:payload}).eq('key','referrals');
+    return !error;
+  }
+  const {error}=await sb.from('info_data').insert({key:'referrals',value:payload});
+  return !error;
+}
+
+function refOkrugOptions(sel){
+  return `<option value="—"${!sel||sel==='—'?' selected':''}>—</option>`
+    +`<optgroup label="Санкт-Петербург">${REF_OKRUGS_SPB.map(o=>`<option${sel===o?' selected':''}>${o}</option>`).join('')}</optgroup>`
+    +`<optgroup label="Москва">${REF_OKRUGS_MSK.map(o=>`<option${sel===o?' selected':''}>${o}</option>`).join('')}</optgroup>`;
+}
+
+async function renderReferrals(){
+  const wrap=document.getElementById('referralWrap');
+  if(!wrap)return;
+  wrap.classList.remove('hidden');
+  wrap.style.display='block';
+
+  REF_ROWS=await refLoad();
+  // Сначала с датой выхода (свежие), потом без даты
+  REF_ROWS.sort((a,b)=>{
+    if(a.exit_date&&b.exit_date)return b.exit_date.localeCompare(a.exit_date);
+    if(a.exit_date)return -1;
+    if(b.exit_date)return 1;
+    return (b.created_at||'').localeCompare(a.created_at||'');
+  });
+
+  // Фильтрация
+  let rows=REF_ROWS;
+  const q=(REF_FILTER.q||'').toLowerCase().trim();
+  if(q)rows=rows.filter(r=>((r.referrer||'')+' '+(r.friend||'')).toLowerCase().includes(q));
+  if(REF_FILTER.okrug)rows=rows.filter(r=>r.okrug===REF_FILTER.okrug);
+
+  // Статистика: топ пригласивших
+  const byRef={};
+  for(const r of REF_ROWS){
+    const n=(r.referrer||'').trim();
+    if(n)byRef[n]=(byRef[n]||0)+1;
+  }
+  const top=Object.entries(byRef).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  const fdRef=d=>{if(!d)return '—';const p=String(d).split('-');return p.length===3?`${p[2]}.${p[1]}.${p[0]}`:d;};
+  const allOkrugs=[...REF_OKRUGS_SPB,...REF_OKRUGS_MSK];
+
+  wrap.innerHTML=`<div style="padding:16px;max-width:1100px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:var(--text)">🤝 Приведи друга</div>
+        <div style="font-size:13px;color:var(--muted)">Кто кого привёл и когда друг вышел на смену</div>
+      </div>
+      <button onclick="openRefForm()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">+ Добавить</button>
+    </div>
+
+    <!-- Плашки -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px">
+      <div style="background:var(--surface);border-radius:14px;padding:14px;box-shadow:0 1px 4px #0001;text-align:center">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Всего приведено</div>
+        <div style="font-size:26px;font-weight:700;color:var(--accent)">${REF_ROWS.length}</div>
+      </div>
+      <div style="background:var(--surface);border-radius:14px;padding:14px;box-shadow:0 1px 4px #0001;text-align:center">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Вышли на смену</div>
+        <div style="font-size:26px;font-weight:700;color:#15803d">${REF_ROWS.filter(r=>r.exit_date).length}</div>
+      </div>
+      <div style="background:var(--surface);border-radius:14px;padding:14px;box-shadow:0 1px 4px #0001;text-align:center">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Ждут выхода</div>
+        <div style="font-size:26px;font-weight:700;color:#b45309">${REF_ROWS.filter(r=>!r.exit_date).length}</div>
+      </div>
+      <div style="background:var(--surface);border-radius:14px;padding:14px;box-shadow:0 1px 4px #0001;text-align:center">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Уникальных наставников</div>
+        <div style="font-size:26px;font-weight:700;color:#2a78d6">${Object.keys(byRef).length}</div>
+      </div>
+    </div>
+
+    ${top.length>0?`<div style="background:var(--surface);border-radius:14px;padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 4px #0001">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">🏆 Больше всех привели</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${top.map((t,i)=>`<span style="background:${i===0?'#fef9c3':'var(--bg)'};border:1.5px solid ${i===0?'#eab308':'var(--border)'};border-radius:16px;padding:4px 12px;font-size:12px;color:var(--text)">${['🥇','🥈','🥉','4.','5.'][i]} ${t[0]} — <b>${t[1]}</b></span>`).join('')}
+      </div>
+    </div>`:''}
+
+    <!-- Фильтры -->
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <input type="text" placeholder="Поиск по ФИО..." value="${(REF_FILTER.q||'').replace(/"/g,'&quot;')}"
+        oninput="REF_FILTER.q=this.value;renderReferrals()"
+        style="padding:7px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;min-width:200px;outline:none">
+      <select onchange="REF_FILTER.okrug=this.value;renderReferrals()"
+        style="padding:7px 10px;border:1.5px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
+        <option value="">Все округа</option>
+        ${allOkrugs.map(o=>`<option${REF_FILTER.okrug===o?' selected':''}>${o}</option>`).join('')}
+      </select>
+      ${(REF_FILTER.q||REF_FILTER.okrug)?`<button onclick="REF_FILTER={q:'',okrug:''};renderReferrals()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">✕ Сбросить</button>`:''}
+      <span style="font-size:12px;color:var(--muted);margin-left:auto">Показано: ${rows.length}</span>
+    </div>
+
+    <!-- Таблица -->
+    <div style="background:var(--surface);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px #0001">
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:640px">
+        <thead>
+          <tr style="background:var(--bg);font-size:11px;color:var(--muted)">
+            <th style="padding:10px 12px;text-align:left;font-weight:600">ФИО кто привёл</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:600">ФИО кого привели</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:600">Округ</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:600">Дата выхода</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:600"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.length===0
+            ? `<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--muted);font-size:13px">${REF_ROWS.length===0?'Пока никого не добавили':'Ничего не найдено'}</td></tr>`
+            : rows.map((r,i)=>`<tr style="border-top:1px solid var(--border);font-size:13px;background:${r.exit_date?(i%2?'#f0fdf4':'#f6fef9'):(i%2?'var(--bg)':'var(--surface)')}">
+                <td style="padding:10px 12px;color:var(--text);font-weight:500">${esc(r.referrer)||'—'}</td>
+                <td style="padding:10px 12px;color:var(--text)">${esc(r.friend)||'—'}</td>
+                <td style="padding:10px 12px;color:var(--muted)">${esc(r.okrug)||'—'}</td>
+                <td style="padding:10px 12px;color:${r.exit_date?'#15803d':'var(--muted)'};font-weight:${r.exit_date?'600':'400'};white-space:nowrap">${r.exit_date?'✅ '+fdRef(r.exit_date):'—'}</td>
+                <td style="padding:10px 12px;white-space:nowrap">
+                  <button onclick="openRefForm('${r.id}')" style="background:none;border:none;cursor:pointer;font-size:15px;margin-right:4px" title="Изменить">✏️</button>
+                  <button onclick="deleteRef('${r.id}')" style="background:none;border:none;color:#ff3b30;cursor:pointer;font-size:15px" title="Удалить">🗑</button>
+                </td>
+              </tr>`).join('')
+          }
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openRefForm(id){
+  const r=id?REF_ROWS.find(x=>String(x.id)===String(id)):null;
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:16px;padding:22px;width:100%;max-width:460px;box-shadow:0 8px 32px #0003;max-height:90vh;overflow-y:auto">
+    <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:16px">${r?'Изменить запись':'Приведи друга — новая запись'}</div>
+
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px">ФИО КТО ПРИВЁЛ</label>
+      <input id="ref-referrer" type="text" placeholder="Иванов Иван" value="${r?esc(r.referrer):''}"
+        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text);outline:none;font-family:inherit">
+    </div>
+
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px">ФИО КОГО ПРИВЕЛИ</label>
+      <input id="ref-friend" type="text" placeholder="Петров Пётр" value="${r?esc(r.friend):''}"
+        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text);outline:none;font-family:inherit">
+    </div>
+
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px">ОКРУГ</label>
+      <select id="ref-okrug" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text);outline:none;font-family:inherit">
+        ${refOkrugOptions(r?r.okrug:'')}
+      </select>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px">ДАТА ВЫХОДА</label>
+      <input id="ref-date" type="date" value="${r&&r.exit_date?r.exit_date:''}"
+        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text);outline:none;font-family:inherit">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Можно оставить пустым, если ещё не вышел</div>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit">Отмена</button>
+      <button onclick="saveRef(${r?`'${r.id}'`:'null'},this)" style="flex:2;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Сохранить</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  setTimeout(()=>{const el=document.getElementById('ref-referrer');if(el)el.focus();},50);
+}
+
+async function saveRef(id, btn){
+  const referrer=document.getElementById('ref-referrer').value.trim();
+  const friend=document.getElementById('ref-friend').value.trim();
+  const okrug=document.getElementById('ref-okrug').value;
+  const exitDate=document.getElementById('ref-date').value;
+
+  if(!referrer){alert('Укажи, кто привёл');return;}
+  if(!friend){alert('Укажи, кого привели');return;}
+
+  btn.textContent='Сохраняем...';btn.disabled=true;
+
+  // Перечитываем перед записью, чтобы не затереть чужие правки
+  const list=await refLoad();
+  if(id){
+    const i=list.findIndex(x=>String(x.id)===String(id));
+    if(i>=0)list[i]={...list[i],referrer,friend,okrug:okrug||'—',exit_date:exitDate||null};
+  } else {
+    list.push({
+      id:(crypto.randomUUID?crypto.randomUUID():'r'+Date.now()+Math.random().toString(36).slice(2)),
+      referrer,friend,okrug:okrug||'—',exit_date:exitDate||null,
+      created_at:new Date().toISOString()
+    });
+  }
+
+  const ok=await refSave(list);
+  if(!ok){
+    alert('Не удалось сохранить — проверь соединение');
+    btn.textContent='Сохранить';btn.disabled=false;
+    return;
+  }
+
+  btn.closest('div[style*=fixed]').remove();
+  renderReferrals();
+}
+
+async function deleteRef(id){
+  if(!confirm('Удалить запись?'))return;
+  const list=(await refLoad()).filter(x=>String(x.id)!==String(id));
+  const ok=await refSave(list);
+  if(!ok){alert('Не удалось удалить — проверь соединение');return;}
+  renderReferrals();
+}
+
+window.openReferrals=openReferrals;
+window.renderReferrals=renderReferrals;
+window.openRefForm=openRefForm;
+window.saveRef=saveRef;
+window.deleteRef=deleteRef;
+// ========== КОНЕЦ: ПРИВЕДИ ДРУГА ==========
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
