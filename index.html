@@ -1177,7 +1177,7 @@ function initUser(user){
   loadData();updatePresence();setInterval(updatePresence,10000);setTimeout(renderPresence,1000);
   sb.channel('c1').on('postgres_changes',{event:'*',schema:'public',table:'candidates'},()=>loadData()).subscribe();
   // presence polling instead of realtime channel
-  sb.channel('c3').on('postgres_changes',{event:'*',schema:'public',table:'info_data'},()=>{if(infoMode)renderInfo();if(referralMode)renderReferrals();}).subscribe();
+  sb.channel('c3').on('postgres_changes',{event:'*',schema:'public',table:'info_data'},()=>{if(infoMode)renderInfo();if(referralMode)renderReferrals();if(responsesMode)renderResponses();}).subscribe();
   sb.channel('c4').on('postgres_changes',{event:'*',schema:'public',table:'deactivated'},()=>{if(deactivMode)renderDeactiv();}).subscribe();
   setInterval(syncQueue,30000);
 setInterval(renderPresence,10000);
@@ -2553,6 +2553,7 @@ async function renderResponses(){
     <div id="resp-content" style="font-size:13px;color:var(--muted)">Загрузка...</div>
   </div>`;
 
+  PROCESSED_IDS=await loadProcessed();
   const {data}=await sb.from('responses').select('*').order('created_at',{ascending:false});
   const allRows=(data||[]).filter(r=>r.recruiter && r.recruiter!=='__marked__');
   const rows=allRows.filter(r=>r.recruiter!=='__dup__');
@@ -2602,7 +2603,7 @@ async function renderResponses(){
           <div style="font-size:17px;font-weight:700;color:var(--text)">${sel==='ALL'?'Все дни':fdRu(sel)}</div>
           <div style="font-size:11px;color:var(--muted)">всего ${dayAll.length} ${dayAll.length===1?'отклик':dayAll.length<5?'отклика':'откликов'}${sel==='ALL'?'':' · '+(idx+1)+' из '+days.length+' дней'}</div>
           <div style="font-size:11px;margin-top:2px"><span style="color:var(--accent);font-weight:700">${dayRows.length} распределено</span>${dayDups.length>0?` · <span style="color:#eb6834;font-weight:700">${dayDups.length} повторных</span>`:''}</div>
-          <div style="font-size:11px;margin-top:2px"><span style="color:#15803d;font-weight:700">✅ ${dayRows.filter(r=>r.processed).length} обработано</span> · <span style="color:var(--muted)">${dayRows.filter(r=>!r.processed).length} в работе</span></div>
+          <div style="font-size:11px;margin-top:2px"><span style="color:#15803d;font-weight:700">✅ ${dayRows.filter(r=>PROCESSED_IDS.has(String(r.id))).length} обработано</span> · <span style="color:var(--muted)">${dayRows.filter(r=>!PROCESSED_IDS.has(String(r.id))).length} в работе</span></div>
         </div>
 
         <button onclick="${nextDay?`selectRespDay('${nextDay}')`:''}" ${nextDay?'':'disabled'}
@@ -2643,7 +2644,7 @@ async function renderResponses(){
         <span style="display:flex;align-items:center;gap:8px">
           <span style="font-size:15px">${isOpen?'📂':'📁'}</span>
           <span>${rec}</span>
-          <span style="background:${recRows.length>0?'rgba(255,255,255,.25)':'var(--muted)'};color:#fff;border-radius:12px;padding:1px 9px;font-size:12px;font-weight:700">${recRows.filter(x=>x.processed).length}/${recRows.length}</span>
+          <span style="background:${recRows.length>0?'rgba(255,255,255,.25)':'var(--muted)'};color:#fff;border-radius:12px;padding:1px 9px;font-size:12px;font-weight:700">${recRows.filter(x=>PROCESSED_IDS.has(String(x.id))).length}/${recRows.length}</span>
         </span>
         <button onclick="event.stopPropagation();openAddResponse('${rec}')" style="background:#fff;color:var(--accent);border:none;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">+ Добавить</button>
       </div>
@@ -2664,7 +2665,7 @@ async function renderResponses(){
             ? `<tr><td colspan="6" style="padding:14px;color:var(--muted);font-size:13px;text-align:center">Нет откликов${sel==='ALL'?'':' за '+fdRu(sel)}</td></tr>`
             : recRows.map((r,i)=>{
                 const d=r.created_at?new Date(r.created_at):null;
-                const done=!!r.processed;
+                const done=PROCESSED_IDS.has(String(r.id));
                 const rowBg=done?'#dcfce7':(i%2?'var(--bg)':'var(--surface)');
                 return `<tr style="border-top:1px solid var(--border);font-size:13px;background:${rowBg}">
                   <td style="padding:8px 12px;color:${done?'#15803d':'var(--muted)'};font-size:12px;white-space:nowrap">${d?d.toLocaleDateString('ru')+' '+d.toTimeString().slice(0,5):'—'}</td>
@@ -2693,9 +2694,36 @@ async function renderResponses(){
   document.getElementById('resp-content').innerHTML=html;
 }
 
+// Отметки «обработан» храним в info_data — отдельная колонка в базе не нужна
+let PROCESSED_IDS=new Set();
+
+async function loadProcessed(){
+  const {data}=await sb.from('info_data').select('value').eq('key','resp_processed').limit(1);
+  if(!data||data.length===0)return new Set();
+  try{
+    const arr=JSON.parse(data[0].value||'[]');
+    return new Set(Array.isArray(arr)?arr.map(String):[]);
+  }catch(e){return new Set();}
+}
+
+async function saveProcessed(set){
+  const payload=JSON.stringify([...set]);
+  const {data}=await sb.from('info_data').select('key').eq('key','resp_processed').limit(1);
+  if(data&&data.length>0){
+    const {error}=await sb.from('info_data').update({value:payload}).eq('key','resp_processed');
+    return !error;
+  }
+  const {error}=await sb.from('info_data').insert({key:'resp_processed',value:payload});
+  return !error;
+}
+
 async function toggleProcessed(id, current){
-  const {error}=await sb.from('responses').update({processed:!current}).eq('id',id);
-  if(error){alert('Ошибка: '+error.message);return;}
+  // Перечитываем, чтобы не затереть отметки коллег
+  const set=await loadProcessed();
+  if(current)set.delete(String(id)); else set.add(String(id));
+  const ok=await saveProcessed(set);
+  if(!ok){alert('Не удалось сохранить отметку — проверь соединение');return;}
+  PROCESSED_IDS=set;
   renderResponses();
 }
 window.toggleProcessed=toggleProcessed;
