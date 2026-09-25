@@ -2872,8 +2872,16 @@ async function renderHH(){
   wrap.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted)">Загрузка...</div>';
 
   const settings=await getHHSettings();
-  const qIdx=await getQueueIndex();
-  const nextRec=ACTIVE_RECS_HH[qIdx % ACTIVE_RECS_HH.length];
+  // Баланс откликов за сегодня
+  const todayStr=new Date().toISOString().split('T')[0];
+  const balance={};
+  ACTIVE_RECS_HH.forEach(r=>balance[r]=0);
+  const {data:todayResp}=await sb.from('responses')
+    .select('recruiter,created_at')
+    .gte('created_at',todayStr+'T00:00:00');
+  (todayResp||[]).forEach(r=>{if(balance.hasOwnProperty(r.recruiter))balance[r.recruiter]++;});
+  let nextRec=ACTIVE_RECS_HH[0];
+  ACTIVE_RECS_HH.forEach(r=>{if(balance[r]<balance[nextRec])nextRec=r;});
   const hasToken=!!settings.access_token;
   const tokenExpired=settings.expires_at && Date.now() > settings.expires_at;
 
@@ -2921,13 +2929,13 @@ async function renderHH(){
     <div style="background:var(--card);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px #0001">
       <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">📥 Синхронизация откликов</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Следующий отклик уйдёт: <b style="color:var(--accent)">${nextRec}</b></div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Очерёдность: ${ACTIVE_RECS_HH.map((r,i)=>`<span style="color:${i===qIdx%ACTIVE_RECS_HH.length?'var(--accent)':'var(--muted)'};font-weight:${i===qIdx%ACTIVE_RECS_HH.length?'700':'400'}">${r}</span>`).join(' → ')}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Распределение по балансу — следующий идёт тому, у кого откликов меньше</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        ${ACTIVE_RECS_HH.map(r=>`<span style="background:${r===nextRec?'#dcfce7':'var(--bg)'};border:1.5px solid ${r===nextRec?'#34c759':'var(--border)'};border-radius:16px;padding:4px 12px;font-size:12px;color:var(--text)">${r===nextRec?'👉 ':''}${r} — <b>${balance[r]}</b></span>`).join('')}
+      </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button onclick="syncHHResponses(this)" ${!HH_INTEGRATION_ENABLED||!hasToken||tokenExpired?'disabled':''} style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;opacity:${!HH_INTEGRATION_ENABLED||!hasToken||tokenExpired?'0.4':'1'}">
           🔄 Загрузить новые отклики
-        </button>
-        <button onclick="resetQueue()" style="background:none;border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer">
-          ↺ Сбросить очередь
         </button>
         <button onclick="localStorage.removeItem('hh_sync_lock');HH_SYNC_RUNNING=false;alert('Блокировка снята');renderHH()" style="background:none;border:1.5px solid var(--border);color:var(--muted);border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer">
           🔓 Снять блокировку
@@ -3113,8 +3121,6 @@ async function syncHHResponses(btn, silent=false){
       if(chunk.length<1000)break;
     }
 
-    // 3. Получаем индекс очереди
-    let qIdx=await getQueueIndex();
 
     // 4. Собираем ВСЕ отклики со всех вакансий
     const syncErrors=[];
@@ -3155,8 +3161,29 @@ async function syncHHResponses(btn, silent=false){
       }
     }
 
-    // 5. Распределяем уникальных кандидатов по очереди
+    // 5. Распределяем по балансу: следующий отклик идёт тому, у кого их меньше всего
     const today=new Date();
+    const todayStr=today.toISOString().split('T')[0];
+
+    // Считаем, сколько откликов уже у каждого рекрутёра за сегодня
+    const loadCount={};
+    ACTIVE_RECS_HH.forEach(r=>loadCount[r]=0);
+    const {data:todayResp}=await sb.from('responses')
+      .select('recruiter,created_at')
+      .gte('created_at',todayStr+'T00:00:00');
+    (todayResp||[]).forEach(r=>{
+      if(loadCount.hasOwnProperty(r.recruiter))loadCount[r.recruiter]++;
+    });
+
+    // Кому отдать следующий: минимальная загрузка, при равенстве — по порядку списка
+    const pickRecruiter=()=>{
+      let best=ACTIVE_RECS_HH[0];
+      for(const r of ACTIVE_RECS_HH){
+        if(loadCount[r]<loadCount[best])best=r;
+      }
+      return best;
+    };
+
     for(const cand of allCandidates){
       // Проверяем нет ли уже такого телефона в базе у кого-то
       if(cand.tel && cand.tel!=='—'){
@@ -3172,8 +3199,8 @@ async function syncHHResponses(btn, silent=false){
       const {data:dblCheck}=await sb.from('responses').select('id').eq('hh_id',cand.hhId).limit(1);
       if(dblCheck && dblCheck.length>0)continue;
 
-      const rec=ACTIVE_RECS_HH[qIdx % ACTIVE_RECS_HH.length];
-      qIdx++;
+      const rec=pickRecruiter();
+      loadCount[rec]++;
 
       let {error:insErr}=await sb.from('responses').insert({
         recruiter:rec,fio:cand.fio,tel:cand.tel,resume_url:cand.resumeUrl,hh_id:cand.hhId,city:cand.respCity
@@ -3186,11 +3213,10 @@ async function syncHHResponses(btn, silent=false){
         insErr=retry.error;
       }
       if(insErr){
-        // Дубль по уникальному индексу — тихо пропускаем, очередь откатываем
-        if(/duplicate|unique/i.test(insErr.message||'')){qIdx--;continue;}
-        // Любая другая ошибка — показываем и прекращаем, чтобы не терять отклики молча
+        loadCount[rec]--; // запись не создалась — возвращаем баланс назад
+        if(/duplicate|unique/i.test(insErr.message||''))continue;
         syncErrors.push(insErr.message);
-        qIdx--;continue;
+        continue;
       }
 
       const {error:candErr}=await sb.from('candidates').insert({
@@ -3208,7 +3234,6 @@ async function syncHHResponses(btn, silent=false){
     }
 
     // Сохраняем обновлённый индекс очереди
-    await saveQueueIndex(qIdx);
 
     HH_SYNC_RUNNING=false;localStorage.removeItem('hh_sync_lock');
     if(syncErrors.length>0)console.error('HH sync errors:',syncErrors);
