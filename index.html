@@ -2681,7 +2681,6 @@ async function renderResponses(){
                   <td style="padding:8px 12px">${r.resume_url?`<a href="${r.resume_url}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px;font-weight:600">🔗 Резюме</a>`:'—'}</td>
                   <td style="padding:8px 12px;white-space:nowrap">
                     <button onclick="toggleProcessed('${r.id}',${done})" title="${done?'Снять отметку':'Отметить как обработан'}" style="background:${done?'#34c759':'none'};border:1.5px solid ${done?'#34c759':'var(--border2)'};color:${done?'#fff':'var(--muted)'};border-radius:8px;padding:3px 9px;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px">${done?'✓ Обработан':'✓ Обработать'}</button>
-                    <button onclick="deleteResponse('${r.id}')" style="background:none;border:none;color:#ff3b30;cursor:pointer;font-size:15px" title="Удалить">🗑</button>
                   </td>
                 </tr>`;
               }).join('')
