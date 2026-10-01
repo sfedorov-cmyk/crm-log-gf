@@ -3619,6 +3619,7 @@ const REF_OKRUGS_SPB=['СПБ : СЗ','СПБ : СВ','СПБ : ВОСТОК','�
 const REF_OKRUGS_MSK=['МСК : САО','МСК : СВАО','МСК : СЗАО','МСК : ВАО','МСК : ЮАО','МСК : ЮВАО','МСК : ЮЗАО','МСК : ЗАО'];
 let REF_ROWS=[];
 let REF_FILTER={q:'',okrug:''};
+let REF_VISIBLE=[];
 
 function openReferrals(){
   referralMode=true;
@@ -3696,6 +3697,7 @@ async function renderReferrals(){
   const top=Object.entries(byRef).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
   const fdRef=d=>{if(!d)return '—';const p=String(d).split('-');return p.length===3?`${p[2]}.${p[1]}.${p[0]}`:d;};
+  REF_VISIBLE=rows;
   const allOkrugs=[...REF_OKRUGS_SPB,...REF_OKRUGS_MSK];
 
   wrap.innerHTML=`<div style="padding:16px;max-width:1100px;margin:0 auto">
@@ -3704,7 +3706,11 @@ async function renderReferrals(){
         <div style="font-size:20px;font-weight:700;color:var(--text)">🤝 Приведи друга</div>
         <div style="font-size:13px;color:var(--muted)">Кто кого привёл и когда друг вышел на смену</div>
       </div>
-      <button onclick="openRefForm()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">+ Добавить</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="copyRefTable()" title="Скопировать таблицу — можно вставить в Excel или отправить в чат" style="background:none;border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📋 Копировать</button>
+        <button onclick="exportRefExcel()" title="Скачать файл для Excel" style="background:none;border:1.5px solid #1a7a3c;color:#1a7a3c;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📥 Excel</button>
+        <button onclick="openRefForm()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">+ Добавить</button>
+      </div>
     </div>
 
     <!-- Плашки -->
@@ -3866,6 +3872,64 @@ async function deleteRef(id){
   if(!ok){alert('Не удалось удалить — проверь соединение');return;}
   renderReferrals();
 }
+
+
+// --- Копирование и выгрузка таблицы «Приведи друга» ---
+function refTableData(){
+  const list=(REF_VISIBLE&&REF_VISIBLE.length)?REF_VISIBLE:REF_ROWS;
+  const fd=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?`${p[2]}.${p[1]}.${p[0]}`:d;};
+  return {
+    headers:['ФИО кто привёл','ФИО кого привели','Округ','Дата выхода'],
+    rows:list.map(r=>[r.referrer||'',r.friend||'',(r.okrug&&r.okrug!=='—')?r.okrug:'',fd(r.exit_date)])
+  };
+}
+
+function copyRefTable(){
+  const {headers,rows}=refTableData();
+  if(rows.length===0){alert('Нечего копировать — таблица пустая');return;}
+  const text=[headers.join('\t'),...rows.map(r=>r.join('\t'))].join('\n');
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    alert('✅ Скопировано строк: '+rows.length+'\nТеперь можно вставить в Excel или отправить в чат');
+  }catch(e){
+    if(navigator.clipboard)navigator.clipboard.writeText(text)
+      .then(()=>alert('✅ Скопировано строк: '+rows.length))
+      .catch(()=>alert('Не удалось скопировать'));
+  }
+}
+
+function exportRefExcel(){
+  const {headers,rows}=refTableData();
+  if(rows.length===0){alert('Нечего выгружать — таблица пустая');return;}
+  const esc=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const sep=';';
+  const today=new Date();
+  const dd=String(today.getDate()).padStart(2,'0');
+  const mm=String(today.getMonth()+1).padStart(2,'0');
+  const stamp=`${dd}.${mm}.${today.getFullYear()}`;
+
+  const lines=[
+    esc('Приведи друга — выгрузка от '+stamp),
+    esc('Всего записей: '+rows.length),
+    '',
+    headers.map(esc).join(sep),
+    ...rows.map(r=>r.map(esc).join(sep))
+  ];
+  const csv='\uFEFF'+lines.join('\n');
+
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`Приведи_друга_${stamp.replace(/\./g,'-')}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+window.copyRefTable=copyRefTable;
+window.exportRefExcel=exportRefExcel;
 
 window.openReferrals=openReferrals;
 window.renderReferrals=renderReferrals;
