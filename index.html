@@ -1630,8 +1630,53 @@ document.getElementById('saveBtn').onclick=async function(){
   if(editId){const{error}=await sb.from('candidates').update(d).eq('id',editId);if(!error){saved=true}else{addToQueue({type:'update',data:d,rowId:editId});saved=true;}}
   else{const{error}=await sb.from('candidates').insert(d);if(!error){saved=true}else{const cacheKey='hrcrm_cache_'+d.date+'_'+d.date;const cached=JSON.parse(localStorage.getItem(cacheKey)||'[]');cached.push({...d,id:'temp_'+Date.now(),sort_order:0,created_at:new Date().toISOString()});localStorage.setItem(cacheKey,JSON.stringify(cached));addToQueue({type:'insert',data:d});rows=cached;saved=true;}}
   this.textContent='Сохранить';this.disabled=false;
-  if(saved){document.getElementById('modalBg').classList.remove('open');await loadData();}
+  if(saved){
+    document.getElementById('modalBg').classList.remove('open');
+    syncStatusToHH(d);          // отказ в CRM → отказ на HH
+    await loadData();
+  }
 };
+
+// Если в CRM поставили «отказ» по кандидату, пришедшему с HH, — закрываем отклик и там
+async function syncStatusToHH(d){
+  try{
+    if(!HH_INTEGRATION_ENABLED)return;
+    if((d.status||'').toLowerCase()!=='отказ')return;
+    if(!d.comment||d.comment.indexOf('Отклик с HH')<0)return;
+
+    // Ищем отклик: сначала по ссылке на резюме, затем по телефону
+    let negId=null;
+    const m=(d.comment||'').match(/https?:\/\/\S+/);
+    if(m){
+      const {data}=await sb.from('responses').select('hh_id').eq('resume_url',m[0]).limit(1);
+      if(data&&data.length>0)negId=data[0].hh_id;
+    }
+    if(!negId && d.tel && d.tel!=='—'){
+      const {data}=await sb.from('responses').select('hh_id').eq('tel',d.tel).not('hh_id','is',null).limit(1);
+      if(data&&data.length>0)negId=data[0].hh_id;
+    }
+    if(!negId)return;
+
+    const already=await loadHHActions();
+    if(already[String(negId)]==='rejected')return;   // уже отказали
+
+    const t=await hhReadyToken();
+    if(t.err)return;
+
+    const tpl=await getHHTemplates();
+    await hhSendMessage(negId, tpl.reject, t.token);
+    const r=await hhSetState(negId,'discard',t.token);
+    if(r.ok){
+      await markResponseAction(negId,'rejected');
+      const n=document.createElement('div');
+      n.style.cssText='position:fixed;bottom:20px;right:20px;background:#b91c1c;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 12px #0003';
+      n.textContent='✕ Отказ отправлен и на HH';
+      document.body.appendChild(n);
+      setTimeout(()=>n.remove(),4000);
+    }
+  }catch(e){console.log('Синхронизация статуса с HH:',e.message);}
+}
+window.syncStatusToHH=syncStatusToHH;
 
 document.getElementById('delBtn').onclick=async function(){
   if(!editId||!confirm('Удалить запись?'))return;
@@ -2549,11 +2594,18 @@ async function renderResponses(){
   const RECS=['Осипова А.','Кислякова Е.','Рачеева Д.','Степакова М.','Яковлева А.'];
 
   wrap.innerHTML=`<div style="padding:16px;max-width:1200px;margin:0 auto">
-    <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:14px">📥 Отклики с HH</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <div style="font-size:20px;font-weight:700;color:var(--text)">📥 Отклики с HH</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="exportChats(30)" title="Собрать переписки со всеми кандидатами за месяц в один файл" style="background:none;border:1.5px solid #229ed9;color:#229ed9;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">📄 Переписки за месяц</button>
+        <button onclick="exportChats(7)" title="То же самое за неделю" style="background:none;border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">📄 За неделю</button>
+      </div>
+    </div>
     <div id="resp-content" style="font-size:13px;color:var(--muted)">Загрузка...</div>
   </div>`;
 
   PROCESSED_IDS=await loadProcessed();
+  HH_ACTIONS=await loadHHActions();
   const {data}=await sb.from('responses').select('*').order('created_at',{ascending:false});
   const allRows=(data||[]).filter(r=>r.recruiter && r.recruiter!=='__marked__');
   const rows=allRows.filter(r=>r.recruiter!=='__dup__');
@@ -2666,6 +2718,7 @@ async function renderResponses(){
             : recRows.map((r,i)=>{
                 const d=r.created_at?new Date(r.created_at):null;
                 const done=PROCESSED_IDS.has(String(r.id));
+                const act=r.hh_id?(HH_ACTIONS[String(r.hh_id)]||''):'';
                 const rowBg=done?'#dcfce7':(i%2?'var(--bg)':'var(--surface)');
                 return `<tr style="border-top:1px solid var(--border);font-size:13px;background:${rowBg}">
                   <td style="padding:8px 12px;color:${done?'#15803d':'var(--muted)'};font-size:12px;white-space:nowrap">${d?d.toLocaleDateString('ru')+' '+d.toTimeString().slice(0,5):'—'}</td>
@@ -2678,7 +2731,14 @@ async function renderResponses(){
                     </div>`:''}
                   </td>
                   <td style="padding:8px 12px;color:var(--muted);font-size:12px">${r.city||'—'}</td>
-                  <td style="padding:8px 12px">${r.resume_url?`<a href="${r.resume_url}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px;font-weight:600">🔗 Резюме</a>`:'—'}</td>
+                  <td style="padding:8px 12px;white-space:nowrap">
+                    ${r.resume_url?`<a href="${r.resume_url}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px;font-weight:600">🔗 Резюме</a>`:'—'}
+                    ${r.hh_id?`<div style="display:flex;gap:4px;margin-top:5px">
+                      <button onclick="openHHChat('${r.hh_id}','${(r.fio||'').replace(/'/g,'')}')" title="Переписка на HH" style="background:none;border:1.5px solid #229ed9;color:#229ed9;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:600;cursor:pointer">💬 Чат</button>
+                      <button onclick="hhInvite('${r.hh_id}','${(r.fio||'').replace(/'/g,'')}',this)" title="Отправить приглашение на HH" style="background:${act==='invited'?'#dcfce7':'none'};border:1.5px solid #34c759;color:#15803d;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:600;cursor:pointer">${act==='invited'?'✓ Приглашён':'✉️ Пригласить'}</button>
+                      <button onclick="hhReject('${r.hh_id}','${(r.fio||'').replace(/'/g,'')}',this)" title="Отправить отказ на HH" style="background:${act==='rejected'?'#fee2e2':'none'};border:1.5px solid #ef4444;color:#b91c1c;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:600;cursor:pointer">${act==='rejected'?'✓ Отказ':'✕ Отказать'}</button>
+                    </div>`:''}
+                  </td>
                   <td style="padding:8px 12px;white-space:nowrap">
                     <button onclick="toggleProcessed('${r.id}',${done})" title="${done?'Снять отметку':'Отметить как обработан'}" style="background:${done?'#34c759':'none'};border:1.5px solid ${done?'#34c759':'var(--border2)'};color:${done?'#fff':'var(--muted)'};border-radius:8px;padding:3px 9px;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px">${done?'✓ Обработан':'✓ Обработать'}</button>
                   </td>
@@ -2819,6 +2879,299 @@ async function hhFetch(url, token, method, body) {
   const text = await resp.text();
   try { return JSON.parse(text); } catch(e) { return {}; }
 }
+
+
+
+// ========== ОТВЕТ КАНДИДАТУ НА HH ==========
+const HH_TPL_DEFAULT = {
+  invite: 'Здравствуйте! Grow Food на связи.\n\nПосмотрели ваш отклик — готовы познакомиться поближе и всё рассказать: сколько получается за слот, как выбирать удобные дни и какие округа сейчас открыты.\n\nПозвоните или напишите — подберём вариант под вас.\n\n📞 8 904 608-89-18\n✈️ Telegram: @Yanafedorovaaa',
+  reject: 'Здравствуйте! Спасибо за отклик и интерес к Grow Food.\n\nСейчас мы не готовы предложить сотрудничество, но ваш контакт сохраним — условия и доступные округа меняются, и мы можем вернуться к вам позже.\n\nХорошего дня!'
+};
+
+async function getHHTemplates(){
+  const {data}=await sb.from('info_data').select('value').eq('key','hh_templates').limit(1);
+  if(!data||data.length===0)return {...HH_TPL_DEFAULT};
+  try{
+    const p=JSON.parse(data[0].value||'{}');
+    return {invite:p.invite||HH_TPL_DEFAULT.invite, reject:p.reject||HH_TPL_DEFAULT.reject};
+  }catch(e){return {...HH_TPL_DEFAULT};}
+}
+
+async function saveHHTemplates(tpl){
+  const payload=JSON.stringify(tpl);
+  const {data}=await sb.from('info_data').select('key').eq('key','hh_templates').limit(1);
+  if(data&&data.length>0){
+    const {error}=await sb.from('info_data').update({value:payload}).eq('key','hh_templates');
+    return !error;
+  }
+  const {error}=await sb.from('info_data').insert({key:'hh_templates',value:payload});
+  return !error;
+}
+
+// Готовит токен: проверяет интеграцию, авторизацию, обновляет при необходимости
+async function hhReadyToken(){
+  if(!HH_INTEGRATION_ENABLED)return {err:'⏸ Интеграция с HH отключена'};
+  let s=await getHHSettings();
+  if(!s.access_token)return {err:'Нет авторизации в HH — зайди во вкладку «🔗 HH.ru»'};
+  if(s.expires_at && Date.now()>s.expires_at){
+    const ok=await refreshHHToken();
+    if(!ok)return {err:'Токен HH истёк — нужна переавторизация во вкладке «🔗 HH.ru»'};
+    s=await getHHSettings();
+  }
+  return {token:s.access_token};
+}
+
+// Отправка сообщения в отклик
+async function hhSendMessage(negId, text, token){
+  const body=new URLSearchParams({message:text}).toString();
+  const res=await hhFetch(`https://api.hh.ru/negotiations/${negId}/messages`, token, 'POST', body);
+  if(res&&res.errors)return {ok:false,msg:JSON.stringify(res.errors).slice(0,200)};
+  return {ok:true};
+}
+
+// Перевод отклика в другое состояние (discard = отказ)
+async function hhSetState(negId, state, token){
+  const body=new URLSearchParams({state:state}).toString();
+  const res=await hhFetch(`https://api.hh.ru/negotiations/${negId}`, token, 'PUT', body);
+  if(res&&res.errors)return {ok:false,msg:JSON.stringify(res.errors).slice(0,200)};
+  return {ok:true};
+}
+
+// Кнопка «Пригласить»
+async function hhInvite(negId, fio, btn){
+  const tpl=await getHHTemplates();
+  const text=prompt('Текст приглашения для «'+(fio||'кандидата')+'».\nМожно поправить перед отправкой:', tpl.invite);
+  if(text===null)return;
+  if(!text.trim()){alert('Пустое сообщение не отправляю');return;}
+
+  const old=btn.textContent;
+  btn.textContent='⏳';btn.disabled=true;
+
+  const t=await hhReadyToken();
+  if(t.err){alert(t.err);btn.textContent=old;btn.disabled=false;return;}
+
+  const r=await hhSendMessage(negId, text, t.token);
+  btn.textContent=old;btn.disabled=false;
+
+  if(!r.ok){alert('Не удалось отправить:\n'+r.msg);return;}
+  alert('✅ Приглашение отправлено на HH');
+  await markResponseAction(negId,'invited');
+  renderResponses();
+}
+
+// Кнопка «Отказать»
+async function hhReject(negId, fio, btn){
+  const tpl=await getHHTemplates();
+  const text=prompt('Текст отказа для «'+(fio||'кандидата')+'».\nМожно поправить, либо очистить поле — тогда отправится только отказ без письма:', tpl.reject);
+  if(text===null)return;
+
+  const old=btn.textContent;
+  btn.textContent='⏳';btn.disabled=true;
+
+  const t=await hhReadyToken();
+  if(t.err){alert(t.err);btn.textContent=old;btn.disabled=false;return;}
+
+  if(text.trim()){
+    const m=await hhSendMessage(negId, text, t.token);
+    if(!m.ok){alert('Сообщение не ушло:\n'+m.msg+'\n\nПробую всё равно поставить отказ.');}
+  }
+  const r=await hhSetState(negId,'discard',t.token);
+  btn.textContent=old;btn.disabled=false;
+
+  if(!r.ok){alert('Отказ на HH не прошёл:\n'+r.msg);return;}
+  alert('✅ Отказ отправлен на HH');
+  await markResponseAction(negId,'rejected');
+  renderResponses();
+}
+
+// Отмечаем, что по отклику уже было действие
+async function markResponseAction(negId, action){
+  const {data}=await sb.from('info_data').select('value').eq('key','hh_actions').limit(1);
+  let map={};
+  if(data&&data.length>0){try{map=JSON.parse(data[0].value||'{}');}catch(e){map={};}}
+  map[String(negId)]=action;
+  const payload=JSON.stringify(map);
+  if(data&&data.length>0)await sb.from('info_data').update({value:payload}).eq('key','hh_actions');
+  else await sb.from('info_data').insert({key:'hh_actions',value:payload});
+  HH_ACTIONS=map;
+}
+
+let HH_ACTIONS={};
+async function loadHHActions(){
+  const {data}=await sb.from('info_data').select('value').eq('key','hh_actions').limit(1);
+  if(!data||data.length===0)return {};
+  try{return JSON.parse(data[0].value||'{}');}catch(e){return {};}
+}
+
+window.hhInvite=hhInvite;
+window.hhReject=hhReject;
+window.getHHTemplates=getHHTemplates;
+window.saveHHTemplates=saveHHTemplates;
+// ========== КОНЕЦ: ОТВЕТ КАНДИДАТУ ==========
+
+
+// ========== ВЫГРУЗКА ПЕРЕПИСОК ЗА ПЕРИОД ==========
+async function exportChats(days){
+  const d=days||30;
+  if(!confirm(`Собрать переписки по откликам за последние ${d} дн.?\n\nCRM опросит HH по каждому кандидату — это может занять несколько минут.\nОкно не закрывай.`))return;
+
+  const t=await hhReadyToken();
+  if(t.err){alert(t.err);return;}
+
+  // Отклики за период
+  const since=new Date(Date.now()-d*24*60*60*1000).toISOString();
+  const {data}=await sb.from('responses').select('*')
+    .gte('created_at',since).not('hh_id','is',null)
+    .order('created_at',{ascending:false});
+  const list=(data||[]).filter(r=>r.recruiter&&r.recruiter!=='__marked__');
+
+  if(list.length===0){alert('За этот период откликов с HH нет');return;}
+
+  // Окно прогресса
+  const box=document.createElement('div');
+  box.id='chatExportBox';
+  box.style.cssText='position:fixed;inset:0;background:#0008;z-index:10001;display:flex;align-items:center;justify-content:center;padding:16px';
+  box.innerHTML=`<div style="background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:420px;box-shadow:0 8px 32px #0003;text-align:center">
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">📄 Собираю переписки</div>
+    <div id="ceInfo" style="font-size:13px;color:var(--muted);margin-bottom:14px">0 из ${list.length}</div>
+    <div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin-bottom:14px">
+      <div id="ceBar" style="height:100%;width:0%;background:var(--accent);transition:width .2s"></div>
+    </div>
+    <button onclick="window.CE_STOP=true" style="background:none;border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:7px 16px;font-size:13px;cursor:pointer">Остановить</button>
+  </div>`;
+  document.body.appendChild(box);
+  window.CE_STOP=false;
+
+  const out=[];
+  let withChat=0;
+
+  for(let i=0;i<list.length;i++){
+    if(window.CE_STOP)break;
+    const r=list[i];
+    document.getElementById('ceInfo').textContent=`${i+1} из ${list.length} · найдено переписок: ${withChat}`;
+    document.getElementById('ceBar').style.width=((i+1)/list.length*100)+'%';
+
+    const res=await hhFetch(`https://api.hh.ru/negotiations/${r.hh_id}/messages`, t.token);
+    const msgs=(res&&res.items)?res.items:[];
+    if(msgs.length>0)withChat++;
+
+    const fd=s=>{if(!s)return '';const x=new Date(s);return x.toLocaleDateString('ru')+' '+x.toTimeString().slice(0,5);};
+
+    if(msgs.length===0){
+      out.push([r.fio||'', r.tel||'', r.city||'', r.recruiter||'', fd(r.created_at), '', '', '(переписки нет)']);
+    } else {
+      msgs.forEach(m=>{
+        const who=((m.author&&m.author.participant_type)==='employer')?'Мы':'Кандидат';
+        out.push([r.fio||'', r.tel||'', r.city||'', r.recruiter||'', fd(r.created_at),
+                  who, fd(m.created_at), (m.text||'').replace(/\s+/g,' ').trim()]);
+      });
+    }
+    await new Promise(res2=>setTimeout(res2,250));   // пауза, чтобы не упереться в лимиты HH
+  }
+
+  document.getElementById('chatExportBox').remove();
+
+  if(out.length===0){alert('Ничего не собралось');return;}
+
+  const headers=['ФИО кандидата','Телефон','Город','Рекрутёр','Дата отклика','Автор','Дата сообщения','Текст'];
+  const esc=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const today=new Date();
+  const stamp=`${String(today.getDate()).padStart(2,'0')}-${String(today.getMonth()+1).padStart(2,'0')}-${today.getFullYear()}`;
+  const csv='\uFEFF'+[
+    esc(`Переписки с кандидатами HH за последние ${d} дн. · выгрузка от ${stamp}`),
+    esc(`Откликов: ${list.length}, из них с перепиской: ${withChat}`),
+    '',
+    headers.map(esc).join(';'),
+    ...out.map(r=>r.map(esc).join(';'))
+  ].join('\n');
+
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`Переписки_HH_${stamp}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  alert(`✅ Готово\n\nОткликов обработано: ${list.length}\nС перепиской: ${withChat}\nСтрок в файле: ${out.length}`);
+}
+window.exportChats=exportChats;
+// ========== КОНЕЦ: ВЫГРУЗКА ПЕРЕПИСОК ==========
+
+// ========== ПЕРЕПИСКА С КАНДИДАТОМ НА HH ==========
+async function openHHChat(negId, fio){
+  const modal=document.createElement('div');
+  modal.id='hhChatModal';
+  modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:16px;width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px #0003;overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div style="min-width:0">
+        <div style="font-size:16px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">💬 ${fio||'Кандидат'}</div>
+        <div style="font-size:11px;color:var(--muted)">Переписка на HH.ru</div>
+      </div>
+      <button onclick="document.getElementById('hhChatModal').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1;flex-shrink:0">×</button>
+    </div>
+    <div id="hhChatBody" style="padding:16px 20px;overflow-y:auto;flex:1;min-height:180px">
+      <div style="text-align:center;color:var(--muted);font-size:13px;padding:30px 0">Загружаю переписку...</div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+
+  const body=document.getElementById('hhChatBody');
+
+  if(!HH_INTEGRATION_ENABLED){
+    body.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:30px 0">⏸ Интеграция с HH отключена</div>';
+    return;
+  }
+
+  let settings=await getHHSettings();
+  if(!settings.access_token){
+    body.innerHTML='<div style="text-align:center;color:#b45309;font-size:13px;padding:30px 0">Нет авторизации в HH.<br>Зайди во вкладку «🔗 HH.ru» и авторизуйся.</div>';
+    return;
+  }
+  if(settings.expires_at && Date.now()>settings.expires_at){
+    const ok=await refreshHHToken();
+    if(!ok){
+      body.innerHTML='<div style="text-align:center;color:#b45309;font-size:13px;padding:30px 0">Токен HH истёк.<br>Нужна переавторизация во вкладке «🔗 HH.ru».</div>';
+      return;
+    }
+    settings=await getHHSettings();
+  }
+
+  const data=await hhFetch(`https://api.hh.ru/negotiations/${negId}/messages`, settings.access_token);
+  const items=(data&&data.items)?data.items:[];
+
+  if(data&&data.errors){
+    body.innerHTML=`<div style="text-align:center;color:#b91c1c;font-size:13px;padding:30px 0">Не удалось загрузить переписку.<br><span style="font-size:11px;color:var(--muted)">${JSON.stringify(data.errors).slice(0,120)}</span></div>`;
+    return;
+  }
+  if(items.length===0){
+    body.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:30px 0">📭 Переписки пока нет<br><span style="font-size:11px">Кандидат откликнулся без сопроводительного письма</span></div>';
+    return;
+  }
+
+  const fmtDate=s=>{
+    if(!s)return '';
+    const d=new Date(s);
+    return d.toLocaleDateString('ru')+' '+d.toTimeString().slice(0,5);
+  };
+
+  body.innerHTML=items.map(m=>{
+    const type=(m.author&&m.author.participant_type)||'';
+    const mine=type==='employer';
+    const who=mine?'Мы':(fio||'Кандидат');
+    const text=(m.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+    return `<div style="margin-bottom:14px;display:flex;justify-content:${mine?'flex-end':'flex-start'}">
+      <div style="max-width:85%">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-align:${mine?'right':'left'}">${who} · ${fmtDate(m.created_at)}</div>
+        <div style="background:${mine?'#dcfce7':'var(--bg)'};border:1px solid ${mine?'#86efac':'var(--border)'};border-radius:12px;padding:9px 12px;font-size:13px;color:var(--text);line-height:1.45;word-break:break-word">${text||'<i style="color:var(--muted)">пустое сообщение</i>'}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  body.scrollTop=body.scrollHeight;
+}
+window.openHHChat=openHHChat;
+// ========== КОНЕЦ: ПЕРЕПИСКА ==========
 
 // =================== HH.ru ИНТЕГРАЦИЯ ===================
 
