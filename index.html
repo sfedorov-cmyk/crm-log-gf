@@ -2879,8 +2879,26 @@ async function renderHH(){
     .select('recruiter,created_at')
     .gte('created_at',todayStr+'T00:00:00');
   (todayResp||[]).forEach(r=>{if(balance.hasOwnProperty(r.recruiter))balance[r.recruiter]++;});
+  // Кто следующий — та же логика, что и при распределении
+  let lastRecView='';
+  {
+    const {data:lr}=await sb.from('info_data').select('value').eq('key','hh_last_recruiter').limit(1);
+    if(lr&&lr.length>0)lastRecView=lr[0].value||'';
+  }
   let nextRec=ACTIVE_RECS_HH[0];
-  ACTIVE_RECS_HH.forEach(r=>{if(balance[r]<balance[nextRec])nextRec=r;});
+  {
+    const minV=Math.min(...ACTIVE_RECS_HH.map(r=>balance[r]));
+    const tiedV=ACTIVE_RECS_HH.filter(r=>balance[r]===minV);
+    if(tiedV.length===1){nextRec=tiedV[0];}
+    else{
+      const st=lastRecView?(ACTIVE_RECS_HH.indexOf(lastRecView)+1):0;
+      nextRec=tiedV[0];
+      for(let i=0;i<ACTIVE_RECS_HH.length;i++){
+        const c=ACTIVE_RECS_HH[(st+i)%ACTIVE_RECS_HH.length];
+        if(tiedV.includes(c)){nextRec=c;break;}
+      }
+    }
+  }
   const hasToken=!!settings.access_token;
   const tokenExpired=settings.expires_at && Date.now() > settings.expires_at;
 
@@ -2928,7 +2946,7 @@ async function renderHH(){
     <div style="background:var(--card);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px #0001">
       <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">📥 Синхронизация откликов</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Следующий отклик уйдёт: <b style="color:var(--accent)">${nextRec}</b></div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Распределение по балансу — следующий идёт тому, у кого откликов меньше</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Цифра — сколько откликов получено сегодня. Следующий идёт тому, у кого меньше; при равенстве круг продолжается с того, на ком остановились${lastRecView?' (последний был: '+lastRecView+')':''}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
         ${ACTIVE_RECS_HH.map(r=>`<span style="background:${r===nextRec?'#dcfce7':'var(--bg)'};border:1.5px solid ${r===nextRec?'#34c759':'var(--border)'};border-radius:16px;padding:4px 12px;font-size:12px;color:var(--text)">${r===nextRec?'👉 ':''}${r} — <b>${balance[r]}</b></span>`).join('')}
       </div>
@@ -3174,13 +3192,33 @@ async function syncHHResponses(btn, silent=false){
       if(loadCount.hasOwnProperty(r.recruiter))loadCount[r.recruiter]++;
     });
 
-    // Кому отдать следующий: минимальная загрузка, при равенстве — по порядку списка
+    // Кто получил отклик последним (чтобы круг не сбрасывался в полночь)
+    let lastRec='';
+    {
+      const {data:lastRow}=await sb.from('info_data').select('value').eq('key','hh_last_recruiter').limit(1);
+      if(lastRow&&lastRow.length>0)lastRec=lastRow[0].value||'';
+    }
+
+    // Кому отдать следующий:
+    //   1) у кого меньше всего откликов за сегодня
+    //   2) при равенстве — следующий по кругу после того, кто получил последним
     const pickRecruiter=()=>{
-      let best=ACTIVE_RECS_HH[0];
-      for(const r of ACTIVE_RECS_HH){
-        if(loadCount[r]<loadCount[best])best=r;
+      const min=Math.min(...ACTIVE_RECS_HH.map(r=>loadCount[r]));
+      const tied=ACTIVE_RECS_HH.filter(r=>loadCount[r]===min);
+      if(tied.length===1)return tied[0];
+      const startIdx=lastRec?(ACTIVE_RECS_HH.indexOf(lastRec)+1):0;
+      for(let i=0;i<ACTIVE_RECS_HH.length;i++){
+        const cand=ACTIVE_RECS_HH[(startIdx+i)%ACTIVE_RECS_HH.length];
+        if(tied.includes(cand))return cand;
       }
-      return best;
+      return tied[0];
+    };
+
+    const saveLastRec=async(rec)=>{
+      lastRec=rec;
+      const {data:ex}=await sb.from('info_data').select('key').eq('key','hh_last_recruiter').limit(1);
+      if(ex&&ex.length>0)await sb.from('info_data').update({value:rec}).eq('key','hh_last_recruiter');
+      else await sb.from('info_data').insert({key:'hh_last_recruiter',value:rec});
     };
 
     for(const cand of allCandidates){
@@ -3218,6 +3256,8 @@ async function syncHHResponses(btn, silent=false){
         continue;
       }
 
+      await saveLastRec(rec);
+
       const {error:candErr}=await sb.from('candidates').insert({
         date:today.toISOString().split('T')[0],
         time:today.toTimeString().slice(0,5),
@@ -3231,8 +3271,6 @@ async function syncHHResponses(btn, silent=false){
 
       totalNew++;
     }
-
-    // Сохраняем обновлённый индекс очереди
 
     HH_SYNC_RUNNING=false;localStorage.removeItem('hh_sync_lock');
     if(syncErrors.length>0)console.error('HH sync errors:',syncErrors);
