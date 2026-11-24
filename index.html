@@ -253,13 +253,14 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="topbar">
     <div class="logo">HR GF</div>
     <span class="sync-pill sync-loading" id="syncStatus">загрузка...</span>
-    <button id="analyticsTopBtn" onclick="analyticsMode=true;hhMode=false;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allWA=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','hhWrap','referralWrap','bulkBar','copyBar'];allWA.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderAnalytics();renderTabs()" style="display:none;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Аналитика</button>
-    <button id="hhTopBtn" onclick="hhMode=true;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allW2=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','referralWrap','bulkBar','copyBar'];allW2.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderHH();renderTabs()" style="display:none;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🔗 HH.ru</button>
+    <button id="analyticsTopBtn" onclick="analyticsMode=true;hhMode=false;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allWA=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','hhWrap','referralWrap','mentorOsWrap','bulkBar','copyBar'];allWA.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderAnalytics();renderTabs()" style="display:none;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Аналитика</button>
+    <button id="hhTopBtn" onclick="hhMode=true;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allW2=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','referralWrap','mentorOsWrap','bulkBar','copyBar'];allW2.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderHH();renderTabs()" style="display:none;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🔗 HH.ru</button>
     <button onclick="location.reload(true)" title="Обновить страницу (Ctrl+Shift+R)" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🔄 Обновить</button>
     <button id="screenshotBtn" title="Скриншот экрана" onclick="takeScreenshot()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📸 Скрин</button>
     <button onclick="dashMode=true;infoMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;responsesMode=false;hhMode=false;clearSelection();render();renderTabs()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Дашборд</button>
-    <button onclick="responsesMode=true;hhMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allW=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','hhWrap','referralWrap','bulkBar','copyBar'];allW.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderResponses();renderTabs()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📥 Отклики</button>
+    <button onclick="responsesMode=true;hhMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;const allW=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','hhWrap','referralWrap','mentorOsWrap','bulkBar','copyBar'];allW.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});try{document.querySelector('.table-wrap').style.display='none';}catch(e){}clearSelection();renderResponses();renderTabs()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">📥 Отклики</button>
     <button onclick="openReferrals()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🤝 Приведи друга</button>
+    <button onclick="openMentorOS()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;white-space:nowrap">🧑‍🏫 Наставники ОС</button>
 
     <div class="topbar-right">
       <span id="queueBadge" style="display:none;font-size:11px;background:#fff3cd;color:#856404;padding:3px 8px;border-radius:20px;font-weight:500"></span>
@@ -299,6 +300,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
   <div class="info-wrap hidden" id="hhWrap"></div>
   <div class="info-wrap hidden" id="analyticsWrap"></div>
   <div class="info-wrap hidden" id="referralWrap"></div>
+  <div class="info-wrap hidden" id="mentorOsWrap"></div>
   <div class="info-wrap hidden" id="okrugWrap"></div>
 </div>
 
@@ -469,6 +471,7 @@ let responsesMode=false;
 let hhMode=false;
 let analyticsMode=false;
 let referralMode=false;
+let mentorOsMode=false;
 let deactivMode=false;
 let vacationMode=false;
 let mentorMode=false;
@@ -1177,7 +1180,7 @@ function initUser(user){
   loadData();updatePresence();setInterval(updatePresence,10000);setTimeout(renderPresence,1000);
   sb.channel('c1').on('postgres_changes',{event:'*',schema:'public',table:'candidates'},()=>loadData()).subscribe();
   // presence polling instead of realtime channel
-  sb.channel('c3').on('postgres_changes',{event:'*',schema:'public',table:'info_data'},()=>{if(infoMode)renderInfo();if(referralMode)renderReferrals();if(responsesMode)renderResponses();}).subscribe();
+  sb.channel('c3').on('postgres_changes',{event:'*',schema:'public',table:'info_data'},()=>{if(infoMode)renderInfo();if(referralMode)renderReferrals();if(mentorOsMode)renderMentorOS();if(responsesMode)renderResponses();}).subscribe();
   sb.channel('c4').on('postgres_changes',{event:'*',schema:'public',table:'deactivated'},()=>{if(deactivMode)renderDeactiv();}).subscribe();
   setInterval(syncQueue,30000);
 setInterval(renderPresence,10000);
@@ -1257,7 +1260,7 @@ function renderTabs(){
     const hh=e.target.closest('[data-hh]');
     if(hh){
       hhMode=true;responsesMode=false;infoMode=false;dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;kpiMode=false;okrugMode=false;
-      const allWraps=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','referralWrap','bulkBar','copyBar'];
+      const allWraps=['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap','vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap','referralWrap','mentorOsWrap','bulkBar','copyBar'];
       allWraps.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
       try{document.querySelector('.table-wrap').style.display='none';}catch(e){}
       clearSelection();renderHH();renderTabs();return;
@@ -1277,6 +1280,7 @@ function renderTabs(){
       const el_9=document.getElementById('okrugWrap');if(el_9)el_9.style.display='none';
       const el_10=document.getElementById('bulkBar');if(el_10)el_10.style.display='none';
       const el_11=document.getElementById('copyBar');if(el_11)el_11.style.display='none';
+      ['referralWrap','mentorOsWrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
       document.querySelector('.table-wrap').style.display='none';
       clearSelection();renderResponses();renderTabs();
     }
@@ -1297,6 +1301,8 @@ function render(){
   const aw=document.getElementById('analyticsWrap');if(aw)aw.classList.add('hidden');
   const rfw=document.getElementById('referralWrap');if(rfw){rfw.classList.add('hidden');rfw.style.display='';}
   referralMode=false;
+  const mow=document.getElementById('mentorOsWrap');if(mow){mow.classList.add('hidden');mow.style.display='';}
+  mentorOsMode=false;
   hhMode=false;analyticsMode=false;
   const el_0=document.getElementById('cardsWrap');if(el_0)el_0.style.display='';
   const el_1=document.getElementById('filtersBar');if(el_1)el_1.style.display='';
@@ -4020,10 +4026,11 @@ function openReferrals(){
 
   ['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap',
    'vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap',
-   'hhWrap','analyticsWrap','bulkBar','copyBar'].forEach(id=>{
+   'hhWrap','analyticsWrap','mentorOsWrap','bulkBar','copyBar'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display='none';
   });
   try{document.querySelector('.table-wrap').style.display='none';}catch(e){}
+  mentorOsMode=false;
 
   const wrap=document.getElementById('referralWrap');
   if(wrap){wrap.classList.remove('hidden');wrap.style.display='block';}
@@ -4328,6 +4335,434 @@ window.openRefForm=openRefForm;
 window.saveRef=saveRef;
 window.deleteRef=deleteRef;
 // ========== КОНЕЦ: ПРИВЕДИ ДРУГА ==========
+
+// ========== НАСТАВНИКИ ОС ==========
+// Данные хранятся в info_data (key=mentors_os), как «Приведи друга».
+const MOS_DISTRICTS={
+  'МСК':['САО','ВАО','СВАО','СЗАО','ЮВАО','ЮАО','ЮЗАО','ЗАО'],
+  'СПБ':['ЮЗ','ЮВ','Восток','СВ','СЗ']
+};
+const MOS_DEFAULT_MENTORS=[
+  {city:'МСК',district:'САО',fio:'Субботников Роман',telegram:'@Geneo_m'},
+  {city:'МСК',district:'ВАО',fio:'Морозов Максим',telegram:'@maksim1987morozov'},
+  {city:'МСК',district:'СВАО',fio:'Подосиновиков Максим',telegram:'@maxmikser'},
+  {city:'МСК',district:'СЗАО',fio:'Субботников Роман',telegram:'@Geneo_m'},
+  {city:'МСК',district:'ЮВАО',fio:'Гаргалык Андрей',telegram:'@ang1014'},
+  {city:'МСК',district:'ЮАО',fio:'Дмитриев Алексей',telegram:'@AlexYDmitriev'},
+  {city:'МСК',district:'ЮЗАО',fio:'Гилёв Дмитрий',telegram:'@nerumi_shop'},
+  {city:'МСК',district:'ЗАО',fio:'Прокофьева Инга',telegram:'@inga_prokofieva'},
+  {city:'СПБ',district:'ЮЗ',fio:'Лабузов Дмитрий',telegram:'@Labu30v'},
+  {city:'СПБ',district:'ЮВ',fio:'Степанова Ольга',telegram:'@Esfir_Moiseevna'},
+  {city:'СПБ',district:'Восток',fio:'Пинчук Виктор',telegram:'@The_new_rules'},
+  {city:'СПБ',district:'СВ',fio:'Шорохов Максим',telegram:'@vfrcec99'},
+  {city:'СПБ',district:'СЗ',fio:'Шорохов Максим',telegram:'@vfrcec99'}
+].map(m=>({...m,phone:'',active:true}));
+const MOS_REASONS=['Передумал','Нашёл другую работу','Не устроили условия','Проблема с авто','Пропал','Другое'];
+// Статусы — как в схеме бота наставников
+const MOS_STATUSES=['передан','взят','связался','не отвечает','ждём','вышел','нет связи','отказ'];
+const MOS_STATUS_LABEL={'передан':'Передан','взят':'Взят в работу','связался':'Связался','не отвечает':'Не отвечает',
+  'ждём':'Ждём выхода','вышел':'Вышел','нет связи':'Нет связи','отказ':'Отказ'};
+const MOS_STATUS_STYLE={
+  'передан':['#64748b','📨'],'взят':['#2a78d6','🙋'],'связался':['#2a78d6','📞'],'не отвечает':['#b45309','🔕'],
+  'ждём':['#7c3aed','📅'],'вышел':['#15803d','✅'],'нет связи':['#dc2626','📵'],'отказ':['#dc2626','❌']
+};
+const MOS_STUCK_DAYS=3;
+let MOS_MENTOR_LIST=MOS_DEFAULT_MENTORS.slice();
+let MOS_ROWS=[];
+let MOS_FILTER={q:'',from:'',to:'',city:'',district:'',mentor:'',status:''};
+let MOS_SORT={key:'handoff_date',dir:-1};
+let MOS_VISIBLE=[];
+
+function mosGroup(r){
+  if(r.refused||r.status==='отказ'||r.status==='нет связи')return 'refused';
+  if(r.exit_fact||r.status==='вышел')return 'out';
+  return 'wait';
+}
+function mosAutoStatus(r){
+  if(r.status==='нет связи')return 'нет связи';
+  if(r.refused)return 'отказ';
+  if(r.exit_fact)return 'вышел';
+  if(r.exit_plan&&(!r.status||['передан','взят','связался','не отвечает','ждём'].includes(r.status)))return 'ждём';
+  return r.status&&MOS_STATUSES.includes(r.status)&&!['вышел','отказ'].includes(r.status)?r.status:(r.mentor?'взят':'передан');
+}
+function mosDaysBetween(a,b){if(!a||!b)return null;return Math.round((new Date(String(b).slice(0,10))-new Date(String(a).slice(0,10)))/864e5);}
+function mosIsStuck(r){
+  if(mosGroup(r)!=='wait'||!r.handoff_date)return false;
+  const last=String(r.status_at||r.updated_at||r.handoff_date).slice(0,10);
+  return mosDaysBetween(last,td())>MOS_STUCK_DAYS;
+}
+function mosMentorFor(city,district){
+  const m=MOS_MENTOR_LIST.find(x=>x.city===city&&x.district===district&&x.active!==false);
+  return m||null;
+}
+function mosMentorNames(){return [...new Set(MOS_MENTOR_LIST.map(m=>m.fio).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));}
+
+// ---------- хранилище ----------
+async function mosBlobLoad(){
+  const {data}=await sb.from('info_data').select('*').eq('key','mentors_os').limit(1);
+  if(!data||data.length===0)return [];
+  try{const p=JSON.parse(data[0].value||'[]');return Array.isArray(p)?p:[];}catch(e){return [];}
+}
+async function mosBlobSave(list){
+  const payload=JSON.stringify(list);
+  const {data}=await sb.from('info_data').select('key').eq('key','mentors_os').limit(1);
+  if(data&&data.length>0){const {error}=await sb.from('info_data').update({value:payload}).eq('key','mentors_os');return !error;}
+  const {error}=await sb.from('info_data').insert({key:'mentors_os',value:payload});return !error;
+}
+async function mosLoad(){
+  return (await mosBlobLoad()).map(r=>({...r,handoff_date:r.handoff_date||r.date,status:r.status||mosAutoStatus(r)}));
+}
+async function mosUpsert(id,rec){
+  const list=await mosBlobLoad();
+  if(id){const i=list.findIndex(x=>String(x.id)===String(id));if(i>=0)list[i]={...list[i],...rec,updated_at:new Date().toISOString()};}
+  else list.push({id:(crypto.randomUUID?crypto.randomUUID():'m'+Date.now()+Math.random().toString(36).slice(2)),...rec,created_at:new Date().toISOString()});
+  return mosBlobSave(list);
+}
+async function mosDelete(id){
+  return mosBlobSave((await mosBlobLoad()).filter(x=>String(x.id)!==String(id)));
+}
+
+// ---------- экран ----------
+function openMentorOS(){
+  mentorOsMode=true;referralMode=false;
+  analyticsMode=false;hhMode=false;responsesMode=false;infoMode=false;
+  dashMode=false;deactivMode=false;vacationMode=false;mentorMode=false;
+  kpiMode=false;okrugMode=false;
+  ['cardsWrap','filtersBar','statsBar','dashWrap','infoWrap','deactivWrap',
+   'vacationWrap','mentorWrap','kpiWrap','okrugWrap','responsesWrap',
+   'hhWrap','analyticsWrap','referralWrap','bulkBar','copyBar'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  try{document.querySelector('.table-wrap').style.display='none';}catch(e){}
+  const wrap=document.getElementById('mentorOsWrap');
+  if(wrap){wrap.classList.remove('hidden');wrap.style.display='block';}
+  clearSelection();
+  renderMentorOS();
+  renderTabs();
+}
+
+const mosFd=d=>{if(!d)return '';const p=String(d).slice(0,10).split('-');return p.length===3?`${p[2]}.${p[1]}.${p[0]}`:d;};
+const mosCityName=c=>c==='МСК'?'Москва':c==='СПБ'?'Петербург':(c||'');
+function mosBadge(s){
+  const st=MOS_STATUS_STYLE[s]||['#64748b','•'];
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;color:${st[0]};background:${st[0]}1a">${st[1]} ${esc(MOS_STATUS_LABEL[s]||s||'—')}</span>`;
+}
+function mosSortBy(k){if(MOS_SORT.key===k)MOS_SORT.dir*=-1;else{MOS_SORT.key=k;MOS_SORT.dir=1;}renderMentorOS();}
+function mosSortVal(r,k){
+  if(k==='status')return MOS_STATUSES.indexOf(r.status||mosAutoStatus(r));
+  if(k==='reason')return (r.reason||'')+(r.note||'');
+  if(k==='city')return mosCityName(r.city);
+  return String(r[k]||'');
+}
+
+async function renderMentorOS(){
+  const wrap=document.getElementById('mentorOsWrap');
+  if(!wrap)return;
+  wrap.classList.remove('hidden');wrap.style.display='block';
+
+  MOS_ROWS=(await mosLoad()).map(r=>({...r,status:r.status||mosAutoStatus(r)}));
+  const F=MOS_FILTER;
+  let rows=MOS_ROWS;
+  const q=(F.q||'').toLowerCase().trim();
+  if(q)rows=rows.filter(r=>((r.courier_fio||'')+' '+(r.courier_phone||'')).toLowerCase().includes(q));
+  if(F.from)rows=rows.filter(r=>String(r.handoff_date||'').slice(0,10)>=F.from);
+  if(F.to)rows=rows.filter(r=>String(r.handoff_date||'').slice(0,10)<=F.to);
+  if(F.city)rows=rows.filter(r=>r.city===F.city);
+  if(F.district)rows=rows.filter(r=>r.district===F.district);
+  if(F.mentor)rows=rows.filter(r=>r.mentor===F.mentor);
+  if(F.status)rows=rows.filter(r=>F.status.startsWith('g:')?mosGroup(r)===F.status.slice(2):r.status===F.status);
+  const k=MOS_SORT.key,dir=MOS_SORT.dir;
+  rows=rows.slice().sort((a,b)=>{const x=mosSortVal(a,k),y=mosSortVal(b,k);return (x<y?-1:x>y?1:0)*dir||String(b.created_at||'').localeCompare(String(a.created_at||''));});
+  MOS_VISIBLE=rows;
+
+  const total=rows.length;
+  const out=rows.filter(r=>mosGroup(r)==='out').length;
+  const refused=rows.filter(r=>mosGroup(r)==='refused').length;
+  const wait=total-out-refused;
+  const pct=n=>total?Math.round(n/total*100)+'%':'';
+  // воронка: передано → связались → договорились → вышли
+  const reached=s=>rows.filter(r=>{
+    const st=r.status;
+    if(s==='contact')return r.contacted_at||['связался','ждём','вышел'].includes(st)||r.exit_plan||r.exit_fact||(st==='отказ'&&r.exit_plan);
+    if(s==='agreed')return r.exit_plan||r.exit_fact||['ждём','вышел'].includes(st);
+    return false;}).length;
+  const cContact=reached('contact'),cAgreed=reached('agreed');
+  const stuck=MOS_ROWS.filter(mosIsStuck);
+
+  const byM={};
+  for(const r of rows){const m=r.mentor||'— не взят —';if(!byM[m])byM[m]={all:0,out:0,ref:0,shift:0};byM[m].all++;const g=mosGroup(r);if(g==='out')byM[m].out++;if(g==='refused')byM[m].ref++;const d=mosDaysBetween(r.exit_plan,r.exit_fact);if(d&&d>0)byM[m].shift++;}
+  const mList=Object.entries(byM).sort((a,b)=>b[1].all-a[1].all);
+  const byR={};
+  for(const r of rows)if(mosGroup(r)==='refused'){const key=r.status==='нет связи'?'Нет связи':(r.reason||'Не указана');byR[key]=(byR[key]||0)+1;}
+  const rList=Object.entries(byR).sort((a,b)=>b[1]-a[1]);
+
+  const tile=(label,val,color,sub)=>`<div style="background:var(--surface);border-radius:14px;padding:14px;box-shadow:0 1px 4px #0001;text-align:center">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${label}</div>
+      <div style="font-size:26px;font-weight:700;color:${color}">${val}</div>
+      ${sub?`<div style="font-size:11px;color:var(--muted)">${sub}</div>`:''}</div>`;
+  const sel='padding:7px 10px;border:1.5px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;font-family:inherit';
+  const flbl='font-size:11px;color:var(--muted);display:block;margin-bottom:2px';
+  const thS='padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none';
+  const th=(key,label)=>`<th style="${thS}" onclick="mosSortBy('${key}')">${label}${MOS_SORT.key===key?(MOS_SORT.dir>0?' ▲':' ▼'):''}</th>`;
+  const anyF=Object.values(F).some(Boolean);
+  const districts=F.city?(MOS_DISTRICTS[F.city]||[]):[...MOS_DISTRICTS['МСК'],...MOS_DISTRICTS['СПБ']];
+  const funnel=(label,n,color)=>`<div style="flex:1;min-width:110px"><div style="font-size:11px;color:var(--muted)">${label}</div><div style="font-size:18px;font-weight:700;color:${color}">${n} <span style="font-size:11px;color:var(--muted);font-weight:500">${total&&label!=='Передано'?Math.round(n/total*100)+'%':''}</span></div><div style="height:5px;border-radius:3px;background:var(--bg);margin-top:4px"><div style="height:5px;border-radius:3px;background:${color};width:${total?Math.round(n/total*100):0}%"></div></div></div>`;
+
+  wrap.innerHTML=`<div style="padding:16px;max-width:1320px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:20px;font-weight:700;color:var(--text)">🧑‍🏫 Наставники ОС</span></div>
+        <div style="font-size:13px;color:var(--muted)">Новички от передачи наставнику до первого выхода</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="copyMosTable()" title="Скопировать таблицу — можно вставить в Excel или отправить в чат" style="background:none;border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📋 Копировать</button>
+        <button onclick="exportMosExcel()" title="Скачать файл для Excel" style="background:none;border:1.5px solid #1a7a3c;color:#1a7a3c;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📥 Excel</button>
+        <button onclick="openMosForm()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">+ Добавить</button>
+      </div>
+    </div>
+
+    <!-- Фильтры -->
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;background:var(--surface);border-radius:14px;padding:12px 14px;box-shadow:0 1px 4px #0001">
+      <div><label style="${flbl}">ФИО / телефон</label><input type="text" placeholder="Поиск…" value="${esc(F.q)}" onchange="MOS_FILTER.q=this.value;renderMentorOS()" style="${sel};min-width:180px;outline:none"></div>
+      <div><label style="${flbl}">С</label><input type="date" value="${F.from}" onchange="MOS_FILTER.from=this.value;renderMentorOS()" style="${sel}"></div>
+      <div><label style="${flbl}">По</label><input type="date" value="${F.to}" onchange="MOS_FILTER.to=this.value;renderMentorOS()" style="${sel}"></div>
+      <div><label style="${flbl}">Город</label><select onchange="MOS_FILTER.city=this.value;MOS_FILTER.district='';renderMentorOS()" style="${sel}">
+        <option value="">Все</option><option value="МСК"${F.city==='МСК'?' selected':''}>Москва</option><option value="СПБ"${F.city==='СПБ'?' selected':''}>Петербург</option></select></div>
+      <div><label style="${flbl}">Район</label><select onchange="MOS_FILTER.district=this.value;renderMentorOS()" style="${sel}">
+        <option value="">Все</option>${districts.map(d=>`<option${F.district===d?' selected':''}>${d}</option>`).join('')}</select></div>
+      <div><label style="${flbl}">Наставник</label><select onchange="MOS_FILTER.mentor=this.value;renderMentorOS()" style="${sel}">
+        <option value="">Все</option>${[...new Set([...mosMentorNames(),...MOS_ROWS.map(r=>r.mentor).filter(Boolean)])].map(m=>`<option${F.mentor===m?' selected':''}>${esc(m)}</option>`).join('')}</select></div>
+      <div><label style="${flbl}">Статус</label><select onchange="MOS_FILTER.status=this.value;renderMentorOS()" style="${sel}">
+        <option value="">Все</option>
+        <option value="g:wait"${F.status==='g:wait'?' selected':''}>— В работе (все)</option>
+        <option value="g:refused"${F.status==='g:refused'?' selected':''}>— Отказ и нет связи</option>
+        ${MOS_STATUSES.map(s=>`<option value="${s}"${F.status===s?' selected':''}>${MOS_STATUS_LABEL[s]}</option>`).join('')}</select></div>
+      ${anyF?`<button onclick="MOS_FILTER={q:'',from:'',to:'',city:'',district:'',mentor:'',status:''};renderMentorOS()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">✕ Сбросить</button>`:''}
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px">
+      ${tile('Всего',total,'var(--accent)','')}
+      ${tile('Вышли',out,'#15803d',pct(out))}
+      ${tile('В работе',wait,'#b45309',pct(wait))}
+      ${tile('Отказ',refused,'#dc2626',pct(refused))}
+    </div>
+
+    <div style="background:var(--surface);border-radius:14px;padding:14px 16px;box-shadow:0 1px 4px #0001;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">Воронка</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        ${funnel('Передано',total,'var(--accent)')}${funnel('Связались',cContact,'#2a78d6')}${funnel('Договорились',cAgreed,'#7c3aed')}${funnel('Вышли',out,'#15803d')}
+      </div>
+    </div>
+
+    ${stuck.length?`<div style="background:#b453090f;border:1.5px solid #b4530955;border-radius:14px;padding:12px 16px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:#b45309;margin-bottom:6px">⏳ Застряли: ${stuck.length} — больше ${MOS_STUCK_DAYS} дней без движения</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${stuck.slice(0,30).map(r=>`<span onclick="openMosForm('${r.id}')" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:3px 10px;font-size:12px;color:var(--text)">${esc(r.courier_fio||'без ФИО')} · ${esc(r.district||'')} · ${esc(r.mentor||'не взят')} · ${mosDaysBetween(String(r.status_at||r.updated_at||r.handoff_date).slice(0,10),td())} дн.</span>`).join('')}</div>
+    </div>`:''}
+
+    ${(mList.length||rList.length)?`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-bottom:14px">
+      ${mList.length?`<div style="background:var(--surface);border-radius:14px;padding:14px 16px;box-shadow:0 1px 4px #0001">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">По наставникам</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <tr style="color:var(--muted)"><td style="padding:3px 0">Наставник</td><td style="text-align:right">Передано</td><td style="text-align:right">Вышли</td><td style="text-align:right">Отказ</td><td style="text-align:right" title="Сколько вышли позже плана">Перенос</td><td style="text-align:right">Доходимость</td></tr>
+          ${mList.map(([m,s])=>`<tr style="border-top:1px solid var(--border);color:var(--text)"><td style="padding:5px 0">${esc(m)}</td><td style="text-align:right">${s.all}</td><td style="text-align:right;color:#15803d">${s.out}</td><td style="text-align:right;color:#dc2626">${s.ref}</td><td style="text-align:right;color:#b45309">${s.shift||'—'}</td><td style="text-align:right;font-weight:600">${s.all?Math.round(s.out/s.all*100)+'%':'—'}</td></tr>`).join('')}
+        </table></div>`:''}
+      ${rList.length?`<div style="background:var(--surface);border-radius:14px;padding:14px 16px;box-shadow:0 1px 4px #0001">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">Причины отказа</div>
+        ${rList.map(([k2,v])=>`<div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding:5px 0;font-size:12px;color:var(--text)"><span>${esc(k2)}</span><b>${v}</b></div>`).join('')}
+      </div>`:''}
+    </div>`:''}
+
+    <div style="display:flex;justify-content:flex-end;font-size:12px;color:var(--muted);margin-bottom:6px">Показано: ${rows.length} · нажми на заголовок колонки, чтобы отсортировать</div>
+    <div style="background:var(--surface);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px #0001">
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:1050px">
+        <thead><tr style="background:var(--bg);font-size:11px;color:var(--muted)">
+          ${th('handoff_date','Дата')}${th('city','Город')}${th('district','Район')}${th('courier_fio','Курьер')}${th('mentor','Наставник')}
+          ${th('exit_plan','Выход план')}${th('exit_fact','Выход факт')}${th('status','Статус')}${th('reason','Причина / заметка')}<th style="padding:10px 12px"></th>
+        </tr></thead>
+        <tbody>
+          ${rows.length===0
+            ? `<tr><td colspan="10" style="padding:24px;text-align:center;color:var(--muted);font-size:13px">${MOS_ROWS.length===0?'Пока записей нет':'Ничего не найдено'}</td></tr>`
+            : rows.map(r=>{
+                const g=mosGroup(r);
+                const bg=g==='out'?'#15803d14':g==='refused'?'#dc262614':'transparent';
+                const late=g==='wait'&&r.exit_plan&&String(r.exit_plan).slice(0,10)<td();
+                const shift=mosDaysBetween(r.exit_plan,r.exit_fact);
+                const why=r.status==='нет связи'?('Нет связи'+(r.attempts?` · ${r.attempts} попытки`:'')):(g==='refused'?(r.reason||'—'):'');
+                const note=[r.reason==='Другое'?r.comment:'',r.note].filter(Boolean).join(' · ');
+                return `<tr style="border-top:1px solid var(--border);font-size:13px;background:${bg}">
+                <td style="padding:10px 12px;color:var(--text);white-space:nowrap">${mosFd(r.handoff_date)||'—'}</td>
+                <td style="padding:10px 12px;color:var(--text)">${r.city==='СПБ'?'СПб':r.city==='МСК'?'МСК':esc(r.city||'—')}</td>
+                <td style="padding:10px 12px;color:var(--text)">${esc(r.district)||'—'}</td>
+                <td style="padding:10px 12px;color:var(--text);font-weight:500">${esc(r.courier_fio)||'—'}${r.courier_phone?`<div style="font-size:11px;color:var(--muted);font-weight:400">${esc(r.courier_phone)}</div>`:''}</td>
+                <td style="padding:10px 12px;color:var(--text)">${esc(r.mentor)||'<span style="color:var(--muted)">не взят</span>'}</td>
+                <td style="padding:10px 12px;white-space:nowrap;color:${late?'#dc2626':'var(--muted)'};font-weight:${late?'600':'400'}" ${late?'title="План прошёл, факта выхода нет"':''}>${r.exit_plan?(late?'⚠️ ':'')+mosFd(r.exit_plan)+(r.exit_session?`<div style="font-size:11px;color:var(--muted);font-weight:400">${esc(r.exit_session)}</div>`:''):'—'}</td>
+                <td style="padding:10px 12px;white-space:nowrap;color:${r.exit_fact?'#15803d':'var(--muted)'};font-weight:${r.exit_fact?'600':'400'}">${r.exit_fact?mosFd(r.exit_fact)+(shift&&shift>0?`<div style="font-size:11px;color:#b45309;font-weight:500">перенос +${shift} дн.</div>`:''):'—'}</td>
+                <td style="padding:10px 12px">${mosBadge(r.status)}</td>
+                <td style="padding:10px 12px;color:var(--text);max-width:240px">${why?`<div style="color:#dc2626">${esc(why)}</div>`:''}${note?`<div style="font-size:12px;color:var(--muted)">${esc(note)}</div>`:''}${!why&&!note?'—':''}</td>
+                <td style="padding:10px 12px;white-space:nowrap">
+                  <button onclick="openMosForm('${r.id}')" style="background:none;border:none;cursor:pointer;font-size:15px;margin-right:4px" title="Изменить">✏️</button>
+                  <button onclick="deleteMos('${r.id}')" style="background:none;border:none;color:#ff3b30;cursor:pointer;font-size:15px" title="Удалить">🗑</button>
+                </td></tr>`;}).join('')}
+        </tbody>
+      </table></div>
+    </div>
+  </div>`;
+}
+
+// ---------- форма записи ----------
+function mosDistrictOptions(city,sel){
+  return `<option value="">—</option>`+(MOS_DISTRICTS[city]||[]).map(d=>`<option${sel===d?' selected':''}>${d}</option>`).join('');
+}
+function mosMentorOptions(sel){
+  const all=[...new Set([...mosMentorNames(),...(sel?[sel]:[])])];
+  return `<option value="">—</option>`+all.map(m=>`<option${sel===m?' selected':''}>${esc(m)}</option>`).join('');
+}
+function mosOnCity(){
+  document.getElementById('mos-district').innerHTML=mosDistrictOptions(document.getElementById('mos-city').value,'');
+  document.getElementById('mos-mentor').value='';
+}
+function mosOnDistrict(){
+  const m=mosMentorFor(document.getElementById('mos-city').value,document.getElementById('mos-district').value);
+  if(m)document.getElementById('mos-mentor').value=m.fio;
+}
+function mosOnRefused(){document.getElementById('mos-reason-box').style.display=document.getElementById('mos-status').value==='отказ'?'':'none';}
+function mosOnDates(){
+  const s=document.getElementById('mos-status');
+  if(document.getElementById('mos-fact').value){s.value='вышел';}
+  else if(document.getElementById('mos-plan').value&&['передан','взят','связался','не отвечает'].includes(s.value)){s.value='ждём';}
+  mosOnRefused();
+}
+function mosOnReason(){document.getElementById('mos-comment-box').style.display=document.getElementById('mos-reason').value==='Другое'?'':'none';}
+
+function openMosForm(id){
+  const r=id?MOS_ROWS.find(x=>String(x.id)===String(id)):null;
+  const city=r&&r.city?r.city:'МСК';
+  const curStatus=r?(r.status||mosAutoStatus(r)):'передан';
+  const refused=curStatus==='отказ';
+  const inp='width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text);outline:none;font-family:inherit';
+  const lbl='font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px';
+  const d10=v=>v?String(v).slice(0,10):'';
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:16px;padding:22px;width:100%;max-width:500px;box-shadow:0 8px 32px #0003;max-height:90vh;overflow-y:auto">
+    <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:16px">${r?'Изменить запись':'Наставники ОС — новая запись'}</div>
+    <div style="margin-bottom:12px"><label style="${lbl}">ДАТА</label>
+      <input id="mos-date" type="date" value="${r?d10(r.handoff_date):td()}" style="${inp}"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label style="${lbl}">ГОРОД</label>
+        <select id="mos-city" onchange="mosOnCity()" style="${inp}">
+          <option value="МСК"${city==='МСК'?' selected':''}>Москва</option><option value="СПБ"${city==='СПБ'?' selected':''}>Петербург</option>
+        </select></div>
+      <div><label style="${lbl}">РАЙОН</label>
+        <select id="mos-district" onchange="mosOnDistrict()" style="${inp}">${mosDistrictOptions(city,r?r.district:'')}</select></div>
+    </div>
+    <div style="margin-bottom:12px"><label style="${lbl}">НАСТАВНИК</label>
+      <select id="mos-mentor" style="${inp}">${mosMentorOptions(r?r.mentor:'')}</select>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Подставляется по району, можно поменять</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label style="${lbl}">ФИО КУРЬЕРА</label><input id="mos-fio" type="text" placeholder="необязательно" value="${r?esc(r.courier_fio):''}" style="${inp}"></div>
+      <div><label style="${lbl}">ТЕЛЕФОН</label><input id="mos-phone" type="text" placeholder="необязательно" value="${r?esc(r.courier_phone):''}" style="${inp}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label style="${lbl}">ВЫХОД — ПЛАН</label><input id="mos-plan" type="date" value="${r?d10(r.exit_plan):''}" onchange="mosOnDates()" style="${inp}"></div>
+      <div><label style="${lbl}">ВЫХОД — ФАКТ</label><input id="mos-fact" type="date" value="${r?d10(r.exit_fact):''}" onchange="mosOnDates()" style="${inp}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label style="${lbl}">СЕССИЯ</label><select id="mos-session" style="${inp}">
+        <option value="">—</option>${['утро','вечер'].map(x=>`<option${r&&r.exit_session===x?' selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label style="${lbl}">СТАТУС</label><select id="mos-status" onchange="mosOnRefused()" style="${inp}">
+        ${MOS_STATUSES.map(s=>`<option value="${s}"${curStatus===s?' selected':''}>${MOS_STATUS_LABEL[s]}</option>`).join('')}</select></div>
+    </div>
+    <div id="mos-reason-box" style="margin-bottom:12px;${refused?'':'display:none'}">
+      <label style="${lbl}">ПРИЧИНА</label>
+      <select id="mos-reason" onchange="mosOnReason()" style="${inp}">
+        <option value="">—</option>${MOS_REASONS.map(x=>`<option${r&&r.reason===x?' selected':''}>${x}</option>`).join('')}
+      </select>
+      <div id="mos-comment-box" style="margin-top:8px;${r&&r.reason==='Другое'?'':'display:none'}">
+        <input id="mos-comment" type="text" placeholder="Что случилось" value="${r?esc(r.comment):''}" style="${inp}"></div>
+    </div>
+    <div style="margin-bottom:12px"><label style="${lbl}">ЗАМЕТКА</label>
+      <input id="mos-note" type="text" placeholder="Например: просит зону ближе к дому" value="${r?esc(r.note):''}" style="${inp}"></div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit">Отмена</button>
+      <button onclick="saveMos(${r?`'${r.id}'`:'null'},this)" style="flex:2;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Сохранить</button>
+    </div></div>`;
+  document.body.appendChild(modal);
+}
+
+async function saveMos(id,btn){
+  const g=x=>document.getElementById(x).value;
+  const status=g('mos-status');
+  const refused=status==='отказ';
+  const reason=refused?g('mos-reason'):'';
+  const city=g('mos-city'),district=g('mos-district'),mentor=g('mos-mentor');
+  const old=id?(MOS_ROWS.find(x=>String(x.id)===String(id))||{}):{};
+  const rec={
+    handoff_date:g('mos-date')||null,city,district,mentor:mentor||null,
+    mentor_tg:mentor?((MOS_MENTOR_LIST.find(x=>x.fio===mentor)||{}).telegram||null):null,
+    courier_fio:g('mos-fio').trim()||null,courier_phone:g('mos-phone').trim()||null,
+    exit_plan:g('mos-plan')||null,exit_fact:g('mos-fact')||null,exit_session:g('mos-session')||null,
+    status,refused,reason:reason||null,comment:(refused&&reason==='Другое')?g('mos-comment').trim()||null:null,
+    note:g('mos-note').trim()||null
+  };
+  if(status!==old.status)rec.status_at=new Date().toISOString();
+  if(!rec.handoff_date){alert('Укажи дату');return;}
+  if(!district){alert('Выбери район');return;}
+  if(!mentor&&status!=='передан'){alert('Выбери наставника');return;}
+  if(refused&&!reason){alert('Укажи причину отказа');return;}
+  if(status==='вышел'&&!rec.exit_fact){alert('Для статуса «Вышел» поставь дату выхода факт');return;}
+  btn.textContent='Сохраняем...';btn.disabled=true;
+  const ok=await mosUpsert(id,rec);
+  if(!ok){alert('Не удалось сохранить — проверь соединение');btn.textContent='Сохранить';btn.disabled=false;return;}
+  btn.closest('div[style*=fixed]').remove();
+  renderMentorOS();
+}
+
+async function deleteMos(id){
+  if(!confirm('Удалить запись?'))return;
+  if(!await mosDelete(id)){alert('Не удалось удалить — проверь соединение');return;}
+  renderMentorOS();
+}
+
+// ---------- копирование / Excel ----------
+function mosTableData(){
+  const list=MOS_VISIBLE||[];
+  return {
+    headers:['Дата','Город','Район','Курьер','Телефон','Наставник','Выход план','Сессия','Выход факт','Перенос, дн.','Статус','Отказ','Причина','Заметка'],
+    rows:list.map(r=>{const ref=mosGroup(r)==='refused';const sh=mosDaysBetween(r.exit_plan,r.exit_fact);
+      return [mosFd(r.handoff_date),mosCityName(r.city),r.district||'',r.courier_fio||'',r.courier_phone||'',r.mentor||'',mosFd(r.exit_plan),r.exit_session||'',mosFd(r.exit_fact),sh&&sh>0?sh:'',
+      MOS_STATUS_LABEL[r.status]||r.status||'',ref?'Да':'',r.status==='нет связи'?'Нет связи':(ref?((r.reason||'')+(r.comment?': '+r.comment:'')):''),r.note||''];})
+  };
+}
+function copyMosTable(){
+  const {headers,rows}=mosTableData();
+  if(rows.length===0){alert('Нечего копировать — таблица пустая');return;}
+  const text=[headers.join('\t'),...rows.map(r=>r.join('\t'))].join('\n');
+  try{
+    const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    alert('✅ Скопировано строк: '+rows.length+'\nТеперь можно вставить в Excel или отправить в чат');
+  }catch(e){if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>alert('✅ Скопировано строк: '+rows.length)).catch(()=>alert('Не удалось скопировать'));}
+}
+function exportMosExcel(){
+  const {headers,rows}=mosTableData();
+  if(rows.length===0){alert('Нечего выгружать — таблица пустая');return;}
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const t=new Date();
+  const stamp=`${String(t.getDate()).padStart(2,'0')}.${String(t.getMonth()+1).padStart(2,'0')}.${t.getFullYear()}`;
+  const lines=[q('Наставники ОС — выгрузка от '+stamp),q('Всего записей: '+rows.length),'',headers.map(q).join(';'),...rows.map(r=>r.map(q).join(';'))];
+  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=`Наставники_ОС_${stamp.replace(/\./g,'-')}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+window.openMentorOS=openMentorOS;window.renderMentorOS=renderMentorOS;
+window.openMosForm=openMosForm;window.saveMos=saveMos;window.deleteMos=deleteMos;
+window.copyMosTable=copyMosTable;window.exportMosExcel=exportMosExcel;
+window.mosOnCity=mosOnCity;window.mosOnDistrict=mosOnDistrict;window.mosOnRefused=mosOnRefused;window.mosOnDates=mosOnDates;window.mosSortBy=mosSortBy;window.mosOnReason=mosOnReason;
+// ========== КОНЕЦ: НАСТАВНИКИ ОС ==========
 </script>
 <!-- Paste Modal -->
 <div class="modal-bg" id="pasteBg">
