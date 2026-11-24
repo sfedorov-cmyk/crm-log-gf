@@ -736,12 +736,13 @@ const INFO_DEFAULT={
     {brigadir:'',nastavnik:'',okrug:'ЦАО(СВАО)',count:1,status:'берём',wish:'Тверской, Красносельский, Басманный, Мещанский, Пресня, Китай Город, Таганская. ВОСКР-ВЕЧЕР И ПОН-УТРО! без этих смен не берём!'}
   ]},
   request_spb:{updated:'',rows:[
-    {brigadir:'',nastavnik:'',okrug:'ЮЗ',count:0,status:'стоп',wish:'пт сб воскр'},
+    {brigadir:'',nastavnik:'',okrug:'ЮЗ',count:0,status:'стоп',wish:''},
     {brigadir:'',nastavnik:'',okrug:'ЮВ',count:0,status:'стоп',wish:''},
-    {brigadir:'',nastavnik:'',okrug:'СЗ',count:3,status:'берём',wish:'сб и воскр-вечер'},
-    {brigadir:'',nastavnik:'',okrug:'СВ',count:0,status:'стоп',wish:'универсалы'},
-    {brigadir:'',nastavnik:'',okrug:'Восток',count:0,status:'стоп',wish:'и утро и вечер, любые дни-универсалы'},
-    {brigadir:'',nastavnik:'',okrug:'Центр',count:1,status:'берём',wish:'ЦЕНТР ЮВ: утро/вечер'}
+    {brigadir:'',nastavnik:'',okrug:'СЗ+СВ',count:0,status:'стоп',wish:''},
+    {brigadir:'',nastavnik:'',okrug:'СЗ',count:0,status:'стоп',wish:''},
+    {brigadir:'',nastavnik:'',okrug:'Восток+СВ',count:0,status:'стоп',wish:''},
+    {brigadir:'',nastavnik:'',okrug:'Восток',count:0,status:'стоп',wish:''},
+    {brigadir:'',nastavnik:'',okrug:'Центр',count:0,status:'стоп',wish:''}
   ]},
   cities:{updated:'',rows:[
     {city:'МСК',address:'ЮЖ: Ступинский проезд д.1',schedule_am:'Утро: с 05:00-08:40, до 12-13:00',schedule_pm:'Вечер: с 15:30-17:30, до 23-00:00',rate_am:'Смз 205, Ин 212',rate_pm:'Смз 173, Ин 179'},
@@ -795,8 +796,26 @@ async function loadInfoData(){
     const merged=JSON.parse(JSON.stringify(INFO_DEFAULT));
     data.forEach(row=>{try{if(merged[row.key]!==undefined)merged[row.key]=JSON.parse(row.value);}catch(e){}});
     _infoCache=merged;
+    await syncSpbOkrugs(merged);
   }catch(e){_infoCache=JSON.parse(JSON.stringify(INFO_DEFAULT));}
 }
+// Список районов СПб для запроса. Поменять здесь — и он сам обновится в «Инфо» и в ссылке для наставников.
+const SPB_OKRUGS=['ЮЗ','ЮВ','СЗ+СВ','СЗ','Восток+СВ','Восток','Центр'];
+async function syncSpbOkrugs(d){
+  try{
+    const rows=(d.request_spb&&d.request_spb.rows)||[];
+    const cur=rows.map(r=>String(r.okrug||'').trim());
+    if(cur.length===SPB_OKRUGS.length&&cur.every((o,i)=>o===SPB_OKRUGS[i]))return;
+    // Совпадающие районы сохраняют свои данные, новые появляются пустыми, лишние убираются
+    const norm=s=>String(s||'').replace(/["\s]/g,'').toLowerCase();
+    d.request_spb.rows=SPB_OKRUGS.map(o=>{
+      const old=rows.find(r=>norm(r.okrug)===norm(o));
+      return old?{...old,okrug:o}:{brigadir:'',nastavnik:'',okrug:o,count:0,status:'стоп',wish:''};
+    });
+    await sb.from('info_data').upsert({key:'request_spb',value:JSON.stringify(d.request_spb),updated_at:new Date().toISOString(),updated_by:myRec||''},{onConflict:'key'});
+  }catch(e){console.warn('spb okrugs sync',e);}
+}
+
 async function saveInfoData(d){
   _infoCache=d;
   const saves=Object.keys(d).map(key=>sb.from('info_data').upsert({key,value:JSON.stringify(d[key]),updated_at:new Date().toISOString(),updated_by:myRec||''},{onConflict:'key'}));
@@ -816,7 +835,13 @@ async function renderInfo(){
   function editableCell(key,idx,field,val,style=''){if(canEditInfo)return`<td style="padding:7px 10px;border-bottom:1px solid var(--border);${style}" contenteditable="true" onblur="saveCell('${key}',${idx},'${field}',this.textContent)">${val||''}</td>`;return`<td style="padding:7px 10px;border-bottom:1px solid var(--border);${style}">${val||''}</td>`;}
 
   iw.innerHTML=`<div style="max-width:1000px;margin:0 auto;padding-bottom:24px">
-  <div style="font-size:17px;font-weight:700;margin-bottom:16px">📚 База знаний</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="font-size:17px;font-weight:700">📚 База знаний</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="showNeedHistory()" title="Кто из наставников и когда менял потребность" style="background:none;border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📜 Заявки наставников</button>
+      <button onclick="copyNeedLink(this)" title="Ссылка, по которой наставники указывают потребность" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔗 Ссылка для наставников</button>
+    </div>
+  </div>
 
   <div class="info-section">
     ${secHeader('📍','Текущий запрос — Регионы','request_regions')}
@@ -829,7 +854,7 @@ async function renderInfo(){
       </tr></thead>
       <tbody>${d.request_regions.rows.map((r,i)=>`<tr>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:500">${r.city}</td>
-        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${countSpinner('request_regions',i,r.count)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${countSpinner('request_regions',i,r.count)}${needMark(r)}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${statusToggle('request_regions',i,r.status)}</td>
         ${editableCell('request_regions',i,'conditions',r.conditions,'min-width:150px')}
       </tr>`).join('')}</tbody>
@@ -849,7 +874,7 @@ async function renderInfo(){
       <tbody>${d.request_msk.rows.map((r,i)=>`<tr style="background:${r.status==='берём'?'#f0fdf4':'#fff5f5'}">
         ${editableCell('request_msk',i,'name',r.name,'font-weight:500')}
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent-dark)">${r.okrug}</td>
-        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${countSpinner('request_msk',i,r.count)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${countSpinner('request_msk',i,r.count)}${needMark(r)}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${statusToggle('request_msk',i,r.status)}</td>
         ${editableCell('request_msk',i,'conditions',r.conditions,'min-width:200px;font-size:12px')}
       </tr>`).join('')}</tbody>
@@ -871,7 +896,7 @@ async function renderInfo(){
         ${editableCell('request_spb',i,'brigadir',r.brigadir,'font-weight:500;min-width:120px')}
         ${editableCell('request_spb',i,'nastavnik',r.nastavnik,'min-width:100px')}
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent-dark)">${r.okrug}</td>
-        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${countSpinner('request_spb',i,r.count)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${countSpinner('request_spb',i,r.count)}${needMark(r)}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${statusToggle('request_spb',i,r.status)}</td>
         ${editableCell('request_spb',i,'wish',r.wish,'min-width:150px')}
       </tr>`).join('')}</tbody>
@@ -4335,6 +4360,35 @@ window.openRefForm=openRefForm;
 window.saveRef=saveRef;
 window.deleteRef=deleteRef;
 // ========== КОНЕЦ: ПРИВЕДИ ДРУГА ==========
+
+
+// ===== Ссылка для наставников: потребность в курьерах =====
+function needMark(r){return r&&r.need_by?`<div title="Заполнил наставник по ссылке" style="font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap">✍️ ${esc(r.need_by)} · ${esc(String(r.need_at||'').slice(0,16))}</div>`:'';}
+function needLink(){return location.origin+location.pathname.replace(/[^/]*$/,'')+'potrebnost.html';}
+function copyNeedLink(btn){
+  const url=needLink();
+  const done=()=>{const t=btn.textContent;btn.textContent='✅ Скопировано';setTimeout(()=>btn.textContent=t,1800);};
+  try{const ta=document.createElement('textarea');ta.value=url;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();}
+  catch(e){if(navigator.clipboard)navigator.clipboard.writeText(url).then(done);else prompt('Ссылка для наставников',url);}
+}
+async function showNeedHistory(){
+  const secName={request_msk:'Москва',request_spb:'Петербург',request_regions:'Регионы'};
+  const {data,error}=await sb.from('need_requests').select('*').order('created_at',{ascending:false}).limit(100);
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.onclick=e=>{if(e.target===modal)modal.remove();};
+  const fd=s=>{const d=new Date(s);return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:16px;padding:20px;width:100%;max-width:760px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px #0003">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:17px;font-weight:700;color:var(--text)">📜 Заявки наставников</div>
+    <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">✕</button></div>
+    ${error?`<div style="color:var(--muted);font-size:13px">История появится, когда администратор подключит ссылку (SQL-скрипт potrebnost_supabase.sql).</div>`
+      :(!data||!data.length)?`<div style="color:var(--muted);font-size:13px">Пока никто не заполнял</div>`
+      :`<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="font-size:11px;color:var(--muted)"><td style="padding:4px">Когда</td><td>Кто</td><td>Где</td><td style="text-align:center">Нужно</td><td>Почему</td></tr>
+        ${data.map(r=>`<tr style="border-top:1px solid var(--border);color:var(--text)"><td style="padding:6px 4px;white-space:nowrap">${fd(r.created_at)}</td><td style="white-space:nowrap">${esc(r.author)}</td><td style="white-space:nowrap">${secName[r.section]||''} · <b>${esc(r.place)}</b></td><td style="text-align:center;font-weight:700">${r.count}</td><td style="font-size:12px">${esc(r.comment)}</td></tr>`).join('')}</table>`}
+  </div>`;
+  document.body.appendChild(modal);
+}
+window.copyNeedLink=copyNeedLink;window.showNeedHistory=showNeedHistory;
 
 // ========== НАСТАВНИКИ ОС ==========
 // Данные хранятся в info_data (key=mentors_os), как «Приведи друга».
